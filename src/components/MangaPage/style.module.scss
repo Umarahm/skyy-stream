@@ -1,0 +1,101 @@
+.MangaPage {
+  height: 100vh;
+  width: 100vw;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 1.5rem;
+  padding-left: 4.5rem;
+
+  h1 {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.searchManga {
+  font-size: 1rem;
+  color: var(--ascent-color);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.MangaListAll {
+  margin-top: 2rem;
+
+  .MangaListSection {
+    display: flex;
+    margin: 1rem 0.5rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    overflow: auto;
+    padding: 0.95rem 0.25rem 0.6rem;
+    gap: 1.2rem;
+
+    .loading {
+      height: 15rem;
+      width: 10rem;
+    }
+  }
+
+  h2 {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--primary-3);
+
+    div {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 1rem;
+      font-size: 0.8rem;
+
+      svg {
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+    }
+  }
+}
+
+.randomBtn {
+  border: none;
+  background: transparent;
+  color: var(--primary-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.5rem;
+}
+
+@media (max-width: 769px) {
+  .MangaPage {
+    padding-left: unset;
+    padding: 1.5rem 1rem;
+    padding-bottom: 2.7rem;
+
+    h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  .MangaListAll {
+    .MangaListSection {
+      .loading {
+        height: 10rem;
+        width: 7rem;
+      }
+    }
+
+    h2 {
+      div {
+        display: none;
+      }
+    }
+  }
+}

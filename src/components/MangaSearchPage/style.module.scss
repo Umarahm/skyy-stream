@@ -1,0 +1,130 @@
+.MangaSearchPage {
+  width: 100vw;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 0.5rem;
+  padding-left: 5rem;
+
+  h1,
+  h2 {
+    margin-left: 3rem;
+  }
+}
+
+.InputWrapper {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .searchInput {
+    margin: 1.5rem 1rem;
+    border: none;
+    outline: none;
+    background: var(--primary-1);
+    color: var(--ascent-color);
+    caret-color: var(--primary-2);
+    padding: 1rem;
+    width: clamp(20rem, 80%, 25rem);
+    border-radius: 0.5rem;
+  }
+}
+
+.inputShortcut {
+  position: relative;
+  width: 0;
+  left: -3.7rem;
+}
+
+.searchQuery {
+  color: var(--ascent-color);
+  margin-left: 0.5rem;
+}
+
+.mangaList {
+  padding: 2rem 3rem;
+  width: 100vw;
+  min-height: 65vh;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+
+  .loading {
+    height: 15rem;
+    width: 10rem;
+  }
+}
+
+.pagination {
+  list-style: none;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  gap: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.page_item {
+  list-style: none;
+  padding: 2px 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.paginateActive {
+  background-color: var(--ascent-color);
+  border-radius: 0.5rem;
+  color: var(--primary-1);
+
+  a {
+    color: var(--primary-1);
+  }
+}
+
+.MangaSearchPage {
+  svg {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    color: var(--primary-2);
+  }
+}
+
+@media (max-width: 769px) {
+  .MangaSearchPage {
+    padding-left: unset;
+    padding: 1.5rem 1rem;
+    padding-bottom: 5rem;
+
+    h1,
+    h2 {
+      margin-left: unset;
+    }
+  }
+
+  .mangaList {
+    min-height: unset;
+    padding: 1rem;
+    gap: 1rem 0.5rem;
+    margin-bottom: 1rem;
+
+    .loading {
+      height: 10rem;
+      width: 7rem;
+    }
+  }
+
+  .pagination {
+    max-width: 85vw;
+    margin: 0 auto;
+    flex-wrap: wrap;
+  }
+}

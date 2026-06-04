@@ -1,0 +1,55 @@
+.cardMotion {
+  width: 10rem;
+  overflow: visible;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.MovieCardSmall {
+  min-height: 15rem;
+  width: 10rem;
+  display: block;
+  overflow: visible;
+  &:hover p {
+    color: var(--primary-3);
+  }
+  .img {
+    height: 15rem;
+    width: 10rem;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: none;
+    outline: none;
+    margin-bottom: 0.3rem;
+    object-fit: cover;
+  }
+  p {
+    color: var(--primary-2);
+    transition: color 0.2s ease;
+    width: 100%;
+    margin-left: 0.2rem;
+    height: 4.5ch;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    // font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 769px) {
+  .cardMotion {
+    width: 7rem;
+  }
+
+  .MovieCardSmall {
+    min-height: 10rem;
+    width: 7rem;
+    .img {
+      height: 10rem;
+      width: 7rem;
+    }
+    p {
+      color: var(--primary-2);
+      width: 80%;
+    }
+  }
+}
