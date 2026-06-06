@@ -3,16 +3,17 @@ import React, { useState, useEffect } from "react";
 import styles from "./style.module.scss";
 import Navbar from "../Navbar";
 import { motion } from "framer-motion";
-import { getSettings } from "@/Utils/settings";
+import { AppHub, getHub, getSettings, setHub } from "@/Utils/settings";
 import SettingsPage from "../SettingsPage";
 import { usePathname } from "next/navigation";
 import Head from "next/head";
 import { useRouter } from "next/navigation";
 import { fetchRandom } from "@/Utils/randomdata";
+import { HUB_DEFAULT_ROUTE, isRouteAllowedForHub } from "@/Utils/hub";
 
 const Layout = ({ children }: any) => {
   const [theme, setTheme] = useState("system");
-  const [mode, setMode] = useState("liquidate");
+  const [mode, setMode] = useState("system");
   const [ascent_color, setAscent_color] = useState("gold");
   const [SFFamily, setSFFamily] = useState("Roboto Mono");
   const [SFColor, setSFColor] = useState("gold");
@@ -21,7 +22,10 @@ const Layout = ({ children }: any) => {
   const [SBBlur, setSBBlur] = useState("0");
   const [SOpacity, setSOpacity] = useState("100%");
   const [themeColor, setThemeColor] = useState<any>();
+  const [hub, setSelectedHub] = useState<AppHub | "">("");
+  const [isHubInitialized, setIsHubInitialized] = useState(false);
   const { push } = useRouter();
+  const path = usePathname();
 
   const fetchRandomData = async () => {
     const res: any = await fetchRandom();
@@ -30,6 +34,14 @@ const Layout = ({ children }: any) => {
       push(`/detail?type=${res.type}&id=${res.id}`);
     }
   };
+
+  useEffect(() => {
+    const handleHubChange = () => {
+      setSelectedHub(getHub());
+    };
+    window.addEventListener("hubChanged", handleHubChange);
+    return () => window.removeEventListener("hubChanged", handleHubChange);
+  }, []);
 
   useEffect(() => {
     const values = getSettings();
@@ -44,7 +56,8 @@ const Layout = ({ children }: any) => {
       setSBBlur(values?.SBBlur);
       setSOpacity(values?.SOpacity);
     }
-    console.log({ values });
+    setSelectedHub(getHub());
+    setIsHubInitialized(true);
     const prefersDarkMode =
       window.matchMedia &&
       window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -54,7 +67,8 @@ const Layout = ({ children }: any) => {
     window.addEventListener("keydown", (event) => {
       if (event.ctrlKey && event.key === "k") {
         event.preventDefault();
-        push("/search");
+        const activeHub = getHub();
+        push(activeHub === "japanese" ? "/anime-search" : "/search");
       }
       if (event.ctrlKey && event.key === "R") {
         event.preventDefault();
@@ -65,6 +79,14 @@ const Layout = ({ children }: any) => {
     // const metaThemeColor = document.querySelector("meta[name=theme-color]");
     // metaThemeColor?.setAttribute("content", themeColor);
   }, []);
+
+  useEffect(() => {
+    if (!isHubInitialized || !hub || !path) return;
+    if (!isRouteAllowedForHub(hub, path)) {
+      push(HUB_DEFAULT_ROUTE[hub]);
+    }
+  }, [hub, path, push, isHubInitialized]);
+
   useEffect(() => {
     document.documentElement.style.setProperty("--mode", mode);
     document.documentElement.style.setProperty("--ascent-color", ascent_color);
@@ -84,7 +106,13 @@ const Layout = ({ children }: any) => {
     SBBlur,
     SOpacity,
   ]);
-  const path = usePathname();
+
+  const handleHubSelect = (value: AppHub) => {
+    setSelectedHub(value);
+    setHub(value);
+    push(HUB_DEFAULT_ROUTE[value]);
+  };
+
   return (
     <>
       {mode === "dark" && (
@@ -106,21 +134,55 @@ const Layout = ({ children }: any) => {
         </Head>
       )}
       <div
-        className={`${styles.background} ${mode === "dark" && "dark"} ${mode === "light" && "light"}`}
+        className={`${styles.background} ${mode === "dark" && "dark"} ${mode === "light" && "light"} ${hub === "japanese" ? "hub-japanese" : "hub-movieTv"}`}
       >
-        <Navbar />
-        <motion.div
-          initial={{ x: -300, opacity: 0 }}
-          animate={{ x: 0, opacity: 1 }}
-          exit={{ x: 300, opacity: 0 }}
-          transition={{
-            type: "spring",
-            stiffness: 260,
-            damping: 20,
-          }}
-        >
-          {children}
-        </motion.div>
+        {!hub && isHubInitialized ? (
+          <div className={styles.hubGate}>
+            <h1>Choose your hub</h1>
+            <p>Select where you want to start. You can switch anytime.</p>
+            <div className={styles.hubChoices}>
+              <button
+                className={`${styles.hubChoiceCard} ${styles.movieCard}`}
+                onClick={() => handleHubSelect("movieTv")}
+                type="button"
+              >
+                <div className={styles.hubCardContent}>
+                  <img src="/images/logo.svg" alt="Movie TV hub logo" />
+                  <h2>Rive Movies/TV</h2>
+                </div>
+              </button>
+              <button
+                className={`${styles.hubChoiceCard} ${styles.animeCard}`}
+                onClick={() => handleHubSelect("japanese")}
+                type="button"
+              >
+                <div className={styles.hubCardContent}>
+                  <img
+                    src="/images/japanese-hub-img.webp"
+                    alt="Japanese hub logo"
+                  />
+                  <h2>Rive Anime & Manga</h2>
+                </div>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <Navbar hub={hub} />
+            <motion.div
+              initial={{ x: -300, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: 300, opacity: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 260,
+                damping: 20,
+              }}
+            >
+              {children}
+            </motion.div>
+          </>
+        )}
         {path === "/settings" ? (
           <SettingsPage
             mode={mode}
@@ -141,6 +203,8 @@ const Layout = ({ children }: any) => {
             setSBColor={setSBColor}
             setSBBlur={setSBBlur}
             setSOpacity={setSOpacity}
+            hub={hub}
+            onHubChange={handleHubSelect}
           />
         ) : null}
       </div>

@@ -38,8 +38,9 @@ import {
 } from "react-icons/md";
 import { RiEye2Line, RiEye2Fill } from "react-icons/ri";
 import { usePathname, useSearchParams } from "next/navigation";
+import { AppHub } from "@/Utils/settings";
 
-const Navbar = ({ children }: any) => {
+const Navbar = ({ hub }: { hub: AppHub | "" }) => {
   const path = usePathname();
   const params = useSearchParams();
   // const query=
@@ -56,118 +57,125 @@ const Navbar = ({ children }: any) => {
   return (
     <div className={styles.navbar}>
       <Link
-        href="/"
+        href={hub === "japanese" ? "/japanese" : "/"}
         aria-label="Home"
         data-tooltip-id="tooltip"
         data-tooltip-content="Home"
       >
-        {pathname === "/" || pathname === "/recommendation" ? (
+        {pathname === "/" ||
+        pathname === "/japanese" ||
+        pathname === "/recommendation" ? (
           <MdHome className={styles.active} />
         ) : (
           <MdOutlineHome className={styles.inactive} />
         )}
       </Link>
       <Link
-        href="/search"
+        href={hub === "japanese" ? "/anime-search" : "/search"}
         aria-label="Search"
         data-tooltip-id="tooltip"
         data-tooltip-html="<div>Search <span class='tooltip-btn'>CTRL + K</span></div>"
       >
-        {pathname === "/search" ? (
+        {pathname === "/search" || pathname === "/anime-search" ? (
           <MdSearch className={styles.active} />
         ) : (
           <MdOutlineSearch className={styles.inactive} />
         )}
       </Link>
-      <Link
-        href="/movie"
-        aria-label="Movies"
-        data-tooltip-id="tooltip"
-        data-tooltip-content="Movies"
-      >
-        {pathname === "/movie" ? (
-          <MdPlayCircle className={styles.active} />
-        ) : (
-          <MdOutlinePlayCircle className={styles.inactive} />
-        )}
-      </Link>
-      <Link
-        href="/tv"
-        aria-label="Tv shows"
-        data-tooltip-id="tooltip"
-        data-tooltip-content="TV shows"
-      >
-        {pathname === "/tv" ? (
-          <MdTv className={styles.active} />
-        ) : (
-          <MdOutlineTv className={styles.inactive} />
-        )}
-      </Link>
-      <Link
-        href="/anime"
-        aria-label="Anime"
-        data-tooltip-id="tooltip"
-        data-tooltip-content="Anime"
-        className={styles.mobileHide}
-      >
-        {pathname === "/anime" ? (
-          <RiEye2Fill className={styles.active} />
-        ) : (
-          <RiEye2Line className={styles.inactive} />
-        )}
-      </Link>
-      <Link
-        href="/manga"
-        aria-label="Manga"
-        data-tooltip-id="tooltip"
-        data-tooltip-content="Manga"
-        className={styles.mobileHide}
-      >
-        {pathname === "/manga" ? (
-          <MdMenuBook className={styles.active} />
-        ) : (
-          <MdOutlineMenuBook className={styles.inactive} />
-        )}
-      </Link>
-      <Link
-        href="/kdrama"
-        aria-label="K-Drama"
-        data-tooltip-id="tooltip"
-        data-tooltip-content="K-Drama"
-        className={styles.mobileHide}
-      >
-        {pathname === "/kdrama" ? (
-          <MdTheaterComedy className={styles.active} />
-        ) : (
-          <MdOutlineTheaterComedy className={styles.inactive} />
-        )}
-      </Link>
-      <Link
-        href="/collections"
-        aria-label="Collections"
-        data-tooltip-id="tooltip"
-        data-tooltip-content="Collections"
-        className={styles.mobileHide}
-      >
-        {pathname === "/collections" ? (
-          <MdCollectionsBookmark className={styles.active} />
-        ) : (
-          <MdOutlineCollectionsBookmark className={styles.inactive} />
-        )}
-      </Link>
-      <Link
-        href="/library"
-        aria-label="Library"
-        data-tooltip-id="tooltip"
-        data-tooltip-content="Library"
-        className={styles.mobileHide}
-      >
-        {pathname === "/library" ? (
-          <IoLibrary className={styles.active} />
-        ) : (
-          <IoLibraryOutline className={styles.inactive} />
-        )}
-      </Link>
+      {hub !== "japanese" ? (
+        <>
+          <Link
+            href="/movie"
+            aria-label="Movies"
+            data-tooltip-id="tooltip"
+            data-tooltip-content="Movies"
+          >
+            {pathname === "/movie" ? (
+              <MdPlayCircle className={styles.active} />
+            ) : (
+              <MdOutlinePlayCircle className={styles.inactive} />
+            )}
+          </Link>
+          <Link
+            href="/tv"
+            aria-label="Tv shows"
+            data-tooltip-id="tooltip"
+            data-tooltip-content="TV shows"
+          >
+            {pathname === "/tv" ? (
+              <MdTv className={styles.active} />
+            ) : (
+              <MdOutlineTv className={styles.inactive} />
+            )}
+          </Link>
+          <Link
+            href="/kdrama"
+            aria-label="K-Drama"
+            data-tooltip-id="tooltip"
+            data-tooltip-content="K-Drama"
+            className={styles.mobileHide}
+          >
+            {pathname === "/kdrama" ? (
+              <MdTheaterComedy className={styles.active} />
+            ) : (
+              <MdOutlineTheaterComedy className={styles.inactive} />
+            )}
+          </Link>
+          <Link
+            href="/collections"
+            aria-label="Collections"
+            data-tooltip-id="tooltip"
+            data-tooltip-content="Collections"
+            className={styles.mobileHide}
+          >
+            {pathname === "/collections" ? (
+              <MdCollectionsBookmark className={styles.active} />
+            ) : (
+              <MdOutlineCollectionsBookmark className={styles.inactive} />
+            )}
+          </Link>
+          <Link
+            href="/library"
+            aria-label="Library"
+            data-tooltip-id="tooltip"
+            data-tooltip-content="Library"
+            className={styles.mobileHide}
+          >
+            {pathname === "/library" ? (
+              <IoLibrary className={styles.active} />
+            ) : (
+              <IoLibraryOutline className={styles.inactive} />
+            )}
+          </Link>
+        </>
+      ) : (
+        <>
+          <Link
+            href="/anime"
+            aria-label="Anime"
+            data-tooltip-id="tooltip"
+            data-tooltip-content="Anime"
+          >
+            {pathname === "/anime" || pathname === "/anime-detail" || pathname === "/anime-details" ? (
+              <RiEye2Fill className={styles.active} />
+            ) : (
+              <RiEye2Line className={styles.inactive} />
+            )}
+          </Link>
+          <Link
+            href="/manga"
+            aria-label="Manga"
+            data-tooltip-id="tooltip"
+            data-tooltip-content="Manga"
+          >
+            {pathname === "/manga" || pathname === "/manga-read" ? (
+              <MdMenuBook className={styles.active} />
+            ) : (
+              <MdOutlineMenuBook className={styles.inactive} />
+            )}
+          </Link>
+        </>
+      )}
       <Link
         href="/settings"
         aria-label="Settings"

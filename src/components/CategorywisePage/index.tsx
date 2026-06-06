@@ -9,6 +9,13 @@ import Filter from "../Filter";
 import Skeleton from "react-loading-skeleton";
 import NProgress from "nprogress";
 import { toast } from "sonner";
+import {
+  getMiruroDisplayTitle,
+  getMiruroPopular,
+  getMiruroPoster,
+  getMiruroRecent,
+  getMiruroTrending,
+} from "@/Utils/miruro";
 // import MoviePoster from '@/components/MoviePoster';
 
 function capitalizeFirstLetter(string: string) {
@@ -18,7 +25,9 @@ function capitalizeFirstLetter(string: string) {
 const dummyList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
   const [categoryType, setCategoryType] = useState(categoryDiv);
-  const [category, setCategory] = useState("latest"); // latest, trending, topRated
+  const [category, setCategory] = useState(
+    categoryPage === "anime" ? "trending" : "latest",
+  ); // latest, trending, topRated
   const [data, setData] = useState<any>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalpages, setTotalpages] = useState(1);
@@ -52,22 +61,47 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
             sortBy: sortBy,
           });
         } else if (categoryPage === "anime") {
-          data = await axiosFetch({
-            requestID:
-              categoryType === "tv" ? "withKeywordsTv" : "withKeywordsMovie",
-            sortBy:
-              category === "latest"
-                ? categoryType === "tv"
-                  ? "first_air_date.desc"
-                  : "primary_release_date.desc"
-                : category === "trending"
-                  ? "popularity.desc"
-                  : category === "topRated"
-                    ? "vote_count.desc"
-                    : undefined,
-            genreKeywords: "210024,",
-            page: currentPage,
-          });
+          const fetchByCategory =
+            category === "trending"
+              ? getMiruroTrending
+              : category === "topRated"
+                ? getMiruroPopular
+                : getMiruroRecent;
+
+          const pageResponse = await fetchByCategory(currentPage);
+          const results = Array.isArray(pageResponse?.results)
+            ? pageResponse.results
+            : [];
+          const safeResults =
+            category === "latest"
+              ? results.filter(
+                  (item: any) => String(item?.format || "").toUpperCase() !== "OVA",
+                )
+              : results;
+
+          const mapped = safeResults.map((item: any, index: number) => ({
+            id: item?.id || `${getMiruroDisplayTitle(item)}-${index}`,
+            title: getMiruroDisplayTitle(item),
+            poster_path: getMiruroPoster(item),
+            customHref: `/anime-details?id=${item?.id}`,
+            mediaLabel: item?.format || "ANIME",
+          }));
+
+          const total = Number(pageResponse?.total || 0);
+          const perPage = Number(pageResponse?.perPage || 20);
+          const pageFromApi = Number(pageResponse?.page || currentPage || 1);
+          const computedTotalPages =
+            total > 0
+              ? Math.ceil(total / perPage)
+              : pageResponse?.hasNextPage
+                ? pageFromApi + 1
+                : pageFromApi;
+
+          data = {
+            page: pageFromApi,
+            total_pages: Math.min(10, Math.max(1, computedTotalPages)),
+            results: mapped,
+          };
         } else if (categoryPage === "kdrama") {
           data = await axiosFetch({
             requestID:
@@ -128,24 +162,49 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
           (categoryPage === "kdrama" && "K-Drama")}
       </h1>
       <div className={styles.category}>
-        <p
-          className={`${category === "latest" ? styles.active : styles.inactive}`}
-          onClick={() => setCategory("latest")}
-        >
-          Latest
-        </p>
-        <p
-          className={`${category === "trending" ? styles.active : styles.inactive}`}
-          onClick={() => setCategory("trending")}
-        >
-          Trending
-        </p>
-        <p
-          className={`${category === "topRated" ? styles.active : styles.inactive}`}
-          onClick={() => setCategory("topRated")}
-        >
-          Top-Rated
-        </p>
+        {categoryPage === "anime" ? (
+          <>
+            <p
+              className={`${category === "trending" ? styles.active : styles.inactive}`}
+              onClick={() => setCategory("trending")}
+            >
+              Trending
+            </p>
+            <p
+              className={`${category === "topRated" ? styles.active : styles.inactive}`}
+              onClick={() => setCategory("topRated")}
+            >
+              Popular
+            </p>
+            <p
+              className={`${category === "latest" ? styles.active : styles.inactive}`}
+              onClick={() => setCategory("latest")}
+            >
+              Recents
+            </p>
+          </>
+        ) : (
+          <>
+            <p
+              className={`${category === "latest" ? styles.active : styles.inactive}`}
+              onClick={() => setCategory("latest")}
+            >
+              Latest
+            </p>
+            <p
+              className={`${category === "trending" ? styles.active : styles.inactive}`}
+              onClick={() => setCategory("trending")}
+            >
+              Trending
+            </p>
+            <p
+              className={`${category === "topRated" ? styles.active : styles.inactive}`}
+              onClick={() => setCategory("topRated")}
+            >
+              Top-Rated
+            </p>
+          </>
+        )}
         {categoryPage === null ? (
           <p
             className={`${category === "filter" ? styles.active : styles.inactive} ${styles.filter}`}
@@ -193,7 +252,14 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
       )}
       <div className={styles.movieList}>
         {data.map((ele: any) => {
-          return <MovieCardSmall data={ele} media_type={categoryType} />;
+          return (
+            <MovieCardSmall
+              data={ele}
+              media_type={categoryPage === "anime" ? "tv" : categoryType}
+              customHref={categoryPage === "anime" ? ele?.customHref : undefined}
+              openInNewTab={false}
+            />
+          );
         })}
         {data?.length === 0 &&
           dummyList.map((ele) => <Skeleton className={styles.loading} />)}

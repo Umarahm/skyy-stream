@@ -323,6 +323,8 @@ const Watch = () => {
   const STREAM_URL_POR = process.env.NEXT_PUBLIC_STREAM_URL_POR;
   const STREAM_URL_WEB = process.env.NEXT_PUBLIC_STREAM_URL_WEB;
   const STREAM_URL_RIVE = process.env.NEXT_PUBLIC_STREAM_URL_RIVE;
+  const STREAM_URL_MIRURO = process.env.NEXT_PUBLIC_STREAM_URL_MIRURO;
+  const STREAM_URL_ANIKOTO = process.env.NEXT_PUBLIC_STREAM_URL_ANIKOTO;
 
   return (
     <>
@@ -444,6 +446,8 @@ const Watch = () => {
               <option value="POR">Aggregator : 14 (Portuguese-Server)</option>
               <option value="WEB">Aggregator : 15 (Ad-Free)</option>
               <option value="ADF">Aggregator : 16 (Fast/Ad-Free)</option>
+              <option value="MIRURO">Aggregator : 17 (Miruro)</option>
+              <option value="ANIKOTO">Aggregator : 18 (Anikoto)</option>
             </select>
           )}
 
@@ -793,6 +797,40 @@ const Watch = () => {
               type === "movie"
                 ? `${STREAM_URL_PRO}/embed/${type}/${id}?player=new`
                 : `${STREAM_URL_PRO}/embed/${type}/${id}/${season}/${episode}?player=new`
+            }
+            className={styles.iframe}
+            allowFullScreen
+            allow="accelerometer; autoplay; encrypted-media; gyroscope;"
+            referrerPolicy="origin"
+          ></iframe>
+        ) : null}
+        {source === "MIRURO" &&
+        id !== "" &&
+        id !== null &&
+        embedMode === true ? (
+          <iframe
+            scrolling="no"
+            src={
+              type === "movie"
+                ? `${STREAM_URL_MIRURO}?id=${id}`
+                : `${STREAM_URL_MIRURO}?id=${id}&season=${season}&episode=${episode}`
+            }
+            className={styles.iframe}
+            allowFullScreen
+            allow="accelerometer; autoplay; encrypted-media; gyroscope;"
+            referrerPolicy="origin"
+          ></iframe>
+        ) : null}
+        {source === "ANIKOTO" &&
+        id !== "" &&
+        id !== null &&
+        embedMode === true ? (
+          <iframe
+            scrolling="no"
+            src={
+              type === "movie"
+                ? `${STREAM_URL_ANIKOTO}?id=${id}`
+                : `${STREAM_URL_ANIKOTO}?id=${id}&season=${season}&episode=${episode}`
             }
             className={styles.iframe}
             allowFullScreen

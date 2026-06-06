@@ -114,6 +114,14 @@
     }
     .EpisodeList {
       gap: 0.1rem;
+      .episodeControls {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.6rem;
+        flex-wrap: wrap;
+      }
       select {
         width: clamp(15rem, 50vw, 20rem);
         padding: 1rem 2rem;
@@ -122,10 +130,26 @@
         outline: none;
         border: 1px solid var(--primary-2);
         border-radius: 0.5rem;
-        margin: 1rem auto;
+        margin: 1rem 0;
         // &[selected="true"]{
         //   color: var(--ascent-color);
         // }
+      }
+      .episodeViewToggle {
+        display: flex;
+        gap: 0.4rem;
+        button {
+          border: 1px solid var(--primary-2);
+          background: var(--bg-color);
+          color: var(--primary-3);
+          border-radius: 0.2rem;
+          padding: 0.6rem 0.7rem;
+          cursor: pointer;
+        }
+      }
+      .activeView {
+        background: var(--ascent-color) !important;
+        color: var(--primary-1) !important;
       }
 
       .episode {
@@ -169,6 +193,29 @@
           justify-content: center;
           align-items: flex-start;
           gap: 1rem;
+        }
+      }
+      .episodeGrid {
+        padding: 0.6rem;
+        max-height: 5rem;
+        min-height: 4rem;
+        justify-content: center;
+        .episodeHeader {
+          width: 100%;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .details {
+          width: 100%;
+          flex-direction: row;
+          justify-content: space-between;
+          align-items: center;
+          h4 {
+            margin: 0;
+          }
+          p {
+            display: none;
+          }
         }
       }
     }

@@ -13,7 +13,19 @@ function capitalizeFirstLetter(string: string) {
   return string?.charAt(0).toUpperCase() + string?.slice(1);
 }
 
-const MovieCardLarge = ({ data, media_type, genresMovie, genresTv }: any) => {
+const getImageSrc = (value: string | null | undefined) => {
+  if (!value) return "/images/logo.svg";
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  return `${process.env.NEXT_PUBLIC_TMBD_IMAGE_URL?.replace("/original", "/w185")}${value}`;
+};
+
+const MovieCardLarge = ({
+  data,
+  media_type,
+  genresMovie,
+  genresTv,
+  customHref,
+}: any) => {
   const [imageLoading, setImageLoading] = useState(true);
   const [genreListMovie, setGenreListMovie] = useState(genresMovie);
   const [genreListTv, setGenreListTv] = useState(genresTv);
@@ -55,7 +67,10 @@ const MovieCardLarge = ({ data, media_type, genresMovie, genresTv }: any) => {
   return (
     <Link
       key={data?.id}
-      href={`${data?.media_type === "person" ? "/person?id=" + data?.id : "/detail?type=" + (data?.media_type || media_type) + "&id=" + data?.id}`}
+      href={
+        customHref ||
+        `${data?.media_type === "person" ? "/person?id=" + data?.id : "/detail?type=" + (data?.media_type || media_type) + "&id=" + data?.id}`
+      }
       className={styles.MovieCardSmall}
       aria-label={data?.name || "poster"}
       data-tooltip-id="tooltip"
@@ -96,7 +111,11 @@ const MovieCardLarge = ({ data, media_type, genresMovie, genresTv }: any) => {
         {/* react-lazy-load-image-component */}
         <LazyLoadImage
           key={data?.id}
-          src={`${imagePlaceholder ? "/images/logo.svg" : (data?.poster_path !== null && data?.poster_path !== undefined) || (data?.profile_path !== null && data?.profile_path !== undefined) || (data?.still_path !== null && data?.still_path !== undefined) ? process.env.NEXT_PUBLIC_TMBD_IMAGE_URL?.replace("/original", "/w185") + (data?.poster_path || data?.profile_path || data?.still_path) || null : "/images/logo.svg"}`}
+          src={
+            imagePlaceholder
+              ? "/images/logo.svg"
+              : getImageSrc(data?.poster_path || data?.profile_path || data?.still_path)
+          }
           height="100%"
           width="100%"
           useIntersectionObserver={true}

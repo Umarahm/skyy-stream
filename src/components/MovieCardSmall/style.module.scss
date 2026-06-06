@@ -22,6 +22,23 @@
     outline: none;
     margin-bottom: 0.3rem;
     object-fit: cover;
+    position: relative;
+  }
+  .mediaLabel {
+    position: absolute;
+    top: 0.4rem;
+    left: 0.4rem;
+    z-index: 2;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 999px;
+    padding: 0.15rem 0.45rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    pointer-events: none;
   }
   p {
     color: var(--primary-2);
@@ -46,6 +63,12 @@
     .img {
       height: 10rem;
       width: 7rem;
+    }
+    .mediaLabel {
+      font-size: 0.52rem;
+      top: 0.3rem;
+      left: 0.3rem;
+      padding: 0.12rem 0.35rem;
     }
     p {
       color: var(--primary-2);

@@ -12,6 +12,7 @@ import { AiFillLeftCircle, AiFillRightCircle } from "react-icons/ai";
 // react-lazy-load-image-component
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/opacity.css";
+import { getHub } from "@/Utils/settings";
 
 function capitalizeFirstLetter(string: string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
@@ -39,6 +40,8 @@ const WatchDetails = ({
   const [totalpages, setTotalpages] = useState(1);
   const [genreListMovie, setGenreListMovie] = useState<any>();
   const [genreListTv, setGenreListTv] = useState<any>();
+  const [episodeViewMode, setEpisodeViewMode] = useState<"grid" | "name">("name");
+  const [isJapaneseHub, setIsJapaneseHub] = useState(false);
   const watchDetailsPage: any = useRef(null);
 
   const monthNames = [
@@ -55,6 +58,15 @@ const WatchDetails = ({
     "November",
     "December",
   ];
+  useEffect(() => {
+    const hub = getHub();
+    setIsJapaneseHub(hub === "japanese");
+    const savedView = localStorage.getItem("RiveStreamJapaneseEpisodeView");
+    if (savedView === "grid" || savedView === "name") {
+      setEpisodeViewMode(savedView);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -166,30 +178,56 @@ const WatchDetails = ({
 
         {type === "tv" && category === "episodes" ? (
           <div className={styles.EpisodeList}>
-            <select
-              name="season"
-              id="season"
-              value={selectedSeason}
-              onChange={(e: any) => setSelectedSeason(e.target.value)}
-            >
-              {data?.seasons?.map((ele: any, i: number) => {
-                console.log({ i });
-                return (
-                  <option
-                    key={ele.id}
-                    value={ele?.season_number}
-                    selected={i == 0}
+            <div className={styles.episodeControls}>
+              <select
+                name="season"
+                id="season"
+                value={selectedSeason}
+                onChange={(e: any) => setSelectedSeason(e.target.value)}
+              >
+                {data?.seasons?.map((ele: any, i: number) => {
+                  console.log({ i });
+                  return (
+                    <option
+                      key={ele.id}
+                      value={ele?.season_number}
+                      selected={i == 0}
+                    >
+                      {ele.name} {` (${ele.episode_count})`}
+                    </option>
+                  );
+                })}
+              </select>
+              {isJapaneseHub ? (
+                <div className={styles.episodeViewToggle}>
+                  <button
+                    type="button"
+                    className={episodeViewMode === "grid" ? styles.activeView : ""}
+                    onClick={() => {
+                      setEpisodeViewMode("grid");
+                      localStorage.setItem("RiveStreamJapaneseEpisodeView", "grid");
+                    }}
                   >
-                    {ele.name} {` (${ele.episode_count})`}
-                  </option>
-                );
-              })}
-            </select>
+                    Grid View
+                  </button>
+                  <button
+                    type="button"
+                    className={episodeViewMode === "name" ? styles.activeView : ""}
+                    onClick={() => {
+                      setEpisodeViewMode("name");
+                      localStorage.setItem("RiveStreamJapaneseEpisodeView", "name");
+                    }}
+                  >
+                    Name View
+                  </button>
+                </div>
+              ) : null}
+            </div>
             {category === "episodes" &&
               categoryData?.episodes?.map((ele: any) => {
                 return (
                   <div
-                    className={`${styles.episode} ${reviewDetail === ele?.id ? styles.ReviewDetail : null} ${parseInt(selectedSeason) === parseInt(season) && parseInt(ele?.episode_number) === parseInt(episode) ? styles.highlightEpisode : null} ${new Date(ele?.air_date) >= new Date() ? styles.notAired : null}`}
+                    className={`${styles.episode} ${episodeViewMode === "grid" ? styles.episodeGrid : ""} ${reviewDetail === ele?.id ? styles.ReviewDetail : null} ${parseInt(selectedSeason) === parseInt(season) && parseInt(ele?.episode_number) === parseInt(episode) ? styles.highlightEpisode : null} ${new Date(ele?.air_date) >= new Date() ? styles.notAired : null}`}
                     onClick={(e) =>
                       setReviewDetail((prev: any) =>
                         prev !== ele?.id ? ele?.id : "",
@@ -198,57 +236,35 @@ const WatchDetails = ({
                     key={ele?.id}
                   >
                     <div className={styles.episodeHeader}>
-                      <Link
-                        href={`/watch?type=tv&id=${ele?.show_id}&season=${ele?.season_number}&episode=${ele?.episode_number}`}
-                        className={styles.CardSmall}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <div
-                          className={`${styles.img} ${imageLoading ? "skeleton" : null}`}
+                      {episodeViewMode === "name" ? (
+                        <Link
+                          href={`/watch?type=tv&id=${ele?.show_id}&season=${ele?.season_number}&episode=${ele?.episode_number}`}
+                          className={styles.CardSmall}
+                          onClick={(e) => e.stopPropagation()}
                         >
-                          {/* if rllic package is not available, then start using this code again, and comment/delete the rllic code */}
-                          {/* <AnimatePresence mode="sync">
-                          <motion.img
-                            key={ele?.id}
-                            src={`${ele?.still_path !== null && ele?.still_path !== undefined ? process.env.NEXT_PUBLIC_TMBD_IMAGE_URL + ele?.still_path : "/images/logo.svg"}`}
-                            initial={{ opacity: 0 }}
-                            animate={{
-                              opacity: imageLoading ? 0 : 1,
-                            }}
-                            height="100%"
-                            width="100%"
-                            exit="exit"
+                          <div
                             className={`${styles.img} ${imageLoading ? "skeleton" : null}`}
-                            onLoad={() => {
-                              setImageLoading(false);
-                            }}
-                            loading="lazy"
-                            // style={!imageLoading ? { opacity: 1 } : { opacity: 0 }}
-                          />
-                        </AnimatePresence> */}
-
-                          {/* react-lazy-load-image-component */}
-                          <LazyLoadImage
-                            key={ele?.id}
-                            src={`${imagePlaceholder ? "/images/logo.svg" : ele?.still_path !== null && ele?.still_path !== undefined ? process.env.NEXT_PUBLIC_TMBD_IMAGE_URL?.replace("/original", "/w342") + ele?.still_path : "/images/logo.svg"}`}
-                            height="100%"
-                            width="100%"
-                            useIntersectionObserver={true}
-                            effect="opacity"
-                            className={`${styles.img} ${imageLoading ? "skeleton" : null}`}
-                            onLoad={() => {
-                              setImageLoading(false);
-                            }}
-                            onError={(e) => {
-                              // console.log({ e });
-                              setImagePlaceholder(true);
-                              setImageLoading(false);
-                            }}
-                            loading="lazy"
-                            // style={!imageLoading ? { opacity: 1 } : { opacity: 0 }}
-                          />
-                        </div>
-                      </Link>
+                          >
+                            <LazyLoadImage
+                              key={ele?.id}
+                              src={`${imagePlaceholder ? "/images/logo.svg" : ele?.still_path !== null && ele?.still_path !== undefined ? process.env.NEXT_PUBLIC_TMBD_IMAGE_URL?.replace("/original", "/w342") + ele?.still_path : "/images/logo.svg"}`}
+                              height="100%"
+                              width="100%"
+                              useIntersectionObserver={true}
+                              effect="opacity"
+                              className={`${styles.img} ${imageLoading ? "skeleton" : null}`}
+                              onLoad={() => {
+                                setImageLoading(false);
+                              }}
+                              onError={() => {
+                                setImagePlaceholder(true);
+                                setImageLoading(false);
+                              }}
+                              loading="lazy"
+                            />
+                          </div>
+                        </Link>
+                      ) : null}
                       <div className={styles.details}>
                         <h4>
                           {`EP ${ele.episode_number}`}
@@ -273,11 +289,11 @@ const WatchDetails = ({
                           href={`/watch?type=tv&id=${ele?.show_id}&season=${ele?.season_number}&episode=${ele?.episode_number}`}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          watch <FaPlay />
+                          {episodeViewMode === "grid" ? "Open" : "watch"} <FaPlay />
                         </Link>
                       </div>
                     </div>
-                    <p>{ele?.overview}</p>
+                    {episodeViewMode === "name" ? <p>{ele?.overview}</p> : null}
                   </div>
                 );
               })}

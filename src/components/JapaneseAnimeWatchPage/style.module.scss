@@ -1,0 +1,55 @@
+.page {
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 1rem 1rem 5rem 5rem;
+}
+
+.headingTitle {
+  color: var(--primary-3);
+}
+
+.headingMeta {
+  color: var(--primary-2);
+  margin-top: 0.2rem;
+}
+
+.controls {
+  margin-top: 0.8rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  select {
+    border: 1px solid var(--primary-2);
+    background: var(--primary-1);
+    color: var(--primary-3);
+    padding: 0.45rem 0.7rem;
+    border-radius: 0.2rem;
+    min-width: 12rem;
+  }
+}
+
+.playerWrap {
+  margin-top: 1rem;
+}
+
+.player {
+  width: 100%;
+  height: 78vh;
+  border: 1px solid var(--primary-2);
+  border-radius: 0.2rem;
+}
+
+.empty {
+  color: var(--primary-2);
+}
+
+@media (max-width: 769px) {
+  .page {
+    padding: 0.6rem 0.6rem 6rem 0.6rem;
+  }
+
+  .player {
+    height: 52vh;
+  }
+}

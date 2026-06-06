@@ -21,11 +21,14 @@ import { navigatorShare } from "@/Utils/share";
 import Skeleton from "react-loading-skeleton";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/Utils/firebase";
+import { setHub } from "@/Utils/settings";
+import { useRouter } from "next/navigation";
 
 const externalImageLoader = ({ src }: { src: string }) =>
   `${process.env.NEXT_PUBLIC_TMBD_IMAGE_URL}${src}`;
 
 const HomeHero = () => {
+  const { push } = useRouter();
   const [data, setData] = useState<any>([]);
   const [images, setImages] = useState<any>([]);
   const [loading, setLoading] = useState<any>(true);
@@ -104,6 +107,16 @@ const HomeHero = () => {
   };
   return (
     <div className={styles.HomeHero}>
+      <button
+        type="button"
+        className={`${styles.changeHubBtn} btn`}
+        onClick={() => {
+          setHub("");
+          push("/");
+        }}
+      >
+        Change Hub
+      </button>
       <div className={styles.HomeCarousel}>
         {images.length > 0 ? (
           <Carousel

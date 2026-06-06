@@ -1,0 +1,295 @@
+.MetaDetailPage {
+  height: 100vh;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .MetaDetails {
+    height: 100%;
+    width: 100%;
+    border-radius: 1rem;
+    background: var(--primary-1);
+    padding: 1rem;
+    overflow: auto;
+    position: relative;
+    padding-top: 0;
+  }
+
+  .categoryNav {
+    position: sticky;
+    top: 0;
+    left: 0;
+    background: var(--primary-1);
+    padding: 1rem 0 0.5rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--primary-2);
+    z-index: 2;
+  }
+
+  .category {
+    display: flex;
+    width: 100%;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 1rem;
+    overflow-x: auto;
+
+    p {
+      white-space: nowrap;
+      margin: 0;
+    }
+  }
+
+  .categoryBlock {
+    display: block;
+    width: 100%;
+    margin: 0.75rem 0 0;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--primary-2);
+    border-radius: 0.5rem;
+    text-align: center;
+    cursor: pointer;
+    background: var(--bg-color);
+  }
+
+  .episodesBlock {
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    border-width: 2px;
+    padding: 0.85rem 1rem;
+    transition: all 0.2s ease;
+
+    &.active {
+      background: var(--hub-accent, var(--ascent-color));
+      border-color: var(--hub-accent, var(--ascent-color));
+      color: var(--primary-1) !important;
+      box-shadow: 0 8px 24px rgba(255, 59, 59, 0.25);
+    }
+
+    &:hover {
+      border-color: var(--hub-accent, var(--ascent-color));
+      color: var(--hub-accent, var(--ascent-color));
+    }
+  }
+
+  h3,
+  h4 {
+    color: var(--primary-3);
+    margin: 1rem 0 0.3rem 0;
+  }
+
+  p {
+    color: var(--primary-2);
+  }
+}
+
+.inactive {
+  cursor: pointer;
+  color: var(--primary-2);
+}
+
+.active {
+  cursor: pointer;
+  color: var(--ascent-color) !important;
+}
+
+.EpisodeList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.preWrap {
+  white-space: pre-line;
+}
+
+.countdown {
+  color: var(--ascent-color) !important;
+  font-size: 0.9rem;
+}
+
+.ratingRow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.malInlineLogo {
+  height: 2rem;
+  width: auto;
+}
+
+.episode {
+  margin: 0;
+  padding: 0.85rem;
+  background: var(--bg-color);
+  border-radius: 0.7rem;
+  border: 1px solid transparent;
+}
+
+.episodeGrid {
+  min-height: 4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  &:hover {
+    border-color: var(--ascent-color);
+  }
+}
+
+.episodeGridWrap {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.episodeTileHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.episodeNumber {
+  color: #d1d5db;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.episodeFiller {
+  background: rgba(250, 204, 21, 0.18);
+  border-color: rgba(250, 204, 21, 0.45);
+
+  &:hover {
+    border-color: rgba(250, 204, 21, 0.7);
+    background: rgba(250, 204, 21, 0.26);
+  }
+}
+
+.rangeSelector {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  label {
+    color: var(--primary-3);
+  }
+
+  select {
+    border: 1px solid var(--primary-2);
+    background: var(--primary-1);
+    color: var(--primary-3);
+    border-radius: 0.35rem;
+    padding: 0.4rem 0.65rem;
+    outline: none;
+  }
+}
+
+.cardGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.metaCard {
+  border: 1px solid var(--primary-2);
+  border-radius: 0.7rem;
+  background: var(--bg-color);
+  display: grid;
+  grid-template-columns: 4rem 1fr;
+  gap: 0.65rem;
+  align-items: center;
+  padding: 0.45rem;
+
+  img {
+    width: 4rem;
+    height: 5rem;
+    object-fit: cover;
+    border-radius: 0.4rem;
+  }
+
+  h4 {
+    margin: 0;
+    color: var(--primary-3);
+    font-size: 0.9rem;
+    line-height: 1.2;
+  }
+
+  p {
+    margin-top: 0.2rem;
+    font-size: 0.8rem;
+  }
+}
+
+.largeCardList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.relationCardWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.relationType {
+  color: var(--ascent-color);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.studioList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.studioItem {
+  border: 1px solid var(--primary-2);
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.6rem;
+  background: var(--bg-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.6rem;
+
+  span {
+    color: var(--primary-3);
+  }
+
+  small {
+    color: var(--primary-2);
+    font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 769px) {
+  .MetaDetailPage {
+    height: 100%;
+    width: 100%;
+    border-radius: 1rem;
+
+    .MetaDetails {
+      padding-top: 3rem;
+    }
+  }
+
+  .episodeGridWrap {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .cardGrid {
+    grid-template-columns: 1fr;
+  }
+}

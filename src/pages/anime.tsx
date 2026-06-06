@@ -1,7 +1,7 @@
-import CategorywisePage from "@/components/CategorywisePage";
+import JapaneseAnimePage from "@/components/JapaneseAnimePage";
 
 const Anime = () => {
-  return <CategorywisePage categoryDiv="tv" categoryPage="anime" />;
+  return <JapaneseAnimePage />;
 };
 
 export default Anime;

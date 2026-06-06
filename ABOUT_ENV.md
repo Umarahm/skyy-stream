@@ -58,6 +58,8 @@ NEXT_PUBLIC_STREAM_URL_FRE=
 NEXT_PUBLIC_STREAM_URL_POR=
 NEXT_PUBLIC_STREAM_URL_WEB=
 NEXT_PUBLIC_STREAM_URL_RIVE=
+NEXT_PUBLIC_STREAM_URL_MIRURO=
+NEXT_PUBLIC_STREAM_URL_ANIKOTO=
 ```
 
 These are all the different streaming services used, that can't be disclosed directly.  
@@ -80,7 +82,16 @@ NEXT_PUBLIC_PROVIDER_URL=
 
 You can find the api, if you search for **vidsrc scrappers**, here we are using a 3rd party API(not ours) which scrapes vidsrc.to and vidsrc.me
 
-## 5. Google Analytics
+## 5. Anikoto Home API (Japanese hub)
+
+```sh
+NEXT_PUBLIC_ANIKOTO_API=http://localhost:5007
+```
+
+Used by the Japanese hub homepage to fetch:
+`spotlight`, `latestEpisodes`, `newRelease`, `newAdded`, `justCompleted`, `topDay`, `topWeek`, `topMonth`.
+
+## 6. Google Analytics
 
 ```sh
 NEXT_PUBLIC_GT_MEASUREMENT_ID=

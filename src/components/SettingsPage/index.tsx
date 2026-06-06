@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import styles from "@/styles/Settings.module.scss";
 import Link from "next/link";
 import { FaGithub, FaGlobe, FaDiscord } from "react-icons/fa";
-import { getSettings, setSettings } from "@/Utils/settings";
+import { AppHub, getSettings, setSettings } from "@/Utils/settings";
 import { usePathname } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/Utils/firebase";
@@ -29,6 +29,8 @@ const SettingsPage = ({
   setSBColor,
   setSBBlur,
   setSOpacity,
+  hub,
+  onHubChange,
 }: any) => {
   const [user, setUser] = useState<any>(false);
   const [loading, setLoading] = useState(true);
@@ -166,6 +168,21 @@ const SettingsPage = ({
               <option value="#ff9800">Orange</option>
               <option value="#ff5722">Deep Orange</option>
               <option value="#795548">Brown</option>
+            </select>
+          </div>
+        </div>
+        <h1>Hub</h1>
+        <div className={styles.group}>
+          <div>
+            <label htmlFor="hub">Active Hub</label>
+            <select
+              name="hub"
+              id="hub"
+              value={hub || ""}
+              onChange={(e) => onHubChange?.(e.target.value as AppHub)}
+            >
+              <option value="movieTv">Movie / TV Hub</option>
+              <option value="japanese">Japanese Hub</option>
             </select>
           </div>
         </div>

@@ -1,7 +1,7 @@
-import MangaSearchPage from "@/components/MangaSearchPage";
+import JapaneseMangaPage from "@/components/JapaneseMangaPage";
 
 const Manga = () => {
-  return <MangaSearchPage />;
+  return <JapaneseMangaPage />;
 };
 
 export default Manga;

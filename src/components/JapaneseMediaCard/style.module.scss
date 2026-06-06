@@ -1,0 +1,27 @@
+.card {
+  width: clamp(10rem, 14vw, 12rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  color: var(--primary-3);
+  img {
+    width: 100%;
+    height: 16rem;
+    object-fit: cover;
+    border-radius: 0.25rem;
+    border: 1px solid var(--primary-2);
+  }
+}
+
+.meta {
+  h4 {
+    font-size: 0.95rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  p {
+    color: var(--primary-2);
+    font-size: 0.82rem;
+  }
+}

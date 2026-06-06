@@ -12,6 +12,8 @@ import NProgress from "nprogress";
 import "@/styles/nprogress.scss";
 import "react-loading-skeleton/dist/skeleton.css";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { getHub } from "@/Utils/settings";
+import { HUB_DEFAULT_ROUTE, isRouteAllowedForHub } from "@/Utils/hub";
 
 export default function App({ Component, pageProps }: any) {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,7 +23,18 @@ export default function App({ Component, pageProps }: any) {
   //   template: '<div class="bar" role="bar"><div class="peg"></div></div>'
   // });
   useEffect(() => {
+    const redirectIfBlocked = (url: string) => {
+      const hub = getHub();
+      if (!hub) return;
+      if (!isRouteAllowedForHub(hub, url)) {
+        Router.replace(HUB_DEFAULT_ROUTE[hub]);
+      }
+    };
+
+    redirectIfBlocked(window.location.pathname);
+
     Router.events.on("routeChangeStart", (url) => {
+      redirectIfBlocked(url);
       setIsLoading(true);
       NProgress.start();
     });

@@ -55,6 +55,35 @@
   --watchPageBtn: var(--primary-1);
 }
 
+.hub-movieTv {
+  --hub-accent: var(--ascent-color);
+}
+
+.hub-japanese {
+  --ascent-color: #ff3b3b;
+  --hub-accent: #ff3b3b;
+}
+
+.hub-japanese.dark {
+  --bg-color: #160406;
+  --bg-gradient: rgba(54, 8, 12, 0.85);
+  --primary-1: #1f070a;
+  --primary-2: #f87171;
+  --primary-3: #fecaca;
+  --primary-4: #fff1f2;
+  --watchPageBtn: #7f1d1d;
+}
+
+.hub-japanese.light {
+  --bg-color: #fff1f2;
+  --bg-gradient: rgba(255, 228, 230, 0.85);
+  --primary-1: #ffe4e6;
+  --primary-2: #be123c;
+  --primary-3: #9f1239;
+  --primary-4: #1f070a;
+  --watchPageBtn: #fecdd3;
+}
+
 // :root{
 //   --ascent-color:gold;
 //   --bg-color:rgba(27, 25, 25,0.1);
@@ -142,6 +171,18 @@ input {
   padding: 0.3rem 0.5rem;
   gap: 0.3rem;
   max-width: 15rem;
+}
+
+.hub-japanese .btn {
+  border-radius: 0.15rem;
+  box-shadow: 0 0 8px rgba(255, 59, 59, 0.35);
+  border: 1px solid rgba(255, 166, 166, 0.45);
+}
+
+.hub-japanese select,
+.hub-japanese input,
+.hub-japanese textarea {
+  border-radius: 0.2rem !important;
 }
 
 .sooner-toast,

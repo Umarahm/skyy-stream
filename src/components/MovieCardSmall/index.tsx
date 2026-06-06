@@ -35,7 +35,7 @@ const MovieCardSmall = ({ data, media_type, customHref, openInNewTab }: any) => 
       className={styles.MovieCardSmall}
       aria-label={data?.name || "poster"}
       data-tooltip-id="tooltip"
-      data-tooltip-html={`${data?.title?.length > 30 || data?.name?.length > 30 ? data?.title || data?.name : ""}`}
+      data-tooltip-html={`${data?.mediaLabel ? `${data.mediaLabel}<br/>` : ""}${data?.title?.length > 30 || data?.name?.length > 30 ? data?.title || data?.name : ""}`}
     >
       <motion.div
         whileHover={{ y: -7 }}
@@ -52,6 +52,7 @@ const MovieCardSmall = ({ data, media_type, customHref, openInNewTab }: any) => 
         <div
           className={`${styles.img} ${data?.poster_path !== null && data?.poster_path !== undefined ? "skeleton" : null}`}
         >
+          {data?.mediaLabel ? <span className={styles.mediaLabel}>{data.mediaLabel}</span> : null}
           {/* if rllic package is not available, then start using this code again, and comment/delete the rllic code */}
           {/* <AnimatePresence mode="sync">
           <motion.img
