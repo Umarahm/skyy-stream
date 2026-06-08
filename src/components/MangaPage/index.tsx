@@ -1,19 +1,14 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import styles from "./style.module.scss";
 import MovieCardSmall from "@/components/MovieCardSmall";
 import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 import { MdChevronLeft, MdChevronRight, MdSearch } from "react-icons/md";
 import { RiDiceFill } from "react-icons/ri";
+import axiosFetch from "@/Utils/fetchBackend";
 
 const dummyList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const baseApi = process.env.NEXT_PUBLIC_CONSUMET_API;
 const MAX_MANGA_PAGES = 5;
-
-const buildApiUrl = (path: string) => {
-  return `${baseApi?.replace(/\/+$/, "")}${path}`;
-};
 
 const mapMangaCardData = (item: any, index: number) => {
   const posterPath =
@@ -86,11 +81,14 @@ const MangaPage = () => {
     setList: any;
     setLoading: any;
   }) => {
-    if (!baseApi) return;
     if (page > MAX_MANGA_PAGES) return;
     setLoading(true);
     try {
-      const response = await axios.get(buildApiUrl(`${endpoint}?page=${page}`));
+      const response = await axiosFetch({
+        requestID: "mangaList",
+        mangaCategory: endpoint,
+        page,
+      });
       const mappedData = getMangaResults(response);
       if (page === 1) {
         setList(mappedData);
@@ -105,11 +103,10 @@ const MangaPage = () => {
   };
 
   const fetchRandomManga = async () => {
-    if (!baseApi) return;
     setLoadingRandom(true);
     setRandomManga([]);
     try {
-      const response = await axios.get(buildApiUrl("/manga/mangadex/random"));
+      const response = await axiosFetch({ requestID: "mangaRandom" });
       const mappedData = getMangaResults(response);
       if (mappedData.length > 0) {
         setRandomManga([mappedData[0]]);
@@ -125,19 +122,19 @@ const MangaPage = () => {
 
   useEffect(() => {
     fetchSection({
-      endpoint: "/manga/mangadex/recent",
+      endpoint: "recent",
       page: 1,
       setList: setRecentlyAired,
       setLoading: setLoadingRecent,
     });
     fetchSection({
-      endpoint: "/manga/mangadex/latest",
+      endpoint: "latest",
       page: 1,
       setList: setLatestUpdates,
       setLoading: setLoadingLatest,
     });
     fetchSection({
-      endpoint: "/manga/mangadex/popular",
+      endpoint: "popular",
       page: 1,
       setList: setPopularMangas,
       setLoading: setLoadingPopular,
@@ -155,7 +152,7 @@ const MangaPage = () => {
       const nextPage = recentPage + 1;
       setRecentPage(nextPage);
       fetchSection({
-        endpoint: "/manga/mangadex/recent",
+        endpoint: "recent",
         page: nextPage,
         setList: setRecentlyAired,
         setLoading: setLoadingRecent,
@@ -165,7 +162,7 @@ const MangaPage = () => {
       const nextPage = latestPage + 1;
       setLatestPage(nextPage);
       fetchSection({
-        endpoint: "/manga/mangadex/latest",
+        endpoint: "latest",
         page: nextPage,
         setList: setLatestUpdates,
         setLoading: setLoadingLatest,
@@ -175,7 +172,7 @@ const MangaPage = () => {
       const nextPage = popularPage + 1;
       setPopularPage(nextPage);
       fetchSection({
-        endpoint: "/manga/mangadex/popular",
+        endpoint: "popular",
         page: nextPage,
         setList: setPopularMangas,
         setLoading: setLoadingPopular,

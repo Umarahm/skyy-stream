@@ -1,17 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
 import styles from "./style.module.scss";
 import ReactPaginate from "react-paginate";
 import { AiFillLeftCircle, AiFillRightCircle } from "react-icons/ai";
 import MovieCardSmall from "@/components/MovieCardSmall";
 import Skeleton from "react-loading-skeleton";
+import axiosFetch from "@/Utils/fetchBackend";
 
 const dummyList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const baseApi = process.env.NEXT_PUBLIC_CONSUMET_API;
-
-const buildApiUrl = (path: string) => {
-  return `${baseApi?.replace(/\/+$/, "")}${path}`;
-};
 
 const mapMangaCardData = (item: any, index: number) => {
   const posterPath =
@@ -71,10 +66,12 @@ const MangaSearchPage = () => {
   const fetchSearchedManga = async () => {
     setLoading(true);
     try {
-      const encodedQuery = encodeURIComponent(query.trim());
-      const response = await axios.get(
-        buildApiUrl(`/manga/weebcentral/${encodedQuery}`),
-      );
+      const response = await axiosFetch({
+        requestID: "mangaSearch",
+        provider: "weebcentral",
+        query: query.trim(),
+        page: currentPage,
+      });
       parseSearchResponse(response);
     } catch (error) {
       console.error("Error searching manga:", error);
@@ -105,7 +102,6 @@ const MangaSearchPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!baseApi) return;
     if (query.trim().length === 0) {
       fetchTopManga();
       return;
@@ -157,7 +153,7 @@ const MangaSearchPage = () => {
         </h1>
       ) : (
         <h1>
-          Search Manga on <span className={styles.searchQuery}>Skyyplay</span>
+          Search Manga on<span className={styles.searchQuery}>Rive</span>
         </h1>
       )}
 

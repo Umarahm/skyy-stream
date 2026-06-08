@@ -220,12 +220,12 @@ const AnimeMetaDetails = ({
             >
               Recommended
             </p>
-            <p
+            {/* <p
               className={`${category === "characters" ? styles.active : styles.inactive}`}
               onClick={() => setCategory("characters")}
             >
               Characters
-            </p>
+            </p> */}
           </div>
           {!isMovie ? (
             <p
@@ -436,72 +436,72 @@ const AnimeMetaDetails = ({
               ))
             ) : (
               <>
-            {providerGroups.length > 0 ? (
-              <div className={styles.rangeSelector}>
-                <label htmlFor="provider-group">Provider</label>
-                <select
-                  id="provider-group"
-                  value={providerIndex}
-                  onChange={(e) => {
-                    setProviderIndex(Number(e.target.value));
-                    setRangeIndex(0);
-                  }}
-                >
-                  {providerGroups.map((group, idx) => (
-                    <option key={group.key} value={idx}>
-                      {group.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
-            {episodeRanges.length > 0 ? (
-              <div className={styles.rangeSelector}>
-                <label htmlFor="episode-range">Episodes</label>
-                <select
-                  id="episode-range"
-                  value={rangeIndex}
-                  onChange={(e) => setRangeIndex(Number(e.target.value))}
-                >
-                  {episodeRanges.map((range, idx) => (
-                    <option key={range.label} value={idx}>
-                      {range.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            ) : null}
-
-            <div className={styles.episodeGridWrap}>
-              {pagedEpisodes.map((episode: any) => (
-                <Link
-                  key={`${episode?.id}-${episode?.number}`}
-                  className={`${styles.episode} ${styles.episodeGrid} ${episode?.filler ? styles.episodeFiller : ""}`}
-                  href={
-                    animeId
-                      ? `/anime-watch?id=${animeId}&ep=${episode?.number || 1}&title=${encodeURIComponent(detailTitle)}&provider=${selectedProvider?.provider || ""}&mode=${selectedProvider?.mode || ""}&subType=${selectedProvider?.subType || ""}&episodeId=${encodeURIComponent(episode?.id || "")}`
-                      : animeSlug
-                        ? `/anime-watch?slug=${animeSlug}&ep=${episode?.number || 1}`
-                        : episode?.href && episode?.href !== "#"
-                          ? episode?.href
-                          : details?.watchUrl || "#"
-                  }
-                  target={
-                    animeId || animeSlug
-                      ? undefined
-                      : episode?.href && episode?.href !== "#"
-                        ? "_blank"
-                        : undefined
-                  }
-                  rel={animeId || animeSlug ? undefined : "noreferrer"}
-                >
-                  <div className={styles.episodeTileHead}>
-                    <span className={styles.episodeNumber}>{episode?.number}</span>
+                {providerGroups.length > 0 ? (
+                  <div className={styles.rangeSelector}>
+                    <label htmlFor="provider-group">Provider</label>
+                    <select
+                      id="provider-group"
+                      value={providerIndex}
+                      onChange={(e) => {
+                        setProviderIndex(Number(e.target.value));
+                        setRangeIndex(0);
+                      }}
+                    >
+                      {providerGroups.map((group, idx) => (
+                        <option key={group.key} value={idx}>
+                          {group.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </Link>
-              ))}
-            </div>
-            {totalEpisodeCount === 0 ? <p>No episodes found.</p> : null}
+                ) : null}
+                {episodeRanges.length > 0 ? (
+                  <div className={styles.rangeSelector}>
+                    <label htmlFor="episode-range">Episodes</label>
+                    <select
+                      id="episode-range"
+                      value={rangeIndex}
+                      onChange={(e) => setRangeIndex(Number(e.target.value))}
+                    >
+                      {episodeRanges.map((range, idx) => (
+                        <option key={range.label} value={idx}>
+                          {range.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                ) : null}
+
+                <div className={styles.episodeGridWrap}>
+                  {pagedEpisodes.map((episode: any) => (
+                    <Link
+                      key={`${episode?.id}-${episode?.number}`}
+                      className={`${styles.episode} ${styles.episodeGrid} ${episode?.filler ? styles.episodeFiller : ""}`}
+                      href={
+                        animeId
+                          ? `/anime-watch?id=${animeId}&ep=${episode?.number || 1}&title=${encodeURIComponent(detailTitle)}&provider=${selectedProvider?.provider || ""}&mode=${selectedProvider?.mode || ""}&subType=${selectedProvider?.subType || ""}&episodeId=${encodeURIComponent(episode?.id || "")}`
+                          : animeSlug
+                            ? `/anime-watch?slug=${animeSlug}&ep=${episode?.number || 1}`
+                            : episode?.href && episode?.href !== "#"
+                              ? episode?.href
+                              : details?.watchUrl || "#"
+                      }
+                      target={
+                        animeId || animeSlug
+                          ? undefined
+                          : episode?.href && episode?.href !== "#"
+                            ? "_blank"
+                            : undefined
+                      }
+                      rel={animeId || animeSlug ? undefined : "noreferrer"}
+                    >
+                      <div className={styles.episodeTileHead}>
+                        <span className={styles.episodeNumber}>{episode?.number}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                {totalEpisodeCount === 0 ? <p>No episodes found.</p> : null}
               </>
             )}
           </div>

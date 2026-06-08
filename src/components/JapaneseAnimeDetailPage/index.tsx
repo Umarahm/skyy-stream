@@ -30,6 +30,9 @@ const JapaneseAnimeDetailPage = () => {
   const id = params.get("id");
   const slug = params.get("slug");
 
+  const getTmdbImageUrl = (path?: string | null) =>
+    path ? `${process.env.NEXT_PUBLIC_TMBD_IMAGE_URL}${path}` : "";
+
   const sanitizeTitleForTmdb = (rawTitle: string) => {
     return rawTitle
       .replace(/\bseason\s*\d+\b/gi, " ")
@@ -39,6 +42,51 @@ const JapaneseAnimeDetailPage = () => {
       .replace(/[()\-_:]/g, " ")
       .replace(/\s+/g, " ")
       .trim();
+  };
+
+  const isLikelyAnimeTmdbResult = (item: any) =>
+    item?.original_language === "ja" &&
+    Array.isArray(item?.genre_ids) &&
+    item.genre_ids.includes(16);
+
+  const findAnimeTmdbMatch = async (title: string) => {
+    const searches = [title, `${title} anime`];
+
+    for (const query of searches) {
+      const searchRes: any = await axiosFetch({
+        requestID: "searchMulti",
+        query,
+        page: 1,
+      });
+      const results = (searchRes?.results || []).filter(
+        (item: any) =>
+          (item?.media_type === "tv" || item?.media_type === "movie") &&
+          (item?.backdrop_path || item?.id),
+      );
+      const animeMatch =
+        results.find((item: any) => item?.media_type === "tv" && isLikelyAnimeTmdbResult(item)) ||
+        results.find(isLikelyAnimeTmdbResult);
+
+      if (animeMatch) return animeMatch;
+    }
+
+    return null;
+  };
+
+  const getTmdbBackdrops = async (match: any) => {
+    if (!match?.id || !match?.media_type) return [];
+
+    const response = await axiosFetch({
+      requestID: `${match.media_type}Images`,
+      id: String(match.id),
+    });
+    const backdrops = (response?.backdrops || [])
+      .slice(0, 5)
+      .map((image: any) => getTmdbImageUrl(image?.file_path))
+      .filter(Boolean);
+
+    if (backdrops.length > 0) return backdrops;
+    return [getTmdbImageUrl(match?.backdrop_path)].filter(Boolean);
   };
 
   useEffect(() => {
@@ -66,30 +114,8 @@ const JapaneseAnimeDetailPage = () => {
         const queryTitle = sanitizeTitleForTmdb(
           getMiruroDisplayTitle(details) || details?.title || details?.titleJp || "",
         );
-        let backdropImage = "";
-        if (queryTitle) {
-          const searchRes: any = await axiosFetch({
-            requestID: "searchMulti",
-            query: queryTitle,
-            page: 1,
-          });
-          const tmdbMatch = (searchRes?.results || []).find(
-            (item: any) =>
-              (item?.media_type === "tv" || item?.media_type === "movie") &&
-              item?.backdrop_path,
-          );
-          if (tmdbMatch?.backdrop_path) {
-            backdropImage = `${process.env.NEXT_PUBLIC_TMBD_IMAGE_URL}${tmdbMatch.backdrop_path}`;
-          }
-        }
-
-        const imageArr = [
-          backdropImage,
-          details?.bannerImage,
-          getMiruroPoster(details),
-          details?.image,
-          details?.episodes?.episodes?.[0]?.image,
-        ].filter(Boolean) as string[];
+        const tmdbMatch = queryTitle ? await findAnimeTmdbMatch(queryTitle) : null;
+        const imageArr = tmdbMatch ? await getTmdbBackdrops(tmdbMatch) : [];
         setImages(imageArr.length > 0 ? imageArr : ["/images/logo.svg"]);
       } catch (error) {
         console.error(error);
@@ -147,7 +173,6 @@ const JapaneseAnimeDetailPage = () => {
               <div className={styles.curvy3}></div>
               <div className={styles.curvy4}></div>
               <div className={styles.rating}>
-                <img src="/icons/MAL_Logo.svg" alt="MAL" className={styles.malLogo} />
                 <span>
                   {animeData ? (
                     typeof animeData?.averageScore === "number" ? (
@@ -164,12 +189,7 @@ const JapaneseAnimeDetailPage = () => {
                 <img
                   src={getMiruroPoster(animeData)}
                   alt={title}
-                  style={{
-                    width: "10rem",
-                    height: "15rem",
-                    objectFit: "cover",
-                    borderRadius: "0.5rem",
-                  }}
+                  className={styles.animePosterImage}
                 />
               ) : (
                 <Skeleton height={240} width={160} borderRadius="0.5rem" />

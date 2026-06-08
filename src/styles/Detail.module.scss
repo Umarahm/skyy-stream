@@ -83,6 +83,13 @@
       left: -0.5rem;
       background: var(--bg-color);
 
+      .animePosterImage {
+        width: 10rem;
+        height: 15rem;
+        object-fit: cover;
+        border-radius: 0.5rem;
+      }
+
       .rating {
         position: absolute;
         top: -0.5rem;
@@ -290,6 +297,10 @@
       .poster {
         outline: 0.9rem solid var(--bg-color);
         width: unset;
+        .animePosterImage {
+          width: 7rem;
+          height: 10rem;
+        }
         .rating {
           position: absolute;
           top: -0.5rem;

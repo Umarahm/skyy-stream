@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  getMiruroBanner,
   getMiruroDisplayTitle,
   getMiruroMediaLabel,
   getMiruroPopular,
@@ -18,6 +17,58 @@ import Skeleton from "react-loading-skeleton";
 import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { setHub } from "@/Utils/settings";
 import { useRouter } from "next/navigation";
+import axiosFetch from "@/Utils/fetchBackend";
+
+const getTmdbImageUrl = (path?: string | null) =>
+  path ? `${process.env.NEXT_PUBLIC_TMBD_IMAGE_URL}${path}` : "";
+
+const isStrictAnimeTmdbResult = (item: any) =>
+  item?.original_language === "ja" &&
+  Array.isArray(item?.genre_ids) &&
+  item.genre_ids.includes(16) &&
+  item?.backdrop_path;
+
+const sanitizeTitleForTmdb = (rawTitle: string) =>
+  String(rawTitle || "")
+    .replace(/\b(the\s+)?final\s+season\b/gi, " ")
+    .replace(/\bseason\s*\d+\b/gi, " ")
+    .replace(/\b(s|season)\s*[ivxlcdm]+\b/gi, " ")
+    .replace(/\bpart\s*\d+\b/gi, " ")
+    .replace(/\bcour\s*\d+\b/gi, " ")
+    .replace(/\b[ivxlcdm]{1,6}\b/gi, " ")
+    .replace(/\b\d+(st|nd|rd|th)?\s+season\b/gi, " ")
+    .replace(/\b\d+\b/g, " ")
+    .replace(/[()\-_:]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const getTmdbAnimeBackdrop = async (title: string) => {
+  const cleanTitle = sanitizeTitleForTmdb(title);
+  if (!cleanTitle) return "";
+
+  const searchRes: any = await axiosFetch({
+    requestID: "searchMulti",
+    query: `${cleanTitle} anime`,
+    page: 1,
+  });
+  const results = (searchRes?.results || []).filter(
+    (item: any) => item?.media_type === "tv" || item?.media_type === "movie",
+  );
+  const match =
+    results.find((item: any) => item?.media_type === "tv" && isStrictAnimeTmdbResult(item)) ||
+    results.find(isStrictAnimeTmdbResult);
+
+  if (cleanTitle.toLowerCase() === "one piece" && match?.id && match?.media_type) {
+    const images: any = await axiosFetch({
+      requestID: `${match.media_type}Images`,
+      id: String(match.id),
+    });
+    const nextBackdrop = images?.backdrops?.[1]?.file_path || images?.backdrops?.[0]?.file_path;
+    return getTmdbImageUrl(nextBackdrop);
+  }
+
+  return getTmdbImageUrl(match?.backdrop_path);
+};
 
 const JapaneseHubHome = () => {
   const { push } = useRouter();
@@ -25,6 +76,7 @@ const JapaneseHubHome = () => {
   const [trending, setTrending] = useState<any[]>([]);
   const [popular, setPopular] = useState<any[]>([]);
   const [upcoming, setUpcoming] = useState<any[]>([]);
+  const [heroSlides, setHeroSlides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [heroIndex, setHeroIndex] = useState(0);
 
@@ -38,10 +90,19 @@ const JapaneseHubHome = () => {
           getMiruroPopular(),
           getMiruroUpcoming(),
         ]);
-        setSpotlight(spotlightRes?.results || []);
+        const spotlightList = spotlightRes?.results || [];
+        setSpotlight(spotlightList);
         setTrending(trendingRes?.results || []);
         setPopular(popularRes?.results || []);
         setUpcoming(upcomingRes?.results || []);
+        const tmdbSlides = await Promise.all(
+          spotlightList.slice(0, 8).map(async (item: any) => {
+            const title = getMiruroDisplayTitle(item);
+            const image = await getTmdbAnimeBackdrop(title);
+            return image ? { item, image } : null;
+          }),
+        );
+        setHeroSlides(tmdbSlides.filter(Boolean));
       } catch (error) {
         console.error(error);
       } finally {
@@ -53,16 +114,13 @@ const JapaneseHubHome = () => {
 
   const getName = (item: any) => getMiruroDisplayTitle(item);
   const getPoster = (item: any) => getMiruroPoster(item);
-  const getBanner = (item: any) => getMiruroBanner(item);
   const getId = (item: any) => item?.id || item?.malId || item?._id;
   const detailHref = (item: any) => {
     const id = getId(item);
     return id ? `/anime-details?id=${id}` : "/anime";
   };
-  const hero = spotlight?.[heroIndex] || spotlight?.[0];
-  const heroImages = spotlight
-    ?.map((item) => getBanner(item))
-    ?.filter(Boolean) as string[];
+  const hero = heroSlides?.[heroIndex]?.item || heroSlides?.[0]?.item || spotlight?.[0];
+  const heroImages = heroSlides.map((slide) => slide.image);
   const heroTitle = getName(hero);
   const heroTitleLength = heroTitle.length;
   const heroTitleClass =

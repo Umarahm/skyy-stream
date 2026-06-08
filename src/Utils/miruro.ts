@@ -1,5 +1,4 @@
-const MIRURO_BASE_URL =
-  process.env.NEXT_PUBLIC_MIRURO_API?.trim() || "https://miruro-api-dun.vercel.app";
+import axiosFetch from "./fetchBackend";
 
 type MiruroListResponse = {
   results?: any[];
@@ -9,53 +8,53 @@ type MiruroListResponse = {
   hasNextPage?: boolean;
 };
 
-const fetchJson = async <T>(url: string, fallback: T): Promise<T> => {
+const fetchJson = async <T>(
+  requestID: string,
+  params: Record<string, any>,
+  fallback: T,
+): Promise<T> => {
   try {
-    const res = await fetch(url);
-    if (!res.ok) return fallback;
-    return (await res.json()) as T;
+    const response = await axiosFetch({ requestID, ...params });
+    return (response ?? fallback) as T;
   } catch (error) {
     return fallback;
   }
 };
 
 export const getMiruroTrending = async (page?: number): Promise<MiruroListResponse> => {
-  const suffix = page ? `?page=${page}` : "";
-  return fetchJson<MiruroListResponse>(`${MIRURO_BASE_URL}/trending${suffix}`, {
+  return fetchJson<MiruroListResponse>("animeTrending", { page }, {
     results: [],
   });
 };
 
 export const getMiruroPopular = async (page?: number): Promise<MiruroListResponse> => {
-  const suffix = page ? `?page=${page}` : "";
-  return fetchJson<MiruroListResponse>(`${MIRURO_BASE_URL}/popular${suffix}`, {
+  return fetchJson<MiruroListResponse>("animePopular", { page }, {
     results: [],
   });
 };
 
 export const getMiruroRecent = async (page?: number): Promise<MiruroListResponse> => {
-  const suffix = page ? `?page=${page}` : "";
-  return fetchJson<MiruroListResponse>(`${MIRURO_BASE_URL}/recent${suffix}`, {
+  return fetchJson<MiruroListResponse>("animeRecent", { page }, {
     results: [],
   });
 };
 
 export const getMiruroUpcoming = async (): Promise<MiruroListResponse> =>
-  fetchJson<MiruroListResponse>(`${MIRURO_BASE_URL}/upcoming`, { results: [] });
+  fetchJson<MiruroListResponse>("animeUpcoming", {}, { results: [] });
 
 export const getMiruroSpotlight = async (): Promise<MiruroListResponse> =>
-  fetchJson<MiruroListResponse>(`${MIRURO_BASE_URL}/spotlight`, { results: [] });
+  fetchJson<MiruroListResponse>("animeSpotlight", {}, { results: [] });
 
 export const getMiruroInfo = async (id: string | number): Promise<any> =>
-  fetchJson<any>(`${MIRURO_BASE_URL}/info/${id}`, null);
+  fetchJson<any>("animeInfo", { id }, null);
 
 export const getMiruroEpisodes = async (id: string | number): Promise<any> =>
-  fetchJson<any>(`${MIRURO_BASE_URL}/episodes/${id}`, null);
+  fetchJson<any>("animeEpisodes", { id }, null);
 
 export const getMiruroWatchByEpisodeId = async (episodeId: string): Promise<any> => {
   const trimmed = String(episodeId || "").replace(/^\/+/, "");
   if (!trimmed) return null;
-  return fetchJson<any>(`${MIRURO_BASE_URL}/${trimmed}`, null);
+  return fetchJson<any>("animeWatchEpisode", { episodeId: trimmed }, null);
 };
 
 export const getMiruroSearch = async (
@@ -64,11 +63,7 @@ export const getMiruroSearch = async (
 ): Promise<MiruroListResponse> => {
   const trimmedQuery = String(query || "").trim();
   if (!trimmedQuery) return { results: [], page: 1, perPage: 20, total: 0, hasNextPage: false };
-  const params = new URLSearchParams({
-    query: trimmedQuery,
-    page: String(page),
-  });
-  return fetchJson<MiruroListResponse>(`${MIRURO_BASE_URL}/search?${params.toString()}`, {
+  return fetchJson<MiruroListResponse>("animeSearch", { query: trimmedQuery, page }, {
     results: [],
     page: 1,
     perPage: 20,
@@ -80,9 +75,9 @@ export const getMiruroSearch = async (
 export const getMiruroSuggestions = async (query: string): Promise<any[]> => {
   const trimmedQuery = String(query || "").trim();
   if (!trimmedQuery) return [];
-  const params = new URLSearchParams({ query: trimmedQuery });
   const response = await fetchJson<any>(
-    `${MIRURO_BASE_URL}/suggestions?${params.toString()}`,
+    "animeSuggestions",
+    { query: trimmedQuery },
     { results: [] },
   );
   if (Array.isArray(response)) return response;
@@ -96,12 +91,11 @@ export const getMiruroFiltered = async (
   format: "TV" | "MOVIE",
   page = 1,
 ): Promise<MiruroListResponse> => {
-  const params = new URLSearchParams({
-    genre: String(genre || "Action"),
+  return fetchJson<MiruroListResponse>("animeFilter", {
+    genreKeywords: String(genre || "Action"),
     format,
-    page: String(page),
-  });
-  return fetchJson<MiruroListResponse>(`${MIRURO_BASE_URL}/filter?${params.toString()}`, {
+    page,
+  }, {
     results: [],
     page: 1,
     perPage: 20,
@@ -109,6 +103,9 @@ export const getMiruroFiltered = async (
     hasNextPage: false,
   });
 };
+
+export const getMiruroSchedule = async (): Promise<MiruroListResponse> =>
+  fetchJson<MiruroListResponse>("animeSchedule", {}, { results: [] });
 
 export const getMiruroDisplayTitle = (item: any): string =>
   item?.title?.english ||

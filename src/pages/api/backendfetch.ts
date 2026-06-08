@@ -33,6 +33,13 @@ export default async function handler(
     season,
     episode,
     service,
+    slug,
+    ep,
+    format,
+    episodeId,
+    provider,
+    mangaCategory,
+    chapterId,
   }: any = ApiQuery;
 
   // console.log({
@@ -61,6 +68,13 @@ export default async function handler(
     season,
     episode,
     service,
+    slug,
+    ep,
+    format,
+    episodeId,
+    provider,
+    mangaCategory,
+    chapterId,
   });
   // Cache the result
   setCache(cacheKey, result);

@@ -23,6 +23,7 @@ function capitalizeFirstLetter(string: string) {
 }
 
 const dummyList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const MAX_ANIME_CATEGORY_PAGES = 20;
 const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
   const [categoryType, setCategoryType] = useState(categoryDiv);
   const [category, setCategory] = useState(
@@ -72,14 +73,20 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
           const results = Array.isArray(pageResponse?.results)
             ? pageResponse.results
             : [];
+          const targetAnimeFormat = String(categoryType || "tv").toUpperCase();
           const safeResults =
             category === "latest"
               ? results.filter(
-                  (item: any) => String(item?.format || "").toUpperCase() !== "OVA",
-                )
+                (item: any) => String(item?.format || "").toUpperCase() !== "OVA",
+              )
               : results;
+          const formatFilteredResults = safeResults.filter((item: any) => {
+            const itemFormat = String(item?.format || "").toUpperCase();
+            if (targetAnimeFormat === "MOVIE") return itemFormat === "MOVIE";
+            return itemFormat !== "MOVIE";
+          });
 
-          const mapped = safeResults.map((item: any, index: number) => ({
+          const mapped = formatFilteredResults.map((item: any, index: number) => ({
             id: item?.id || `${getMiruroDisplayTitle(item)}-${index}`,
             title: getMiruroDisplayTitle(item),
             poster_path: getMiruroPoster(item),
@@ -99,7 +106,7 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
 
           data = {
             page: pageFromApi,
-            total_pages: Math.min(10, Math.max(1, computedTotalPages)),
+            total_pages: Math.min(MAX_ANIME_CATEGORY_PAGES, Math.max(1, computedTotalPages)),
             results: mapped,
           };
         } else if (categoryPage === "kdrama") {
@@ -135,7 +142,8 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
           return;
         }
         setData(data.results);
-        setTotalpages(data.total_pages > 500 ? 500 : data.total_pages);
+        const maxPages = categoryPage === "anime" ? MAX_ANIME_CATEGORY_PAGES : 500;
+        setTotalpages(data.total_pages > maxPages ? maxPages : data.total_pages);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -145,9 +153,9 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
     fetchData();
   }, [categoryType, category, currentPage, trigger]);
 
-  // useEffect(()=>{
-  //   setCurrentPage(1);
-  // },[category])
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [category, categoryType]);
 
   const handleFilterClick = () => {
     setCurrentPage(1);

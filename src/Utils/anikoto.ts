@@ -1,3 +1,5 @@
+import axiosFetch from "./fetchBackend";
+
 type AnikotoHomeResponse = {
   ok?: boolean;
   cached?: boolean;
@@ -29,8 +31,6 @@ type AnikotoSearchResponse = {
   results?: any[];
 };
 
-const ANIKOTO_BASE_URL =
-  process.env.NEXT_PUBLIC_ANIKOTO_API?.trim() || "http://localhost:5007";
 const WATCH_CACHE_TTL_MS = 10000;
 const watchInFlightRequests = new Map<string, Promise<AnikotoWatchResponse>>();
 const watchResponseCache = new Map<
@@ -38,60 +38,23 @@ const watchResponseCache = new Map<
   { timestamp: number; value: AnikotoWatchResponse }
 >();
 
-const fetchHomeFrom = async (url: string): Promise<AnikotoHomeResponse | null> => {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    return null;
-  }
-};
-
 export const getAnikotoHome = async (): Promise<AnikotoHomeResponse> => {
-  const candidates = [`${ANIKOTO_BASE_URL}/home`, `${ANIKOTO_BASE_URL}/api/home`];
-  for (const endpoint of candidates) {
-    const response = await fetchHomeFrom(endpoint);
-    if (response?.data) return response;
-  }
-  return { ok: false, cached: false, data: {} };
-};
-
-const fetchAnimeDetailsFrom = async (
-  url: string,
-): Promise<AnikotoAnimeDetailsResponse | null> => {
   try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return await res.json();
+    const response = await axiosFetch({ requestID: "anikotoHome" });
+    return response?.data ? response : { ok: false, cached: false, data: {} };
   } catch (error) {
-    return null;
+    return { ok: false, cached: false, data: {} };
   }
 };
 
 export const getAnikotoAnimeDetails = async (
   slug: string,
 ): Promise<AnikotoAnimeDetailsResponse> => {
-  const candidates = [
-    `${ANIKOTO_BASE_URL}/anime/${slug}`,
-    `${ANIKOTO_BASE_URL}/api/anime/${slug}`,
-  ];
-  for (const endpoint of candidates) {
-    const response = await fetchAnimeDetailsFrom(endpoint);
-    if (response?.data) return response;
-  }
-  return { ok: false, data: null };
-};
-
-const fetchAnimeWatchFrom = async (
-  url: string,
-): Promise<AnikotoWatchResponse | null> => {
   try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return await res.json();
+    const response = await axiosFetch({ requestID: "anikotoAnimeDetails", slug });
+    return response?.data ? response : { ok: false, data: null };
   } catch (error) {
-    return null;
+    return { ok: false, data: null };
   }
 };
 
@@ -138,29 +101,17 @@ const pickBestSearchMatch = (items: any[], keyword: string) => {
   return ranked[0]?.score === 999 ? null : ranked[0]?.item || null;
 };
 
-const fetchSearchFrom = async (url: string): Promise<AnikotoSearchResponse | null> => {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    return null;
-  }
-};
-
 export const resolveAnikotoSlugFromKeyword = async (
   keyword: string,
 ): Promise<string | null> => {
   const trimmedKeyword = keyword.trim();
   if (!trimmedKeyword) return null;
-  const encodedKeyword = encodeURIComponent(trimmedKeyword);
-  const candidates = [
-    `${ANIKOTO_BASE_URL}/search?keyword=${encodedKeyword}&refresh=1`,
-    `${ANIKOTO_BASE_URL}/api/search?keyword=${encodedKeyword}&refresh=1`,
-  ];
 
-  for (const endpoint of candidates) {
-    const response = await fetchSearchFrom(endpoint);
+  try {
+    const response: AnikotoSearchResponse = await axiosFetch({
+      requestID: "anikotoSearch",
+      query: trimmedKeyword,
+    });
     const rawList =
       response?.data?.results ||
       response?.data?.animes ||
@@ -168,12 +119,14 @@ export const resolveAnikotoSlugFromKeyword = async (
       response?.data ||
       [];
     const list = Array.isArray(rawList) ? rawList : [];
-    if (list.length === 0) continue;
+    if (list.length === 0) return null;
     const matched = pickBestSearchMatch(list, trimmedKeyword);
     const slug = extractSlug(matched);
     if (slug) return slug;
     const firstSlug = extractSlug(list[0]);
     if (firstSlug) return firstSlug;
+  } catch (error) {
+    return null;
   }
 
   return null;
@@ -195,20 +148,18 @@ export const getAnikotoWatch = async (
     return existingInFlight;
   }
 
-  const candidates = [
-    `${ANIKOTO_BASE_URL}/watch/${slug}?ep=${ep}`,
-    `${ANIKOTO_BASE_URL}/api/watch/${slug}?ep=${ep}`,
-  ];
   const requestPromise = (async () => {
-    for (const endpoint of candidates) {
-      const response = await fetchAnimeWatchFrom(endpoint);
-      if (response?.data) {
-        watchResponseCache.set(cacheKey, {
-          timestamp: Date.now(),
-          value: response,
-        });
-        return response;
-      }
+    const response: AnikotoWatchResponse = await axiosFetch({
+      requestID: "anikotoWatch",
+      slug,
+      ep,
+    });
+    if (response?.data) {
+      watchResponseCache.set(cacheKey, {
+        timestamp: Date.now(),
+        value: response,
+      });
+      return response;
     }
     const fallback = { ok: false, data: null };
     watchResponseCache.set(cacheKey, {

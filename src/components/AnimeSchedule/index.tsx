@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import styles from "./style.module.scss";
 import Link from "next/link";
 import { MdOutlineCalendarToday, MdArrowForward, MdChevronLeft, MdChevronRight } from "react-icons/md";
+import { getMiruroSchedule } from "@/Utils/miruro";
 
 const AnimeSchedule = () => {
   const [scheduleData, setScheduleData] = useState<any[]>([]);
@@ -11,8 +12,7 @@ const AnimeSchedule = () => {
     const fetchSchedule = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_MIRURO_API}/schedule`);
-        const json = await res.json();
+        const json = await getMiruroSchedule();
         if (json?.results) {
           setScheduleData(json.results);
         }

@@ -14,6 +14,13 @@ interface Fetch {
   season?: number;
   episode?: number;
   service?: string;
+  slug?: string;
+  ep?: string | number;
+  format?: string;
+  episodeId?: string;
+  provider?: string;
+  mangaCategory?: string;
+  chapterId?: string;
 }
 export default async function axiosFetch({
   requestID,
@@ -28,11 +35,27 @@ export default async function axiosFetch({
   season,
   episode,
   service,
+  slug,
+  ep,
+  format,
+  episodeId,
+  provider,
+  mangaCategory,
+  chapterId,
 }: Fetch) {
   const request = requestID;
   const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
   const baseURL = "/api/backendfetch";
   const randomURL = process.env.NEXT_PUBLIC_RANDOM_URL;
+  const backendRequest = (requestID: string, params: Record<string, any> = {}) => {
+    const searchParams = new URLSearchParams({ requestID });
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        searchParams.set(key, String(value));
+      }
+    });
+    return `${baseURL}?${searchParams.toString()}`;
+  };
   const requests: any = {
     latestMovie: `${baseURL}?requestID=latestMovie&language=${language}&page=${page}`, //nowPlayingMovie
     latestTv: `${baseURL}?requestID=latestTv&language=${language}&page=${page}`, // airingTodayTv
@@ -99,6 +122,31 @@ export default async function axiosFetch({
     // EXTERNAL provider
     movieExternalVideoProvider: `${baseURL}?requestID=movieExternalVideoProvider&id=${id}`,
     tvExternalVideoProvider: `${baseURL}?requestID=tvExternalVideoProvider&id=${id}&season=${season}&episode=${episode}`,
+
+    // anime
+    animeTrending: backendRequest("animeTrending", { page }),
+    animePopular: backendRequest("animePopular", { page }),
+    animeRecent: backendRequest("animeRecent", { page }),
+    animeUpcoming: backendRequest("animeUpcoming"),
+    animeSpotlight: backendRequest("animeSpotlight"),
+    animeInfo: backendRequest("animeInfo", { id }),
+    animeEpisodes: backendRequest("animeEpisodes", { id }),
+    animeWatchEpisode: backendRequest("animeWatchEpisode", { episodeId }),
+    animeSearch: backendRequest("animeSearch", { query, page }),
+    animeSuggestions: backendRequest("animeSuggestions", { query }),
+    animeFilter: backendRequest("animeFilter", { genreKeywords, format, page }),
+    animeSchedule: backendRequest("animeSchedule"),
+    anikotoHome: backendRequest("anikotoHome"),
+    anikotoAnimeDetails: backendRequest("anikotoAnimeDetails", { slug }),
+    anikotoSearch: backendRequest("anikotoSearch", { query }),
+    anikotoWatch: backendRequest("anikotoWatch", { slug, ep }),
+
+    // manga
+    mangaList: backendRequest("mangaList", { mangaCategory, page }),
+    mangaRandom: backendRequest("mangaRandom"),
+    mangaSearch: backendRequest("mangaSearch", { provider, query, page }),
+    mangaInfo: backendRequest("mangaInfo", { provider, id }),
+    mangaRead: backendRequest("mangaRead", { provider, chapterId }),
   };
   const final_request = requests[request];
   if (!id && request.includes("Data")) {

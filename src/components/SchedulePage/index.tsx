@@ -3,6 +3,7 @@ import styles from "./style.module.scss";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { getHub } from "@/Utils/settings";
+import { getMiruroSchedule } from "@/Utils/miruro";
 
 const SchedulePage = () => {
   const [scheduleData, setScheduleData] = useState<any[]>([]);
@@ -28,8 +29,7 @@ const SchedulePage = () => {
     const fetchSchedule = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${process.env.NEXT_PUBLIC_MIRURO_API}/schedule`);
-        const json = await res.json();
+        const json = await getMiruroSchedule();
         if (json?.results) {
           setScheduleData(json.results);
         }

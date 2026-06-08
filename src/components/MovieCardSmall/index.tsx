@@ -35,7 +35,7 @@ const MovieCardSmall = ({ data, media_type, customHref, openInNewTab }: any) => 
       className={styles.MovieCardSmall}
       aria-label={data?.name || "poster"}
       data-tooltip-id="tooltip"
-      data-tooltip-html={`${data?.mediaLabel ? `${data.mediaLabel}<br/>` : ""}${data?.title?.length > 30 || data?.name?.length > 30 ? data?.title || data?.name : ""}`}
+      data-tooltip-content={data?.title || data?.name || ""}
     >
       <motion.div
         whileHover={{ y: -7 }}

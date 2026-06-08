@@ -14,6 +14,7 @@ import {
 import styles from "./style.module.scss";
 
 const dummyList = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const MAX_ANIME_SEARCH_PAGES = 20;
 const GENRES = [
   "Action",
   "Adventure",
@@ -121,7 +122,12 @@ const AnimeSearchPage = () => {
         const computedTotal = Math.max(1, Math.ceil(total / (perPage || 20)));
         const hasNextPage = Boolean(response?.hasNextPage);
         const fallbackTotal = hasNextPage ? apiPage + 1 : apiPage;
-        setTotalPages(computedTotal > 1 ? computedTotal : Math.max(1, fallbackTotal));
+        setTotalPages(
+          Math.min(
+            MAX_ANIME_SEARCH_PAGES,
+            computedTotal > 1 ? computedTotal : Math.max(1, fallbackTotal),
+          ),
+        );
       } finally {
         setLoading(false);
       }

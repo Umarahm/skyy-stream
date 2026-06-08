@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import axios from "axios";
 import Head from "next/head";
 import Skeleton from "react-loading-skeleton";
 import ReactPaginate from "react-paginate";
@@ -12,7 +11,10 @@ import {
   MdFullscreen,
 } from "react-icons/md";
 import { LuLaptopMinimal } from "react-icons/lu";
+import { PiFilePdfFill } from "react-icons/pi";
 import styles from "./style.module.scss";
+import MobileMangaSidebar from "./MobileMangaSidebar";
+import axiosFetch from "@/Utils/fetchBackend";
 
 type MangaChapter = {
   id: string;
@@ -38,11 +40,32 @@ type MangaPageImage = {
   headerForImage?: string;
 };
 
-const baseApi = process.env.NEXT_PUBLIC_CONSUMET_API;
 const CHAPTERS_PER_PAGE = 15;
+const INITIAL_PAGE_BATCH = 3;
+const PAGE_BATCH_SIZE = 3;
 
-const buildApiUrl = (path: string) => {
-  return `${baseApi?.replace(/\/+$/, "")}${path}`;
+const MangaImageWithLoader = ({
+  src,
+  alt,
+}: {
+  src: string;
+  alt: string;
+}) => {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <div className={styles.imageFrame}>
+      {!loaded && <div className={styles.staticImageLoader} aria-hidden="true" />}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        className={!loaded ? styles.pageImageHidden : ""}
+        onLoad={() => setLoaded(true)}
+      />
+    </div>
+  );
 };
 
 const MangaReadPage = () => {
@@ -60,9 +83,15 @@ const MangaReadPage = () => {
   const [loadingPages, setLoadingPages] = useState(true);
   const [error, setError] = useState("");
   const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
+  const [isPdfModeOpen, setIsPdfModeOpen] = useState(false);
   const [fullscreenIndex, setFullscreenIndex] = useState(0);
   const [desktopSpread, setDesktopSpread] = useState(false);
   const [isDesktopViewport, setIsDesktopViewport] = useState(false);
+  const [visiblePageCount, setVisiblePageCount] = useState(INITIAL_PAGE_BATCH);
+  const mangaScrollRef = useRef<HTMLDivElement | null>(null);
+  const pageLoadSentinelRef = useRef<HTMLDivElement | null>(null);
+  const pdfScrollRef = useRef<HTMLDivElement | null>(null);
+  const pdfLoadSentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const idFromQuery = params.get("id");
@@ -70,7 +99,7 @@ const MangaReadPage = () => {
   }, [params]);
 
   useEffect(() => {
-    if (!baseApi || !mangaId) {
+    if (!mangaId) {
       setLoadingInfo(false);
       setMangaInfo(null);
       return;
@@ -83,14 +112,12 @@ const MangaReadPage = () => {
       setExpandedChapterId("");
       setChapterPage(1);
       try {
-        const response = await axios.get(
-          buildApiUrl(`/manga/${provider}/info?id=${encodeURIComponent(mangaId)}`),
-        );
-        const infoPayload = response?.data || {};
+        const infoPayload = await axiosFetch({
+          requestID: "mangaInfo",
+          provider,
+          id: mangaId,
+        }) || {};
         setMangaInfo(infoPayload);
-        const firstChapterId = infoPayload?.chapters?.[0]?.id || "";
-        setSelectedChapterId(firstChapterId);
-        setExpandedChapterId(firstChapterId);
       } catch (err) {
         console.error("Error fetching manga info:", err);
         setError("Unable to load manga details.");
@@ -103,8 +130,9 @@ const MangaReadPage = () => {
   }, [mangaId, provider, language]);
 
   useEffect(() => {
-    if (!baseApi || !selectedChapterId) {
+    if (!selectedChapterId) {
       setChapterPages([]);
+      setVisiblePageCount(INITIAL_PAGE_BATCH);
       setLoadingPages(false);
       return;
     }
@@ -113,13 +141,14 @@ const MangaReadPage = () => {
       setLoadingPages(true);
       setError("");
       try {
-        const response = await axios.get(
-          buildApiUrl(
-            `/manga/${provider}/read?chapterId=${encodeURIComponent(selectedChapterId)}`,
-          ),
-        );
-        const readPayload = Array.isArray(response?.data) ? response.data : [];
+        const response = await axiosFetch({
+          requestID: "mangaRead",
+          provider,
+          chapterId: selectedChapterId,
+        });
+        const readPayload = Array.isArray(response) ? response : [];
         const sortedPages = [...readPayload].sort((a, b) => a.page - b.page);
+        setVisiblePageCount(INITIAL_PAGE_BATCH);
         setChapterPages(sortedPages);
       } catch (err) {
         console.error("Error fetching chapter pages:", err);
@@ -152,6 +181,18 @@ const MangaReadPage = () => {
     const start = (chapterPage - 1) * CHAPTERS_PER_PAGE;
     return chapterList.slice(start, start + CHAPTERS_PER_PAGE);
   }, [chapterList, chapterPage]);
+  const visibleChapterPages = useMemo(
+    () => chapterPages.slice(0, Math.min(visiblePageCount, chapterPages.length)),
+    [chapterPages, visiblePageCount],
+  );
+
+  const loadMoreVisiblePages = useCallback(() => {
+    setVisiblePageCount((prev) =>
+      Math.min(prev + PAGE_BATCH_SIZE, chapterPages.length),
+    );
+  }, [chapterPages.length]);
+
+  const hasMorePagesToRender = visiblePageCount < chapterPages.length;
 
   const fullscreenStep = desktopSpread ? 2 : 1;
   const fullscreenPages = useMemo(() => {
@@ -160,9 +201,20 @@ const MangaReadPage = () => {
   }, [chapterPages, fullscreenIndex, fullscreenStep]);
 
   const handleOpenFullscreen = (index: number) => {
+    const mobileViewport =
+      typeof window !== "undefined" ? window.innerWidth < 769 : !isDesktopViewport;
     setFullscreenIndex(index);
     setDesktopSpread(false);
+    setIsPdfModeOpen(mobileViewport);
+    setVisiblePageCount((prev) =>
+      Math.max(prev, Math.min(index + PAGE_BATCH_SIZE, chapterPages.length)),
+    );
     setIsFullscreenOpen(true);
+  };
+
+  const handleCloseFullscreen = () => {
+    setIsFullscreenOpen(false);
+    setIsPdfModeOpen(false);
   };
 
   const handlePrevFullscreen = () => {
@@ -198,10 +250,10 @@ const MangaReadPage = () => {
     if (!isFullscreenOpen) return;
     const keyHandler = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setIsFullscreenOpen(false);
-      } else if (event.key === "ArrowLeft" && canGoPrevFullscreen) {
+        handleCloseFullscreen();
+      } else if (!isPdfModeOpen && event.key === "ArrowLeft" && canGoPrevFullscreen) {
         handlePrevFullscreen();
-      } else if (event.key === "ArrowRight" && canGoNextFullscreen) {
+      } else if (!isPdfModeOpen && event.key === "ArrowRight" && canGoNextFullscreen) {
         handleNextFullscreen();
       }
     };
@@ -209,7 +261,70 @@ const MangaReadPage = () => {
     return () => {
       window.removeEventListener("keydown", keyHandler);
     };
-  }, [isFullscreenOpen, canGoPrevFullscreen, canGoNextFullscreen, fullscreenStep]);
+  }, [
+    isFullscreenOpen,
+    isPdfModeOpen,
+    canGoPrevFullscreen,
+    canGoNextFullscreen,
+    fullscreenStep,
+  ]);
+
+  useEffect(() => {
+    if (loadingPages || !hasMorePagesToRender || !pageLoadSentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          loadMoreVisiblePages();
+        }
+      },
+      {
+        root: isDesktopViewport ? mangaScrollRef.current : null,
+        rootMargin: "600px 0px",
+      },
+    );
+    observer.observe(pageLoadSentinelRef.current);
+    return () => {
+      observer.disconnect();
+    };
+  }, [
+    hasMorePagesToRender,
+    isDesktopViewport,
+    loadMoreVisiblePages,
+    loadingPages,
+    visiblePageCount,
+  ]);
+
+  useEffect(() => {
+    if (
+      !isFullscreenOpen ||
+      !isPdfModeOpen ||
+      !hasMorePagesToRender ||
+      !pdfLoadSentinelRef.current
+    ) {
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          loadMoreVisiblePages();
+        }
+      },
+      {
+        root: pdfScrollRef.current,
+        rootMargin: "600px 0px",
+      },
+    );
+    observer.observe(pdfLoadSentinelRef.current);
+    return () => {
+      observer.disconnect();
+    };
+  }, [
+    hasMorePagesToRender,
+    isFullscreenOpen,
+    isPdfModeOpen,
+    loadMoreVisiblePages,
+    visiblePageCount,
+  ]);
 
   return (
     <>
@@ -221,39 +336,49 @@ const MangaReadPage = () => {
       </Head>
       <div className={styles.MangaReadPage}>
         <div className={styles.biggerPic}>
-          <div className={styles.mangaPages}>
+          <div className={styles.mangaPages} ref={mangaScrollRef}>
             {loadingPages
               ? [1, 2, 3].map((item) => (
                 <Skeleton key={item} className={styles.pageSkeleton} />
               ))
-              : chapterPages.length > 0
-                ? chapterPages.map((pageImage, index) => (
-                  <div
-                    className={styles.pageCard}
-                    key={`${pageImage.page}-${pageImage.img}`}
-                    onClick={() => handleOpenFullscreen(index)}
-                  >
-                    <button className={styles.fullscreenBtn} aria-label="Open fullscreen">
-                      <MdFullscreen />
-                    </button>
-                    <img
-                      src={pageImage.img}
-                      alt={`Page ${pageImage.page}`}
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
+              : !selectedChapterId
+                ? (
+                  <div className={styles.selectChapterState}>
+                    <div className={styles.logoLoader} />
+                    <h2>Select a chapter to start reading</h2>
+                    <p>Thank you for reading manga with rive UwU</p>
                   </div>
-                ))
-                : mangaInfo?.image && (
-                  <div className={styles.pageCard}>
-                    <img
-                      src={mangaInfo.image}
-                      alt={mangaInfo.title || "Manga cover"}
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-                )}
+                )
+                : chapterPages.length > 0
+                  ? visibleChapterPages.map((pageImage, index) => (
+                    <div
+                      className={styles.pageCard}
+                      key={`${pageImage.page}-${pageImage.img}`}
+                      onClick={() => handleOpenFullscreen(index)}
+                    >
+                      <button className={styles.fullscreenBtn} aria-label="Open fullscreen">
+                        <MdFullscreen />
+                      </button>
+                      <span className={styles.pageNumberLabel}>Page {pageImage.page}</span>
+                      <MangaImageWithLoader
+                        src={pageImage.img}
+                        alt={`Page ${pageImage.page}`}
+                      />
+                    </div>
+                  ))
+                  : (
+                    <div className={styles.selectChapterState}>
+                      <div className={styles.logoLoader} />
+                      <h2>No pages found</h2>
+                      <p>Try another chapter from the chapter list.</p>
+                    </div>
+                  )}
+            {!loadingPages && hasMorePagesToRender && (
+              <div className={styles.pageLoadMore} ref={pageLoadSentinelRef}>
+                <div className={styles.logoLoader} />
+                <span>Loading more pages</span>
+              </div>
+            )}
           </div>
         </div>
         <div className={styles.biggerDetail}>
@@ -382,21 +507,56 @@ const MangaReadPage = () => {
           </div>
         </div>
       </div>
+      <MobileMangaSidebar
+        provider={provider}
+        language={language}
+        activeTab={activeTab}
+        mangaInfo={mangaInfo}
+        selectedChapter={selectedChapter}
+        selectedChapterNumber={selectedChapterNumber}
+        chapterListLength={chapterList.length}
+        paginatedChapters={paginatedChapters}
+        chapterPage={chapterPage}
+        chapterTotalPages={chapterTotalPages}
+        loadingInfo={loadingInfo}
+        error={error}
+        selectedChapterId={selectedChapterId}
+        expandedChapterId={expandedChapterId}
+        onProviderChange={setProvider}
+        onLanguageChange={setLanguage}
+        onActiveTabChange={setActiveTab}
+        onChapterPageChange={setChapterPage}
+        onChapterSelect={(chapterId: string) => {
+          setSelectedChapterId(chapterId);
+          setExpandedChapterId((prev) => (prev === chapterId ? "" : chapterId));
+        }}
+      />
       {isFullscreenOpen && (
         <div className={styles.fullscreenOverlay}>
           <div className={styles.pageIndicator}>
-            {fullscreenPages[0]?.page
-              ? `Page ${fullscreenPages[0].page}${
-                  desktopSpread && fullscreenPages[1]?.page
-                    ? ` - ${fullscreenPages[1].page}`
-                    : ""
+            {isPdfModeOpen
+              ? "PDF Mode"
+              : fullscreenPages[0]?.page
+                ? `Page ${fullscreenPages[0].page}${desktopSpread && fullscreenPages[1]?.page
+                  ? ` - ${fullscreenPages[1].page}`
+                  : ""
                 }`
-              : "Manga Reader"}
+                : "Manga Reader"}
           </div>
           <div className={styles.fullscreenActions}>
             {isDesktopViewport && (
+              <button
+                className={`${styles.iconBtn} ${isPdfModeOpen ? styles.iconBtnActive : ""}`}
+                onClick={() => setIsPdfModeOpen((prev) => !prev)}
+                aria-label="Toggle PDF scroll mode"
+                title="PDF scroll mode"
+              >
+                <PiFilePdfFill />
+              </button>
+            )}
+            {isDesktopViewport && (
               <>
-                <span className={styles.desktopModeLabel}>Enable desktop mode</span>
+                {/* <span className={styles.desktopModeLabel}>Enable desktop mode</span> */}
                 <button
                   className={`${styles.iconBtn} ${desktopSpread ? styles.iconBtnActive : ""}`}
                   onClick={() => setDesktopSpread((prev) => !prev)}
@@ -409,41 +569,72 @@ const MangaReadPage = () => {
             )}
             <button
               className={styles.iconBtn}
-              onClick={() => setIsFullscreenOpen(false)}
+              onClick={handleCloseFullscreen}
               aria-label="Close fullscreen"
             >
               <MdClose />
             </button>
           </div>
-          <div
-            className={`${styles.fullscreenBody} ${desktopSpread ? styles.fullscreenBodySpread : ""
+          {isPdfModeOpen ? (
+            <div
+              className={`${styles.pdfBody} ${
+                desktopSpread && isDesktopViewport ? styles.pdfBodySpread : ""
               }`}
-          >
-            {fullscreenPages.map((pageImage) => (
-              <div className={styles.fullscreenPage} key={`fullscreen-${pageImage.page}`}>
-                <img src={pageImage.img} alt={`Page ${pageImage.page}`} />
+              ref={pdfScrollRef}
+            >
+              {visibleChapterPages.map((pageImage) => (
+                <div className={styles.pdfPage} key={`pdf-${pageImage.page}-${pageImage.img}`}>
+                  <span className={styles.pageNumberLabel}>Page {pageImage.page}</span>
+                  <MangaImageWithLoader
+                    src={pageImage.img}
+                    alt={`Page ${pageImage.page}`}
+                  />
+                </div>
+              ))}
+              {hasMorePagesToRender && (
+                <div className={styles.pageLoadMore} ref={pdfLoadSentinelRef}>
+                  <div className={styles.logoLoader} />
+                  <span>Loading more pages</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <div
+                className={`${styles.fullscreenBody} ${desktopSpread ? styles.fullscreenBodySpread : ""
+                  }`}
+              >
+                {fullscreenPages.map((pageImage) => (
+                  <div className={styles.fullscreenPage} key={`fullscreen-${pageImage.page}`}>
+                    <span className={styles.pageNumberLabel}>Page {pageImage.page}</span>
+                    <MangaImageWithLoader
+                      src={pageImage.img}
+                      alt={`Page ${pageImage.page}`}
+                    />
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <div className={styles.navRail}>
-            <button
-              className={`${styles.navBtn} ${!canGoPrevFullscreen ? styles.navDisabled : ""}`}
-              onClick={handlePrevFullscreen}
-              disabled={!canGoPrevFullscreen}
-              aria-label="Previous page"
-            >
-              <MdChevronLeft />
-            </button>
-            <span className={styles.navLabel}>swipe</span>
-            <button
-              className={`${styles.navBtn} ${!canGoNextFullscreen ? styles.navDisabled : ""}`}
-              onClick={handleNextFullscreen}
-              disabled={!canGoNextFullscreen}
-              aria-label="Next page"
-            >
-              <MdChevronRight />
-            </button>
-          </div>
+              <div className={styles.navRail}>
+                <button
+                  className={`${styles.navBtn} ${!canGoPrevFullscreen ? styles.navDisabled : ""}`}
+                  onClick={handlePrevFullscreen}
+                  disabled={!canGoPrevFullscreen}
+                  aria-label="Previous page"
+                >
+                  <MdChevronLeft />
+                </button>
+                <span className={styles.navLabel}>swipe</span>
+                <button
+                  className={`${styles.navBtn} ${!canGoNextFullscreen ? styles.navDisabled : ""}`}
+                  onClick={handleNextFullscreen}
+                  disabled={!canGoNextFullscreen}
+                  aria-label="Next page"
+                >
+                  <MdChevronRight />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </>
