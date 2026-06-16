@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  getMiruroBanner,
   getMiruroDisplayTitle,
   getMiruroMediaLabel,
   getMiruroPopular,
@@ -78,6 +79,7 @@ const JapaneseHubHome = () => {
   const [upcoming, setUpcoming] = useState<any[]>([]);
   const [heroSlides, setHeroSlides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [heroLoading, setHeroLoading] = useState(true);
   const [heroIndex, setHeroIndex] = useState(0);
 
   useEffect(() => {
@@ -95,14 +97,12 @@ const JapaneseHubHome = () => {
         setTrending(trendingRes?.results || []);
         setPopular(popularRes?.results || []);
         setUpcoming(upcomingRes?.results || []);
-        const tmdbSlides = await Promise.all(
-          spotlightList.slice(0, 8).map(async (item: any) => {
-            const title = getMiruroDisplayTitle(item);
-            const image = await getTmdbAnimeBackdrop(title);
-            return image ? { item, image } : null;
-          }),
-        );
-        setHeroSlides(tmdbSlides.filter(Boolean));
+
+        const fallbackSlides = spotlightList.slice(0, 8).map((item: any) => ({
+          item,
+          image: getMiruroBanner(item),
+        }));
+        setHeroSlides(fallbackSlides.filter((slide) => slide.image));
       } catch (error) {
         console.error(error);
       } finally {
@@ -111,6 +111,44 @@ const JapaneseHubHome = () => {
     };
     load();
   }, []);
+
+  useEffect(() => {
+    if (!spotlight.length) {
+      setHeroLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadHeroBackdrops = async () => {
+      try {
+        setHeroLoading(true);
+        const tmdbSlides = await Promise.all(
+          spotlight.slice(0, 8).map(async (item: any) => {
+            const title = getMiruroDisplayTitle(item);
+            const image = await getTmdbAnimeBackdrop(title);
+            return image ? { item, image } : null;
+          }),
+        );
+        if (cancelled) return;
+
+        const enrichedSlides = tmdbSlides.filter(Boolean);
+        if (enrichedSlides.length > 0) {
+          setHeroSlides(enrichedSlides);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (!cancelled) setHeroLoading(false);
+      }
+    };
+
+    loadHeroBackdrops();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [spotlight]);
 
   const getName = (item: any) => getMiruroDisplayTitle(item);
   const getPoster = (item: any) => getMiruroPoster(item);
@@ -172,9 +210,9 @@ const JapaneseHubHome = () => {
               desktopHeight="80vh"
               objectFit="cover"
             />
-          ) : (
+          ) : heroLoading || loading ? (
             <Skeleton className={styles.CarouselLoading} />
-          )}
+          ) : null}
           <div className={styles.curvy}></div>
           <div className={styles.curvy2}></div>
           <div className={styles.curvy3}></div>
@@ -234,10 +272,13 @@ const JapaneseHubHome = () => {
               </div>
             </h1>
             <div className={styles.HomeListSection}>
-              {(loading || section.list.length === 0) &&
+              {loading &&
                 [1, 2, 3, 4, 5, 6].map((item) => (
                   <Skeleton key={item} className={styles.loading} />
                 ))}
+              {!loading && section.list.length === 0 ? (
+                <p className={styles.emptyMessage}>No titles found.</p>
+              ) : null}
               {section.list.map((item: any) => {
                 const mapped = toCardData(item);
                 return (

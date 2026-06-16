@@ -159,20 +159,32 @@ export default async function axiosFetch({
 
   // client side caching
   const cacheKey = final_request;
-  const cachedResult = await getCache(cacheKey);
+  let cachedResult: any = null;
+  try {
+    cachedResult = await getCache(cacheKey);
+  } catch (error) {
+    console.error("Client cache read failed:", error);
+  }
   if (
     cachedResult &&
     cachedResult !== null &&
     cachedResult !== undefined &&
     cachedResult !== ""
   ) {
-    return await cachedResult;
+    return cachedResult;
   }
 
   try {
     const response = await axios.get(final_request);
-    if (response?.data?.data !== null) setCache(cacheKey, response?.data);
-    return await response?.data; // Return the resolved data from the response
+    const payload = response?.data;
+    if (payload !== null && payload !== undefined) {
+      try {
+        await setCache(cacheKey, payload);
+      } catch (error) {
+        console.error("Client cache write failed:", error);
+      }
+    }
+    return payload;
   } catch (error) {
     console.error("Error fetching data:", error);
     // Handle errors appropriately (e.g., throw a custom error or return null)

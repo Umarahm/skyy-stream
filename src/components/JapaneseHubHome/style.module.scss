@@ -160,6 +160,12 @@
 }
 
 .HomeListAll {
+  .emptyMessage {
+    color: var(--primary-2);
+    margin: 0;
+    padding: 0.5rem 0;
+  }
+
   .HomeListSection {
     display: flex;
     margin: 1rem 0.5rem;
@@ -235,6 +241,12 @@
     }
   }
   .HomeListAll {
+    .emptyMessage {
+      color: var(--primary-2);
+      margin: 0;
+      padding: 0.5rem 0;
+    }
+
     .HomeListSection {
       .loading {
         height: 10rem;
