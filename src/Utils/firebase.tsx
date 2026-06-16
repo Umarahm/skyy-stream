@@ -1,14 +1,8 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 import { GoogleAuthProvider } from "firebase/auth";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FB_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FB_AUTH_DOMAIN,
@@ -19,9 +13,17 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FB_MEASUREMENT_ID,
 };
 
-// Initialize Firebase only if it hasn't been initialized already
-export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-// export const analytics = getAnalytics(app);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const isFirebaseConfigured = Boolean(
+  typeof process.env.NEXT_PUBLIC_FB_API_KEY === "string" &&
+    process.env.NEXT_PUBLIC_FB_API_KEY.trim().length > 0,
+);
+
+function createFirebaseApp(): FirebaseApp | null {
+  if (!isFirebaseConfigured) return null;
+  return getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+}
+
+export const app = createFirebaseApp();
+export const auth: Auth | null = app ? getAuth(app) : null;
+export const db: Firestore | null = app ? getFirestore(app) : null;
 export const provider = new GoogleAuthProvider();

@@ -32,6 +32,8 @@ const Library = () => {
   const [user, setUser] = useState<any>();
 
   useEffect(() => {
+    if (!auth) return;
+
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userID = user.uid;

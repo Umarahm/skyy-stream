@@ -55,6 +55,8 @@ const HomeHero = () => {
       }
     };
     fetchData();
+    if (!auth) return;
+
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userID = user.uid;

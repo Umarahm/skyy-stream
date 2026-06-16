@@ -84,6 +84,11 @@ const DetailPage = () => {
   }, [params, id]);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userID = user.uid;

@@ -1,25 +1,24 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import axiosFetch from "@/Utils/fetch";
 import { getCache, setCache } from "@/Utils/cache";
-export const runtime = "edge";
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-export default async function handler(
-  req: NextRequest,
-  res: NextApiResponse<any>,
-) {
-  const ApiQuery = Object.fromEntries(req?.nextUrl?.searchParams?.entries());
+
+const toStringValue = (value: string | string[] | undefined) =>
+  Array.isArray(value) ? value[0] : value;
+
+const toNumberValue = (value: string | string[] | undefined) => {
+  const parsed = Number(toStringValue(value));
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
+  const ApiQuery = req.query;
   const cacheKey = JSON.stringify(ApiQuery);
 
-  // Check if the result for this query is already cached
   const cachedResult = getCache(cacheKey);
   if (cachedResult) {
-    // return res.status(200).json(cachedResult);
-    console.log("got from cache");
-
-    return NextResponse.json(cachedResult);
+    return res.status(200).json(cachedResult);
   }
-  // console.log(req);
+
   const {
     requestID,
     id,
@@ -40,46 +39,30 @@ export default async function handler(
     provider,
     mangaCategory,
     chapterId,
-  }: any = ApiQuery;
+  } = ApiQuery;
 
-  // console.log({
-  //   requestID,
-  //   id,
-  //   language,
-  //   page,
-  //   genreKeywords,
-  //   sortBy,
-  //   year,
-  //   country,
-  //   query,
-  //   season,
-  //   episode,
-  // });
   const result: any = await axiosFetch({
-    requestID,
-    id,
-    language,
-    page,
-    genreKeywords,
-    sortBy,
-    year,
-    country,
-    query,
-    season,
-    episode,
-    service,
-    slug,
-    ep,
-    format,
-    episodeId,
-    provider,
-    mangaCategory,
-    chapterId,
+    requestID: toStringValue(requestID),
+    id: toStringValue(id),
+    language: toStringValue(language),
+    page: toNumberValue(page),
+    genreKeywords: toStringValue(genreKeywords),
+    sortBy: toStringValue(sortBy),
+    year: toNumberValue(year),
+    country: toStringValue(country),
+    query: toStringValue(query),
+    season: toNumberValue(season),
+    episode: toNumberValue(episode),
+    service: toStringValue(service),
+    slug: toStringValue(slug),
+    ep: toStringValue(ep),
+    format: toStringValue(format),
+    episodeId: toStringValue(episodeId),
+    provider: toStringValue(provider),
+    mangaCategory: toStringValue(mangaCategory),
+    chapterId: toStringValue(chapterId),
   });
-  // Cache the result
+
   setCache(cacheKey, result);
-  // console.log({ result });
-  // res?.status(200)?.json(result);
-  return NextResponse.json(result);
-  // res.status(200).json({ name: "John Doe" });
+  return res.status(200).json(result);
 }

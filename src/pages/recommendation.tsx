@@ -28,6 +28,8 @@ const Recommendation = ({ categoryDiv, categoryPage = null }: any) => {
   // console.log(capitalizeFirstLetter(categoryType));
 
   useEffect(() => {
+    if (!auth) return;
+
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userID = user.uid;

@@ -1,5 +1,3 @@
-import axios from "axios";
-
 interface Fetch {
   requestID: any;
   id?: string | null;
@@ -300,10 +298,11 @@ export default async function axiosFetch({
   // console.log({ final_request });
 
   try {
-    const response = await axios.get(final_request, {
-      params: { api_key: API_KEY },
-    });
-    return await response?.data; // Return the resolved data from the response
+    const requestUrl = new URL(final_request);
+    if (API_KEY) requestUrl.searchParams.set("api_key", API_KEY);
+    const response = await fetch(requestUrl.toString());
+    if (!response.ok) return;
+    return await response.json();
   } catch (error) {
     console.error("Error fetching data:", error);
     // Handle errors appropriately (e.g., throw a custom error or return null)

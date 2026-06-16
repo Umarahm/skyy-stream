@@ -37,6 +37,11 @@ const SettingsPage = ({
   const { push } = useRouter();
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     onAuthStateChanged(auth, (user) => {
       // console.log({ user });
       if (user) {
