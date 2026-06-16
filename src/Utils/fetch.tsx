@@ -191,6 +191,12 @@ export default async function axiosFetch({
     animeUpcoming: () => fetchJson(`${miruroBase}/upcoming`, animeListFallback),
     animeSpotlight: () => fetchJson(`${miruroBase}/spotlight`, animeListFallback),
     animeInfo: () => fetchJson(`${miruroBase}/info/${encodePath(id)}`, null),
+    animeRelations: () =>
+      fetchJson(`${miruroBase}/anime/${encodePath(id)}/relations`, { relations: [] }),
+    animeRecommendations: () =>
+      fetchJson(`${miruroBase}/anime/${encodePath(id)}/recommendations`, { recommendations: [] }),
+    animeCharacters: () =>
+      fetchJson(`${miruroBase}/anime/${encodePath(id)}/characters`, { characters: { edges: [] } }),
     animeEpisodes: () => fetchJson(`${miruroBase}/episodes/${encodePath(id)}`, null),
     animeWatchEpisode: () => fetchJson(`${miruroBase}/${encodePath(episodeId)}`, null),
     animeSearch: () => {
@@ -212,7 +218,8 @@ export default async function axiosFetch({
       });
       return fetchJson(`${miruroBase}/filter?${params.toString()}`, animePagedFallback);
     },
-    animeSchedule: () => fetchJson(`${miruroBase}/schedule`, animeListFallback),
+    animeSchedule: () =>
+      fetchJson(`${miruroBase}/schedule?page=${page || 1}`, animePagedFallback),
     anikotoHome: () =>
       fetchFirstJson(
         [`${anikotoBase}/home`, `${anikotoBase}/api/home`],

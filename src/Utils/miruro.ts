@@ -48,6 +48,15 @@ export const getMiruroSpotlight = async (): Promise<MiruroListResponse> =>
 export const getMiruroInfo = async (id: string | number): Promise<any> =>
   fetchJson<any>("animeInfo", { id }, null);
 
+export const getMiruroRelations = async (id: string | number): Promise<any> =>
+  fetchJson<any>("animeRelations", { id }, { relations: [] });
+
+export const getMiruroRecommendations = async (id: string | number): Promise<any> =>
+  fetchJson<any>("animeRecommendations", { id }, { recommendations: [] });
+
+export const getMiruroCharacters = async (id: string | number): Promise<any> =>
+  fetchJson<any>("animeCharacters", { id }, { characters: { edges: [] } });
+
 export const getMiruroEpisodes = async (id: string | number): Promise<any> =>
   fetchJson<any>("animeEpisodes", { id }, null);
 
@@ -104,8 +113,97 @@ export const getMiruroFiltered = async (
   });
 };
 
-export const getMiruroSchedule = async (): Promise<MiruroListResponse> =>
-  fetchJson<MiruroListResponse>("animeSchedule", {}, { results: [] });
+export const getMiruroSchedule = async (page = 1): Promise<MiruroListResponse> =>
+  fetchJson<MiruroListResponse>("animeSchedule", { page }, {
+    results: [],
+    page: 1,
+    perPage: 20,
+    total: 0,
+    hasNextPage: false,
+  });
+
+export const getMiruroScheduleAll = async (maxPages = 10): Promise<MiruroListResponse> => {
+  const pages = await Promise.all(
+    Array.from({ length: maxPages }, (_, index) => getMiruroSchedule(index + 1)),
+  );
+
+  const seen = new Set<string>();
+  const results: any[] = [];
+
+  pages.forEach((pageData) => {
+    (pageData?.results || []).forEach((item) => {
+      const key = String(item?.id || item?.aniId || item?.malId || item?.airingAt);
+      if (seen.has(key)) return;
+      seen.add(key);
+      results.push(item);
+    });
+  });
+
+  const lastPage = pages[pages.length - 1];
+
+  return {
+    results,
+    page: maxPages,
+    perPage: lastPage?.perPage,
+    total: lastPage?.total,
+    hasNextPage: lastPage?.hasNextPage,
+  };
+};
+
+const SCHEDULE_PAST_DAYS = 0;
+const SCHEDULE_FUTURE_DAYS = 3;
+
+export const normalizeScheduleDay = (timestamp: number): Date => {
+  const date = new Date(timestamp * 1000);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+export const isSameScheduleDay = (left: Date, right: Date): boolean =>
+  left.getFullYear() === right.getFullYear() &&
+  left.getMonth() === right.getMonth() &&
+  left.getDate() === right.getDate();
+
+export const getScheduleDayKey = (date: Date): string =>
+  `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
+export const getScheduleFallbackDays = (): Date[] => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return Array.from({ length: SCHEDULE_PAST_DAYS + SCHEDULE_FUTURE_DAYS + 1 }, (_, index) => {
+    const date = new Date(today);
+    date.setDate(today.getDate() + index - SCHEDULE_PAST_DAYS);
+    return date;
+  });
+};
+
+export const getScheduleDaysFromData = (items: any[]): Date[] => {
+  const dayMap = new Map<string, Date>();
+
+  items.forEach((item) => {
+    if (!item?.airingAt) return;
+    const day = normalizeScheduleDay(item.airingAt);
+    const key = getScheduleDayKey(day);
+    if (!dayMap.has(key)) dayMap.set(key, day);
+  });
+
+  return Array.from(dayMap.values()).sort((a, b) => a.getTime() - b.getTime());
+};
+
+export const getDefaultScheduleDay = (days: Date[]): Date => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return days.find((day) => isSameScheduleDay(day, today)) || today;
+};
+
+export const filterScheduleByDay = (items: any[], day: Date): any[] =>
+  items
+    .filter((item) => {
+      if (!item?.airingAt) return false;
+      return isSameScheduleDay(normalizeScheduleDay(item.airingAt), day);
+    })
+    .sort((a, b) => a.airingAt - b.airingAt);
 
 export const getMiruroDisplayTitle = (item: any): string =>
   item?.title?.english ||

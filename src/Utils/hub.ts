@@ -9,6 +9,7 @@ const SHARED_ROUTES = new Set([
   "/settings",
   "/downloads",
   "/disclaimer",
+  "/announcements",
   "/login",
   "/signup",
   "/404",

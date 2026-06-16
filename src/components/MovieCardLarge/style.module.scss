@@ -1,42 +1,81 @@
 .MovieCardSmall {
-  min-height: 12rem;
-  width: 23rem;
+  min-height: 10rem;
+  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   overflow: hidden;
-  // border: 1px solid var(--primary-2);
+  position: relative;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  background: color-mix(in srgb, var(--primary-1) 85%, #000 15%);
+  border: 1px solid var(--primary-2);
+  transition: border-color 0.2s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--color-blue) 50%, var(--primary-2) 50%);
+  }
   desktopOverflow {
     height: 12rem;
     width: 8rem;
     overflow: hidden;
   }
+  .bgImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.1;
+    z-index: 0;
+    filter: blur(12px);
+    transform: scale(1.1);
+  }
   .img {
-    height: 12rem;
-    width: 8rem;
-    border-radius: 0.5rem;
+    height: 9rem;
+    width: 6.5rem;
+    min-width: 6.5rem;
+    border-radius: 0.35rem;
     overflow: hidden;
     border: none;
     outline: none;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0;
     object-fit: cover;
+    z-index: 1;
   }
   .metaData {
-    width: 14rem;
+    width: 100%;
     margin-left: 1rem;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.35rem;
+    z-index: 1;
+    overflow: hidden;
+    p {
+      color: var(--primary-2);
+      font-size: 0.85rem;
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
     h1 {
       color: var(--primary-3);
       width: 100%;
-      margin-left: 0.2rem;
-      max-height: 4ch;
+      margin-left: 0;
+      max-height: 3.2ch;
       text-overflow: ellipsis;
       overflow: hidden;
-      font-size: 1.2rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      white-space: normal;
+      font-size: 1.05rem;
+      line-height: 1.3;
     }
   }
 }
@@ -44,25 +83,27 @@
 @media (max-width: 769px) {
   .MovieCardSmall {
     min-height: 8rem;
-    width: 18rem;
+    width: 100%;
     .img {
       height: 8rem;
-      width: 5rem;
+      width: 5.5rem;
+      min-width: 5.5rem;
       overflow: unset;
-      border-radius: 0.5rem;
+      border-radius: 0.35rem;
       overflow: hidden;
     }
     .metaData {
-      width: 12rem;
-      margin-left: 1rem;
+      width: 100%;
+      margin-left: 0.75rem;
       display: flex;
       justify-content: center;
       align-items: flex-start;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.35rem;
       h1 {
-        color: var(--primary-2);
-        width: 80%;
+        color: var(--primary-3);
+        width: 100%;
+        font-size: 1rem;
       }
     }
   }

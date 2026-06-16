@@ -1,6 +1,6 @@
 {
   "name": "rivestream-next",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@next/third-parties": "^14.2.4",
+    "@vidstack/react": "^1.15.6",
     "artplayer": "^5.1.6",
     "artplayer-plugin-hls-quality": "^2.0.0",
     "axios": "^1.7.2",

@@ -76,6 +76,12 @@ const MovieCardLarge = ({
       data-tooltip-id="tooltip"
       data-tooltip-html={`${data?.title?.length > 50 || data?.name?.length > 50 ? data?.title || data?.name : ""}`}
     >
+      <img 
+        src={imagePlaceholder ? "/images/logo.svg" : getImageSrc(data?.poster_path || data?.profile_path || data?.still_path)} 
+        className={styles.bgImage} 
+        alt="" 
+        aria-hidden="true" 
+      />
       <div
         className={`${styles.img} ${data?.poster_path !== null && data?.poster_path !== undefined ? "skeleton" : null}`}
       >
@@ -142,13 +148,12 @@ const MovieCardLarge = ({
         <p>
           {capitalizeFirstLetter(data?.media_type || media_type)}
           {data?.vote_average ? ` • ${data?.vote_average.toFixed(1)}` : null}
-          {!Number.isNaN(year) ? ` • ${year}` : null}{" "}
-          {lang !== undefined ? ` • ${lang.toUpperCase()}` : null}
+          {!Number.isNaN(year) && year > 0 ? ` • ${year}` : null}{" "}
+          {lang !== undefined && lang !== "" ? ` • ${lang.toUpperCase()}` : null}
         </p>
-        {Genres?.join(
-          ", ",
-        ) // || <Skeleton />
-        }
+        <p>
+          {Genres?.length > 0 ? Genres.join(", ") : data?.mediaLabel}
+        </p>
       </div>
     </Link>
   );

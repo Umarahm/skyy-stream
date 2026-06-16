@@ -36,7 +36,8 @@ import {
   MdTheaterComedy,
   MdOutlineTheaterComedy,
 } from "react-icons/md";
-import { RiEye2Line, RiEye2Fill } from "react-icons/ri";
+import { RiEye2Line, RiEye2Fill, RiCalendarScheduleLine } from "react-icons/ri";
+import { GrAnnounce } from "react-icons/gr";
 import { usePathname, useSearchParams } from "next/navigation";
 import { AppHub } from "@/Utils/settings";
 
@@ -174,8 +175,30 @@ const Navbar = ({ hub }: { hub: AppHub | "" }) => {
               <MdOutlineMenuBook className={styles.inactive} />
             )}
           </Link>
+          <Link
+            href="/schedule"
+            aria-label="Schedule"
+            data-tooltip-id="tooltip"
+            data-tooltip-content="Anime Schedule"
+            className={styles.mobileHide}
+          >
+            <RiCalendarScheduleLine
+              className={pathname === "/schedule" ? styles.active : styles.inactive}
+            />
+          </Link>
         </>
       )}
+      <Link
+        href="/announcements"
+        aria-label="Announcements"
+        data-tooltip-id="tooltip"
+        data-tooltip-content="Announcements"
+        className={styles.mobileHide}
+      >
+        <GrAnnounce
+          className={pathname === "/announcements" ? styles.active : styles.inactive}
+        />
+      </Link>
       <Link
         href="/settings"
         aria-label="Settings"

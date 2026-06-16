@@ -43,6 +43,24 @@ const toSubType = (rawSubtype: string, streamType: string) => {
   return String(streamType || "").toLowerCase().includes("hls") ? "h-sub" : "s-sub";
 };
 
+const selectPreferredProviderGroup = (groups: any[]) => {
+  if (!Array.isArray(groups) || groups.length === 0) return null;
+  const kiwiPreferred = groups.find(
+    (group) =>
+      String(group?.provider || "").toLowerCase() === "kiwi" &&
+      String(group?.subType || "").toLowerCase().includes("h-sub"),
+  );
+  if (kiwiPreferred) return kiwiPreferred;
+  const firstHSub = groups.find((group) => String(group?.subType || "").toLowerCase().includes("h-sub"));
+  if (firstHSub) return firstHSub;
+  return groups[0];
+};
+const HIDDEN_PROVIDERS = new Set(["bonk", "hop", "bee", "animedunya"]);
+const toEpisodeNumber = (value: any) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+};
+
 const toLargeCardData = (media: any) => ({
   id: media?.id,
   title: getMiruroDisplayTitle(media),
@@ -72,28 +90,57 @@ const formatCountdown = (seconds: number) => {
 const AnimeMetaDetails = ({
   details,
   episodesPayload,
+  charactersPayload,
   animeId,
   loading = false,
+  episodesLoading = false,
+  anilistEpisodeCount = null,
+  previewEpisode = null,
+  previewProvider = "kiwi",
+  previewType = "sub",
+  previewLoading = false,
+  previewSources = [],
+  previewSourceIndex = 0,
+  availablePreviewProviders = [],
+  availablePreviewTypes = ["sub"],
+  onPreviewProviderChange,
+  onPreviewTypeChange,
+  onPreviewSourceIndexChange,
+  onEpisodePreviewSelect,
 }: {
   details: any;
   episodesPayload?: any;
+  charactersPayload?: any;
   animeId?: string | null;
   loading?: boolean;
+  episodesLoading?: boolean;
+  anilistEpisodeCount?: number | null;
+  previewEpisode?: number | null;
+  previewProvider?: string;
+  previewType?: "sub" | "dub";
+  previewLoading?: boolean;
+  previewSources?: any[];
+  previewSourceIndex?: number;
+  availablePreviewProviders?: string[];
+  availablePreviewTypes?: Array<"sub" | "dub">;
+  onPreviewProviderChange?: (provider: string) => void;
+  onPreviewTypeChange?: (audioType: "sub" | "dub") => void;
+  onPreviewSourceIndexChange?: (index: number) => void;
+  onEpisodePreviewSelect?: (payload: { number: number; provider?: string }) => void;
 }) => {
+  const isMovie = /movie|film/i.test(String(details?.type || details?.format || ""));
   const [category, setCategory] = useState<
     "overview" | "episodes" | "recommended" | "relations" | "characters"
   >("overview");
   const [rangeIndex, setRangeIndex] = useState(0);
-  const [providerIndex, setProviderIndex] = useState(0);
   const [nowTs, setNowTs] = useState(Date.now());
   const pageSize = 100;
-  const enabledProviders = ["kiwi", "moo", "ally"];
   const providerGroups = useMemo(() => {
     const providers = episodesPayload?.providers || {};
     const groups: any[] = [];
     Object.entries(providers).forEach(([providerName, providerDataRaw]: [string, any]) => {
       const normalizedProvider = String(providerName || "").toLowerCase();
-      if (!enabledProviders.includes(normalizedProvider)) return;
+      if (!normalizedProvider || HIDDEN_PROVIDERS.has(normalizedProvider)) return;
       const providerData = providerDataRaw || {};
       const streamType = String(providerData?.streamType || "");
       const episodeCollections = providerData?.episodes || {};
@@ -114,25 +161,79 @@ const AnimeMetaDetails = ({
     return groups;
   }, [episodesPayload]);
 
-  useEffect(() => {
-    if (providerGroups.length === 0) {
-      setProviderIndex(0);
-      return;
-    }
-    const preferredIndex = providerGroups.findIndex((group) =>
-      String(group?.subType || "").toLowerCase().includes("h-sub"),
-    );
-    setProviderIndex(preferredIndex >= 0 ? preferredIndex : 0);
-  }, [providerGroups]);
-
-  const selectedProvider = providerGroups[providerIndex] || null;
-  const fallbackEpisodes = details?.episodes?.episodes || [];
-  const activeEpisodes = selectedProvider?.episodes || fallbackEpisodes;
-  const totalEpisodeCount = activeEpisodes.length;
+  const selectedProvider = useMemo(
+    () => selectPreferredProviderGroup(providerGroups),
+    [providerGroups],
+  );
+  const fallbackEpisodes = Array.isArray(details?.episodes?.episodes) ? details.episodes.episodes : [];
+  const fallbackEpisodeMap = useMemo(() => {
+    const map = new Map<number, any>();
+    fallbackEpisodes.forEach((episode: any) => {
+      const number = toEpisodeNumber(episode?.number);
+      if (!number || map.has(number)) return;
+      map.set(number, episode);
+    });
+    return map;
+  }, [fallbackEpisodes]);
+  const episodeMetaByNumber = useMemo(() => {
+    const providers = episodesPayload?.providers || {};
+    const map = new Map<number, { byProvider: Record<string, any>; first: any; filler: boolean }>();
+    Object.entries(providers).forEach(([providerName, providerDataRaw]: [string, any]) => {
+      const normalizedProvider = String(providerName || "").toLowerCase();
+      if (!normalizedProvider || HIDDEN_PROVIDERS.has(normalizedProvider)) return;
+      const providerData = providerDataRaw || {};
+      const episodeCollections = providerData?.episodes || {};
+      Object.values(episodeCollections).forEach((episodesListRaw: any) => {
+        if (!Array.isArray(episodesListRaw)) return;
+        episodesListRaw.forEach((episode: any) => {
+          const number = toEpisodeNumber(episode?.number);
+          if (!number) return;
+          const existing = map.get(number) || { byProvider: {}, first: null, filler: false };
+          if (!existing.byProvider[normalizedProvider] && episode?.id) {
+            existing.byProvider[normalizedProvider] = episode;
+          }
+          if (!existing.first && episode?.id) {
+            existing.first = episode;
+          }
+          existing.filler = existing.filler || Boolean(episode?.filler);
+          map.set(number, existing);
+        });
+      });
+    });
+    return map;
+  }, [episodesPayload]);
+  const inferredEpisodeCount = useMemo(() => {
+    const providerNumbers = Array.from(episodeMetaByNumber.keys());
+    const fallbackNumbers = Array.from(fallbackEpisodeMap.keys());
+    const maxProviderEpisode = providerNumbers.length > 0 ? Math.max(...providerNumbers) : 0;
+    const maxFallbackEpisode = fallbackNumbers.length > 0 ? Math.max(...fallbackNumbers) : 0;
+    return Math.max(maxProviderEpisode, maxFallbackEpisode);
+  }, [episodeMetaByNumber, fallbackEpisodeMap]);
+  const totalEpisodeCount = anilistEpisodeCount && anilistEpisodeCount > 0 ? anilistEpisodeCount : inferredEpisodeCount;
+  const resolvedEpisodeCount = totalEpisodeCount > 0 ? totalEpisodeCount : isMovie && animeId ? 1 : 0;
+  const activeEpisodes = useMemo(() => {
+    if (!resolvedEpisodeCount) return [];
+    const selectedProviderName = String(selectedProvider?.provider || "").toLowerCase();
+    return Array.from({ length: resolvedEpisodeCount }, (_, idx) => {
+      const number = idx + 1;
+      const providerMeta = episodeMetaByNumber.get(number);
+      const fallbackEpisode = fallbackEpisodeMap.get(number);
+      const selectedProviderEpisode = selectedProviderName
+        ? providerMeta?.byProvider?.[selectedProviderName]
+        : null;
+      const sourceEpisode = selectedProviderEpisode || providerMeta?.first || fallbackEpisode || {};
+      return {
+        ...sourceEpisode,
+        number,
+        filler: Boolean(sourceEpisode?.filler ?? providerMeta?.filler ?? fallbackEpisode?.filler),
+        mappedEpisodeId: selectedProviderEpisode?.id || providerMeta?.first?.id || fallbackEpisode?.id || "",
+      };
+    });
+  }, [resolvedEpisodeCount, selectedProvider?.provider, episodeMetaByNumber, fallbackEpisodeMap]);
   const episodeRanges = useMemo(() => {
     const ranges = [];
-    for (let start = 0; start < totalEpisodeCount; start += pageSize) {
-      const end = Math.min(totalEpisodeCount, start + pageSize);
+    for (let start = 0; start < resolvedEpisodeCount; start += pageSize) {
+      const end = Math.min(resolvedEpisodeCount, start + pageSize);
       ranges.push({
         start,
         end,
@@ -140,23 +241,27 @@ const AnimeMetaDetails = ({
       });
     }
     return ranges;
-  }, [totalEpisodeCount]);
+  }, [resolvedEpisodeCount]);
   const activeRange = episodeRanges[rangeIndex] || {
     start: 0,
-    end: Math.min(totalEpisodeCount, pageSize),
+    end: Math.min(resolvedEpisodeCount, pageSize),
   };
   const pagedEpisodes = useMemo(
     () =>
       activeEpisodes.slice(activeRange.start, activeRange.end),
     [activeEpisodes, activeRange],
   );
-  const isMovie = /movie|film/i.test(String(details?.type || details?.format || ""));
+  const isEpisodesLoading = loading || episodesLoading;
   const animeSlug = details?.episodes?.slug || details?.slug || "";
   const detailTitle = getMiruroDisplayTitle(details) || details?.title || "Anime";
   const description = details?.description || details?.synopsis || "";
   const recommendations = details?.recommendations?.nodes || [];
   const relations = details?.relations?.edges || [];
-  const characters = details?.characters?.edges || [];
+  const characters =
+    charactersPayload?.characters?.edges ||
+    charactersPayload?.edges ||
+    details?.characters?.edges ||
+    [];
   const studios = details?.studios?.nodes || [];
   const nextAiring = details?.nextAiringEpisode;
   const hasData = Boolean(details?.id || details?.title || details?.malId);
@@ -169,16 +274,11 @@ const AnimeMetaDetails = ({
   const typeStatusText = [details?.format || details?.type, details?.status]
     .filter(Boolean)
     .join(" • ");
-  const overviewRating =
-    typeof details?.averageScore === "number"
-      ? `${(details.averageScore / 10).toFixed(1)} / 10`
-      : details?.rating || null;
+  const malId = details?.malId;
 
   useEffect(() => {
-    if (isMovie && category === "episodes") {
-      setCategory("overview");
-    }
-  }, [isMovie, category]);
+    setRangeIndex(0);
+  }, [selectedProvider?.key]);
 
   useEffect(() => {
     if (!nextAiring?.airingAt) return;
@@ -220,21 +320,19 @@ const AnimeMetaDetails = ({
             >
               Recommended
             </p>
-            {/* <p
+            <p
               className={`${category === "characters" ? styles.active : styles.inactive}`}
               onClick={() => setCategory("characters")}
             >
               Characters
-            </p> */}
-          </div>
-          {!isMovie ? (
-            <p
-              className={`${styles.categoryBlock} ${styles.episodesBlock} ${category === "episodes" ? styles.active : styles.inactive}`}
-              onClick={() => setCategory("episodes")}
-            >
-              Episodes
             </p>
-          ) : null}
+          </div>
+          <p
+            className={`${styles.categoryBlock} ${styles.episodesBlock} ${category === "episodes" ? styles.active : styles.inactive}`}
+            onClick={() => setCategory("episodes")}
+          >
+            Episodes
+          </p>
         </div>
 
         {category === "overview" ? (
@@ -263,22 +361,12 @@ const AnimeMetaDetails = ({
                   </>
                 ) : null}
 
-                {overviewRating || details?.averageScore || details?.malScore ? (
+                {malId ? (
                   <>
-                    <h3>Rating</h3>
+                    <h3>MyAnimeList</h3>
                     <p className={styles.ratingRow}>
-                      {overviewRating ? <span>{overviewRating}</span> : null}
-                      {details?.averageScore || details?.malScore ? (
-                        <>
-                          {overviewRating ? <span>•</span> : null}
-                          <img src="/icons/MAL_Logo.svg" alt="MAL" className={styles.malInlineLogo} />
-                          <span>
-                            {typeof details?.averageScore === "number"
-                              ? (details.averageScore / 10).toFixed(1)
-                              : details.malScore}
-                          </span>
-                        </>
-                      ) : null}
+                      <img src="/icons/MAL_Logo.svg" alt="MAL" className={styles.malInlineLogo} />
+                      <span>{malId}</span>
                     </p>
                   </>
                 ) : null}
@@ -428,33 +516,14 @@ const AnimeMetaDetails = ({
           </div>
         ) : null}
 
-        {category === "episodes" && !isMovie ? (
+        {category === "episodes" ? (
           <div className={styles.EpisodeList}>
-            {loading ? (
+            {isEpisodesLoading ? (
               dummyList.map((item) => (
                 <Skeleton key={item} height={64} style={{ margin: "0.5rem 0" }} />
               ))
             ) : (
               <>
-                {providerGroups.length > 0 ? (
-                  <div className={styles.rangeSelector}>
-                    <label htmlFor="provider-group">Provider</label>
-                    <select
-                      id="provider-group"
-                      value={providerIndex}
-                      onChange={(e) => {
-                        setProviderIndex(Number(e.target.value));
-                        setRangeIndex(0);
-                      }}
-                    >
-                      {providerGroups.map((group, idx) => (
-                        <option key={group.key} value={idx}>
-                          {group.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                ) : null}
                 {episodeRanges.length > 0 ? (
                   <div className={styles.rangeSelector}>
                     <label htmlFor="episode-range">Episodes</label>
@@ -469,39 +538,101 @@ const AnimeMetaDetails = ({
                         </option>
                       ))}
                     </select>
+                    {animeId && previewEpisode ? (
+                      <>
+                        <span className={styles.streamContext}>
+                          {detailTitle} • EP {previewEpisode}
+                        </span>
+                        <label htmlFor="episode-audio">Audio</label>
+                        <select
+                          id="episode-audio"
+                          value={previewType}
+                          onChange={(event) =>
+                            onPreviewTypeChange?.(event.target.value === "dub" ? "dub" : "sub")
+                          }
+                        >
+                          {availablePreviewTypes.map((audioType) => (
+                            <option key={audioType} value={audioType}>
+                              {audioType.toUpperCase()}
+                            </option>
+                          ))}
+                        </select>
+                        <label htmlFor="episode-provider">Source</label>
+                        <select
+                          id="episode-provider"
+                          value={previewProvider}
+                          onChange={(event) => onPreviewProviderChange?.(event.target.value)}
+                        >
+                          {availablePreviewProviders.map((provider) => (
+                            <option key={provider} value={provider}>
+                              {provider.toUpperCase()}
+                            </option>
+                          ))}
+                        </select>
+                        <label htmlFor="episode-stream">Server</label>
+                        <select
+                          id="episode-stream"
+                          value={previewSourceIndex}
+                          onChange={(event) => onPreviewSourceIndexChange?.(Number(event.target.value))}
+                          disabled={previewLoading || previewSources.length === 0}
+                        >
+                          {previewSources.length > 0 ? (
+                            previewSources.map((source: any, idx: number) => (
+                              <option key={`${source?.server || "src"}-${idx}`} value={idx}>
+                                {source?.server || `Source ${idx + 1}`}
+                              </option>
+                            ))
+                          ) : (
+                            <option value={0}>No source</option>
+                          )}
+                        </select>
+                      </>
+                    ) : null}
                   </div>
                 ) : null}
 
                 <div className={styles.episodeGridWrap}>
-                  {pagedEpisodes.map((episode: any) => (
-                    <Link
-                      key={`${episode?.id}-${episode?.number}`}
-                      className={`${styles.episode} ${styles.episodeGrid} ${episode?.filler ? styles.episodeFiller : ""}`}
-                      href={
-                        animeId
-                          ? `/anime-watch?id=${animeId}&ep=${episode?.number || 1}&title=${encodeURIComponent(detailTitle)}&provider=${selectedProvider?.provider || ""}&mode=${selectedProvider?.mode || ""}&subType=${selectedProvider?.subType || ""}&episodeId=${encodeURIComponent(episode?.id || "")}`
-                          : animeSlug
-                            ? `/anime-watch?slug=${animeSlug}&ep=${episode?.number || 1}`
+                  {pagedEpisodes.map((episode: any) => {
+                    const episodeNumber = Number(episode?.number || 1);
+                    const isPreviewActive = previewEpisode === episodeNumber;
+                    return (
+                      <Link
+                        key={`${episode?.mappedEpisodeId || episode?.id || "ep"}-${episode?.number}`}
+                        className={`${styles.episode} ${styles.episodeGrid} ${episode?.filler ? styles.episodeFiller : ""} ${isPreviewActive ? styles.episodeActive : ""}`}
+                        href={
+                          animeId
+                            ? `/anime-watch?id=${animeId}&ep=${episodeNumber}&title=${encodeURIComponent(detailTitle)}&provider=${selectedProvider?.provider || ""}&mode=${selectedProvider?.mode || ""}&subType=${selectedProvider?.subType || ""}&episodeId=${encodeURIComponent(episode?.mappedEpisodeId || episode?.id || "")}`
+                            : animeSlug
+                              ? `/anime-watch?slug=${animeSlug}&ep=${episodeNumber}`
+                              : episode?.href && episode?.href !== "#"
+                                ? episode?.href
+                                : details?.watchUrl || "#"
+                        }
+                        onClick={(event) => {
+                          if (!animeId || !onEpisodePreviewSelect) return;
+                          event.preventDefault();
+                          onEpisodePreviewSelect({
+                            number: episodeNumber,
+                            provider: selectedProvider?.provider || "kiwi",
+                          });
+                        }}
+                        target={
+                          animeId || animeSlug
+                            ? undefined
                             : episode?.href && episode?.href !== "#"
-                              ? episode?.href
-                              : details?.watchUrl || "#"
-                      }
-                      target={
-                        animeId || animeSlug
-                          ? undefined
-                          : episode?.href && episode?.href !== "#"
-                            ? "_blank"
-                            : undefined
-                      }
-                      rel={animeId || animeSlug ? undefined : "noreferrer"}
-                    >
-                      <div className={styles.episodeTileHead}>
-                        <span className={styles.episodeNumber}>{episode?.number}</span>
-                      </div>
-                    </Link>
-                  ))}
+                              ? "_blank"
+                              : undefined
+                        }
+                        rel={animeId || animeSlug ? undefined : "noreferrer"}
+                      >
+                        <div className={styles.episodeTileHead}>
+                          <span className={styles.episodeNumber}>{episodeNumber}</span>
+                        </div>
+                      </Link>
+                    );
+                  })}
                 </div>
-                {totalEpisodeCount === 0 ? <p>No episodes found.</p> : null}
+                {resolvedEpisodeCount === 0 ? <p>No episodes found.</p> : null}
               </>
             )}
           </div>

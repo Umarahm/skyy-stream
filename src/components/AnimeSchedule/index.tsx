@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import styles from "./style.module.scss";
 import Link from "next/link";
 import { MdOutlineCalendarToday, MdArrowForward, MdChevronLeft, MdChevronRight } from "react-icons/md";
-import { getMiruroSchedule } from "@/Utils/miruro";
+import { filterScheduleByDay, getMiruroScheduleAll } from "@/Utils/miruro";
 
 const AnimeSchedule = () => {
   const [scheduleData, setScheduleData] = useState<any[]>([]);
@@ -12,7 +12,7 @@ const AnimeSchedule = () => {
     const fetchSchedule = async () => {
       try {
         setLoading(true);
-        const json = await getMiruroSchedule();
+        const json = await getMiruroScheduleAll(10);
         if (json?.results) {
           setScheduleData(json.results);
         }
@@ -25,22 +25,10 @@ const AnimeSchedule = () => {
     fetchSchedule();
   }, []);
 
-  const isSameDay = (d1: Date, d2: Date) => {
-    return (
-      d1.getFullYear() === d2.getFullYear() &&
-      d1.getMonth() === d2.getMonth() &&
-      d1.getDate() === d2.getDate()
-    );
-  };
-
   const todaysSchedule = useMemo(() => {
     const today = new Date();
-    return scheduleData
-      .filter((item) => {
-        const airingDate = new Date(item.airingAt * 1000);
-        return isSameDay(airingDate, today);
-      })
-      .sort((a, b) => a.airingAt - b.airingAt);
+    today.setHours(0, 0, 0, 0);
+    return filterScheduleByDay(scheduleData, today);
   }, [scheduleData]);
 
   const formatTime = (timestamp: number) => {

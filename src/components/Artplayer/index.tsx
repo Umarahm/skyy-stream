@@ -9,12 +9,14 @@ function destroyHls(hls: any) {
     hls.stopLoad?.();
     hls.detachMedia?.();
     hls.destroy?.();
-  } catch (_) {}
+  } catch (_) { }
 }
 
 export default function Player({
   option,
   captions,
+  skipSegments = [],
+  onPlaybackError,
   getInstance,
   format,
   ...rest
@@ -46,11 +48,44 @@ export default function Player({
         destroyHls(hlsInstance);
         hlsInstance = null;
 
-        const hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-        art.hls = hls;
-        hlsInstance = hls;
+        try {
+          const hls = new Hls({
+            xhrSetup: (xhr, url) => {
+              let newUrl = url;
+              
+              if (newUrl.startsWith("http://") && window.location.protocol === "https:") {
+                newUrl = newUrl.replace(/^http:\/\//, "https://");
+              }
+              
+              if (newUrl.includes("url=http://")) {
+                newUrl = newUrl.replace(/url=http:\/\//g, "url=https://");
+              }
+              if (newUrl.includes("url=http%3A%2F%2F")) {
+                newUrl = newUrl.replace(/url=http%3A%2F%2F/g, "url=https%3A%2F%2F");
+              }
+
+              if (newUrl !== url) {
+                const currentResponseType = xhr.responseType;
+                const currentTimeout = xhr.timeout;
+                const currentWithCredentials = xhr.withCredentials;
+                xhr.open("GET", newUrl, true);
+                xhr.responseType = currentResponseType;
+                xhr.timeout = currentTimeout;
+                xhr.withCredentials = currentWithCredentials;
+              }
+            },
+          });
+          hls.loadSource(url);
+          hls.attachMedia(video);
+          art.hls = hls;
+          hlsInstance = hls;
+        } catch (error) {
+          console.error("HLS init failed:", error);
+          art.notice.show = "Video Load Error";
+          if (typeof onPlaybackError === "function") {
+            onPlaybackError("Video Load Error");
+          }
+        }
       } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
         video.src = url;
       } else {
@@ -69,119 +104,121 @@ export default function Player({
     const subtitles =
       captions?.length > 0
         ? captions.map((ele: any) => ({
-            default: Boolean(ele?.default),
-            html: ele?.label,
-            url: ele?.file,
-          }))
+          default: Boolean(ele?.default),
+          html: ele?.label,
+          url: ele?.file,
+        }))
         : [{ html: "No Captions", url: "" }];
 
     // ── Create player ───────────────────────────────────────────────────────
     Artplayer.MOBILE_CLICK_PLAY = true;
 
-    const art = new Artplayer({
-      ...option,
-      container: artRef.current,
-      setting: true,
-      fullscreen: true,
-      autoOrientation: true,
-      flip: true,
-      pip: true,
-      playbackRate: true,
-      aspectRatio: true,
-      type: format === "hls" ? "m3u8" : "mp4",
-      subtitle: {
-        url: defaultCaption?.file || "",
-        // Proxy URLs don't end in .vtt so Artplayer can't auto-detect the
-        // format — force it to always treat captions as WebVTT.
-        type: "vtt",
-        encoding: "utf-8",
-        // Allow <b>, <i>, <u>, <ruby> etc. inside VTT cues to render as real
-        // HTML rather than being escaped to plain text.
-        escape: false,
-      },
-      airplay: true,
-      mutex: true,
-      subtitleOffset: true,
-      miniProgressBar: true,
-      autoplay: true,
-      hotkey: true,
-      screenshot: true,
-      customType: format === "hls" ? { m3u8: playM3u8 } : {},
-      settings: [
-        {
-          html: "Subtitle",
-          width: 250,
-          tooltip: "",
-          selector: subtitles,
-          onSelect(item: any) {
-            if (item?.url) {
-              // Use switch() so we can force type: 'vtt' — proxy URLs have no
-              // .vtt extension and Artplayer can't auto-detect the format.
-              art.subtitle.switch(item.url, { name: item.html, type: "vtt" });
-            } else {
-              art.subtitle.url = "";
-            }
-            return item?.html;
-          },
+    let art: any = null;
+    try {
+      art = new Artplayer({
+        ...option,
+        container: artRef.current,
+        setting: true,
+        fullscreen: true,
+        autoOrientation: true,
+        flip: true,
+        pip: true,
+        playbackRate: true,
+        aspectRatio: true,
+        type: format === "hls" ? "m3u8" : "mp4",
+        subtitle: {
+          url: defaultCaption?.file || "",
+          // Proxy URLs don't end in .vtt so Artplayer can't auto-detect the
+          // format — force it to always treat captions as WebVTT.
+          type: "vtt",
+          encoding: "utf-8",
+          // Allow <b>, <i>, <u>, <ruby> etc. inside VTT cues to render as real
+          // HTML rather than being escaped to plain text.
+          escape: false,
         },
-        {
-          html: "Watch Party",
-          width: 250,
-          height: 500,
-          icon: '<img src="/images/logo512.svg" alt="watchparty"/>',
-          selector: [
-            {
-              html: "watchparty.me",
-              url: "https://www.watchparty.me/create?video=" + option?.url,
+        airplay: true,
+        mutex: true,
+        subtitleOffset: true,
+        miniProgressBar: true,
+        autoplay: true,
+        hotkey: true,
+        screenshot: true,
+        customType: format === "hls" ? { m3u8: playM3u8 } : {},
+        settings: [
+          {
+            html: "Subtitle",
+            width: 250,
+            tooltip: "",
+            selector: subtitles,
+            onSelect(item: any) {
+              if (item?.url) {
+                // Use switch() so we can force type: 'vtt' — proxy URLs have no
+                // .vtt extension and Artplayer can't auto-detect the format.
+                art.subtitle.switch(item.url, { name: item.html, type: "vtt" });
+              } else {
+                art.subtitle.url = "";
+              }
+              return item?.html;
             },
-          ],
-          onSelect() {
-            const a = document.createElement("a");
-            a.href = `https://www.watchparty.me/create?video=${option.url}`;
-            a.target = "_blank";
-            a.dispatchEvent(
-              new MouseEvent("click", { bubbles: true, cancelable: true, view: window }),
-            );
           },
-        },
-        {
-          html: "Download",
-          width: 250,
-          height: 500,
-          icon: '<img src="/images/logo512.svg" alt="download"/>',
-          selector:
-            format === "hls"
-              ? [
-                  { html: "Download HLS (Recommended)", url: option.url, opt: 1 },
-                  { html: "Download HLS (mediatools)", url: option.url, opt: 2 },
-                  { html: "Download HLS (thetuhin)", url: option.url, opt: 3 },
-                ]
-              : [{ html: "Download mp4", url: option.url, opt: 4 }],
-          onSelect(item: any) {
-            const open = (url: string) => {
+          {
+            html: "Watch Party",
+            width: 250,
+            height: 500,
+            icon: '<img src="/images/logo512.svg" alt="watchparty"/>',
+            selector: [
+              {
+                html: "watchparty.me",
+                url: "https://www.watchparty.me/create?video=" + option?.url,
+              },
+            ],
+            onSelect() {
               const a = document.createElement("a");
-              a.href = url;
+              a.href = `https://www.watchparty.me/create?video=${option.url}`;
               a.target = "_blank";
               a.dispatchEvent(
                 new MouseEvent("click", { bubbles: true, cancelable: true, view: window }),
               );
-            };
-            if (item.opt === 1) open(`https://hlsdownload.vidbinge.com/?url=${option.url}`);
-            if (item.opt === 2) open(`https://mediatools.cc/hlsDownloader?query=${option.url}`);
-            if (item.opt === 3) {
-              navigator?.clipboard?.writeText(option.url);
-              open(`https://hlsdownloader.thetuhin.com/?text=${option.url}`);
-            }
-            if (item.opt === 4) {
-              navigator?.clipboard?.writeText(option.url);
-              open(option.url);
-            }
+            },
           },
-        },
-      ],
-      plugins:
-        format === "hls"
-          ? [
+          {
+            html: "Download",
+            width: 250,
+            height: 500,
+            icon: '<img src="/images/logo512.svg" alt="download"/>',
+            selector:
+              format === "hls"
+                ? [
+                  { html: "Download HLS (Recommended)", url: option.url, opt: 1 },
+                  { html: "Download HLS (mediatools)", url: option.url, opt: 2 },
+                  { html: "Download HLS (thetuhin)", url: option.url, opt: 3 },
+                ]
+                : [{ html: "Download mp4", url: option.url, opt: 4 }],
+            onSelect(item: any) {
+              const open = (url: string) => {
+                const a = document.createElement("a");
+                a.href = url;
+                a.target = "_blank";
+                a.dispatchEvent(
+                  new MouseEvent("click", { bubbles: true, cancelable: true, view: window }),
+                );
+              };
+              if (item.opt === 1) open(`https://hlsdownload.vidbinge.com/?url=${option.url}`);
+              if (item.opt === 2) open(`https://mediatools.cc/hlsDownloader?query=${option.url}`);
+              if (item.opt === 3) {
+                navigator?.clipboard?.writeText(option.url);
+                open(`https://hlsdownloader.thetuhin.com/?text=${option.url}`);
+              }
+              if (item.opt === 4) {
+                navigator?.clipboard?.writeText(option.url);
+                open(option.url);
+              }
+            },
+          },
+        ],
+        plugins:
+          format === "hls"
+            ? [
               artplayerPluginHlsQuality({
                 setting: true,
                 getResolution: (level: any) => level.height + "P",
@@ -189,8 +226,22 @@ export default function Player({
                 auto: "Auto",
               }),
             ]
-          : [],
-    });
+            : [],
+      });
+    } catch (error) {
+      console.error("Artplayer init failed:", error);
+      if (artRef.current) {
+        artRef.current.innerHTML = "<div style='padding:12px;color:#fff'>Video Load Error</div>";
+      }
+      if (typeof onPlaybackError === "function") {
+        onPlaybackError("Video Load Error");
+      }
+      return () => {
+        aborted = true;
+        destroyHls(hlsInstance);
+        hlsInstance = null;
+      };
+    }
 
     if (getInstance && typeof getInstance === "function") {
       getInstance(art);
@@ -199,9 +250,30 @@ export default function Player({
     art.on("ready", () => {
       art.notice.show = "Video Ready To Play";
     });
+    const skippedRanges = new Set<string>();
+    const handleSkipSegments = () => {
+      const video = art.video as HTMLVideoElement | undefined;
+      if (!video || !Array.isArray(skipSegments) || skipSegments.length === 0) return;
+      const now = video.currentTime;
+      const activeSegment = skipSegments.find((segment: any) => {
+        const start = Number(segment?.start);
+        const end = Number(segment?.end);
+        return Number.isFinite(start) && Number.isFinite(end) && end > start && now >= start && now < end;
+      });
+      if (!activeSegment) return;
+      const key = `${activeSegment.type}-${activeSegment.start}-${activeSegment.end}`;
+      if (skippedRanges.has(key)) return;
+      skippedRanges.add(key);
+      video.currentTime = Number(activeSegment.end);
+      art.notice.show = activeSegment.label || "Skipped segment";
+    };
+    art.on("video:timeupdate", handleSkipSegments);
     art.on("error", (error: any, reconnectTime: any) => {
       art.notice.show = "Video Load Error";
       console.info(error, reconnectTime);
+      if (typeof onPlaybackError === "function") {
+        onPlaybackError("Video Load Error");
+      }
     });
 
     // ── Cleanup ─────────────────────────────────────────────────────────────
@@ -227,19 +299,19 @@ export default function Player({
           video.removeAttribute("src");
           video.load();
         }
-      } catch (_) {}
+      } catch (_) { }
 
       // Destroy the Artplayer instance
       try {
         art.destroy(true);
-      } catch (_) {}
+      } catch (_) { }
 
       // Wipe container DOM
       if (artRef.current) {
         artRef.current.innerHTML = "";
       }
     };
-  }, [option.url, format, captions]);
+  }, [option.url, format, captions, skipSegments, onPlaybackError]);
 
   return <div ref={artRef} {...rest}></div>;
 }

@@ -1,4 +1,7 @@
-const ANILIST_URL = "https://graphql.anilist.co";
+const ANILIST_URL =
+  process.env.NEXT_PUBLIC_ANILIST_GRAPHQL_URL?.trim() ||
+  process.env.ANILIST_GRAPHQL_URL?.trim() ||
+  "https://graphql.anilist.co";
 
 type Variables = Record<string, unknown>;
 

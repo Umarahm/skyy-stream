@@ -1,0 +1,84 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.modal {
+  width: min(30rem, 100%);
+  max-height: 80vh;
+  overflow: auto;
+  background: #0b0b0b;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 0.9rem;
+  padding: 1rem;
+
+  h3 {
+    margin: 0;
+    color: #fff;
+  }
+}
+
+.context {
+  margin: 0.3rem 0 0.9rem;
+  color: #b6beca;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.7rem;
+  padding: 0.6rem 0.7rem;
+
+  h4 {
+    margin: 0;
+    color: #eef2f8;
+    font-size: 1rem;
+  }
+
+  p {
+    margin: 0.1rem 0 0;
+    color: #9ca7b8;
+    font-size: 0.9rem;
+  }
+}
+
+.dot {
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 999px;
+  margin-top: 0.35rem;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+}
+
+.idle .dot {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.checking .dot {
+  border-color: #4fb3ff;
+  box-shadow: 0 0 0 3px rgba(79, 179, 255, 0.18);
+}
+
+.success .dot {
+  border-color: #2ecc71;
+  box-shadow: 0 0 0 3px rgba(46, 204, 113, 0.16);
+}
+
+.failed .dot {
+  border-color: #ff5b5b;
+  box-shadow: 0 0 0 3px rgba(255, 91, 91, 0.14);
+}

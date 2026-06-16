@@ -91,6 +91,14 @@ NEXT_PUBLIC_ANIKOTO_API=http://localhost:5007
 Used by the Japanese hub homepage to fetch:
 `spotlight`, `latestEpisodes`, `newRelease`, `newAdded`, `justCompleted`, `topDay`, `topWeek`, `topMonth`.
 
+## 5.1 AniList GraphQL API
+
+```sh
+NEXT_PUBLIC_ANILIST_GRAPHQL_URL=https://graphql.anilist.co
+```
+
+Used for AniList GraphQL requests (anime metadata and canonical episode count).
+
 ## 6. Google Analytics
 
 ```sh

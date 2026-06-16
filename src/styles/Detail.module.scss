@@ -11,6 +11,7 @@
   .biggerPic {
     flex: 3;
     position: relative;
+    z-index: 1;
     border-radius: 1rem;
     overflow: hidden;
     transition: all 1s ease;
@@ -20,13 +21,36 @@
       height: 95vh;
       width: 100%;
     }
+    .previewPlayerWrap {
+      height: 95vh;
+      width: 100%;
+      background: #000;
+    }
+    .previewPlayer {
+      height: 95vh;
+      width: 100%;
+    }
+    .previewEmpty {
+      height: 95vh;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: var(--primary-3);
+      background: #000;
+      text-align: center;
+      padding: 1rem;
+    }
   }
   .biggerDetail {
     flex: 1;
+    position: relative;
+    z-index: 4;
     transition: all 1s ease;
   }
   .biggerDetail:hover {
     flex: 2;
+    z-index: 6;
   }
 
   .curvy {
@@ -110,6 +134,25 @@
           height: 0.85rem;
           width: auto;
         }
+      }
+      .anilistScoreBadge {
+        position: absolute;
+        top: 0.35rem;
+        right: 3.3rem;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 999px;
+        font-size: 0.72rem;
+        line-height: 1;
+        padding: 0.25rem 0.5rem;
+        z-index: 2;
+      }
+      .anilistScoreSkeleton {
+        position: absolute;
+        top: 0.35rem;
+        right: 3.3rem;
+        z-index: 2;
       }
     }
     .HomeHeroMeta {
@@ -252,6 +295,18 @@
       min-height: 60vh;
       width: calc(100vw - 2rem);
       .CarouselLoading {
+        height: 60vh;
+        width: calc(100vw - 2rem);
+      }
+      .previewPlayerWrap {
+        height: 60vh;
+        width: calc(100vw - 2rem);
+      }
+      .previewPlayer {
+        height: 60vh;
+        width: calc(100vw - 2rem);
+      }
+      .previewEmpty {
         height: 60vh;
         width: calc(100vw - 2rem);
       }

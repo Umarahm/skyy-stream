@@ -343,6 +343,20 @@ const SettingsPage = ({
         <h1>App Center</h1>
         <div className={styles.group}>
           <Link
+            href="/announcements"
+            data-tooltip-id="tooltip"
+            data-tooltip-content="What's new in Rive"
+          >
+            Announcements
+          </Link>
+          <Link
+            href="/schedule"
+            data-tooltip-id="tooltip"
+            data-tooltip-content="Weekly anime airing schedule"
+          >
+            Anime Schedule
+          </Link>
+          <Link
             href="/manga"
             data-tooltip-id="tooltip"
             data-tooltip-html="Go to Manga Page"

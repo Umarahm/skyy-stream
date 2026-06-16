@@ -15,10 +15,12 @@
 
 .inactive {
   fill: var(--primary-2);
+  color: var(--primary-2);
 }
 
 .active {
   fill: var(--ascent-color) !important;
+  color: var(--ascent-color) !important;
 }
 
 .mobileHide {
