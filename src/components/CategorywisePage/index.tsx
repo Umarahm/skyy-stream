@@ -77,8 +77,9 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
           const safeResults =
             category === "latest"
               ? results.filter(
-                (item: any) => String(item?.format || "").toUpperCase() !== "OVA",
-              )
+                  (item: any) =>
+                    String(item?.format || "").toUpperCase() !== "OVA",
+                )
               : results;
           const formatFilteredResults = safeResults.filter((item: any) => {
             const itemFormat = String(item?.format || "").toUpperCase();
@@ -86,13 +87,15 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
             return itemFormat !== "MOVIE";
           });
 
-          const mapped = formatFilteredResults.map((item: any, index: number) => ({
-            id: item?.id || `${getMiruroDisplayTitle(item)}-${index}`,
-            title: getMiruroDisplayTitle(item),
-            poster_path: getMiruroPoster(item),
-            customHref: `/anime-details?id=${item?.id}`,
-            mediaLabel: item?.format || "ANIME",
-          }));
+          const mapped = formatFilteredResults.map(
+            (item: any, index: number) => ({
+              id: item?.id || `${getMiruroDisplayTitle(item)}-${index}`,
+              title: getMiruroDisplayTitle(item),
+              poster_path: getMiruroPoster(item),
+              customHref: `/anime-details?id=${item?.id}`,
+              mediaLabel: item?.format || "ANIME",
+            }),
+          );
 
           const total = Number(pageResponse?.total || 0);
           const perPage = Number(pageResponse?.perPage || 20);
@@ -106,7 +109,10 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
 
           data = {
             page: pageFromApi,
-            total_pages: Math.min(MAX_ANIME_CATEGORY_PAGES, Math.max(1, computedTotalPages)),
+            total_pages: Math.min(
+              MAX_ANIME_CATEGORY_PAGES,
+              Math.max(1, computedTotalPages),
+            ),
             results: mapped,
           };
         } else if (categoryPage === "kdrama") {
@@ -142,8 +148,11 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
           return;
         }
         setData(data.results);
-        const maxPages = categoryPage === "anime" ? MAX_ANIME_CATEGORY_PAGES : 500;
-        setTotalpages(data.total_pages > maxPages ? maxPages : data.total_pages);
+        const maxPages =
+          categoryPage === "anime" ? MAX_ANIME_CATEGORY_PAGES : 500;
+        setTotalpages(
+          data.total_pages > maxPages ? maxPages : data.total_pages,
+        );
         setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -264,7 +273,9 @@ const CategorywisePage = ({ categoryDiv, categoryPage = null }: any) => {
             <MovieCardSmall
               data={ele}
               media_type={categoryPage === "anime" ? "tv" : categoryType}
-              customHref={categoryPage === "anime" ? ele?.customHref : undefined}
+              customHref={
+                categoryPage === "anime" ? ele?.customHref : undefined
+              }
               openInNewTab={false}
             />
           );

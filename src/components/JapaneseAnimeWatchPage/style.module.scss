@@ -401,13 +401,28 @@
     display: contents;
   }
 
-  .playerSection { order: 1; }
-  .header { order: 2; }
-  .sourcesSection { order: 3; }
-  .infoPanel { order: 4; }
-  .episodesPanel { order: 5; margin-top: 0.5rem; }
-  .commentsPanel { order: 6; }
-  .railPanel { order: 7; }
+  .playerSection {
+    order: 1;
+  }
+  .header {
+    order: 2;
+  }
+  .sourcesSection {
+    order: 3;
+  }
+  .infoPanel {
+    order: 4;
+  }
+  .episodesPanel {
+    order: 5;
+    margin-top: 0.5rem;
+  }
+  .commentsPanel {
+    order: 6;
+  }
+  .railPanel {
+    order: 7;
+  }
 
   .player {
     height: 52vh;

@@ -14,7 +14,11 @@ const normalizeAudioType = (value: any): "sub" | "dub" | "unknown" => {
   return "unknown";
 };
 
-const WatchSourceList = ({ sources, selectedIndex, onSelect }: WatchSourceListProps) => {
+const WatchSourceList = ({
+  sources,
+  selectedIndex,
+  onSelect,
+}: WatchSourceListProps) => {
   if (!sources.length) return null;
 
   return (
@@ -23,7 +27,8 @@ const WatchSourceList = ({ sources, selectedIndex, onSelect }: WatchSourceListPr
       <div className={styles.sourceCards}>
         {sources.map((source, idx) => {
           const isActive = selectedIndex === idx;
-          const streamFormat = String(source?.streamFormat || "").toUpperCase() || "STREAM";
+          const streamFormat =
+            String(source?.streamFormat || "").toUpperCase() || "STREAM";
           const audioType = normalizeAudioType(source?.type).toUpperCase();
           return (
             <button
@@ -33,7 +38,9 @@ const WatchSourceList = ({ sources, selectedIndex, onSelect }: WatchSourceListPr
               onClick={() => onSelect(idx)}
             >
               <div className={styles.sourceCardTop}>
-                <span className={styles.sourceServer}>{source?.server || `Source ${idx + 1}`}</span>
+                <span className={styles.sourceServer}>
+                  {source?.server || `Source ${idx + 1}`}
+                </span>
                 <span className={styles.sourceBadge}>{streamFormat}</span>
               </div>
               <div className={styles.sourceCardMeta}>

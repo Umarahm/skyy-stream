@@ -47,7 +47,7 @@
       padding: 0.5rem;
       border-radius: 1rem;
       overflow-x: auto;
-      
+
       &::-webkit-scrollbar {
         display: none;
       }
@@ -145,7 +145,7 @@
           display: flex;
           justify-content: center;
           align-items: center;
-          
+
           .dot {
             width: 16px;
             height: 16px;
@@ -181,7 +181,7 @@
         /* Alternating sides */
         &.leftSide {
           flex-direction: row;
-          
+
           .cardContainer {
             justify-content: flex-end;
           }
@@ -192,7 +192,7 @@
 
         &.rightSide {
           flex-direction: row-reverse;
-          
+
           .cardContainer {
             justify-content: flex-start;
           }
@@ -228,7 +228,10 @@
           width: 100%;
           max-width: 400px;
           height: 120px;
-          transition: transform 0.2s, background 0.2s, border-color 0.2s;
+          transition:
+            transform 0.2s,
+            background 0.2s,
+            border-color 0.2s;
 
           &:hover {
             transform: translateY(-4px);
@@ -348,7 +351,7 @@
             align-items: flex-start !important;
             text-align: left !important;
             margin-bottom: 0.5rem;
-            
+
             .timeText {
               font-size: 1.2rem;
             }

@@ -157,7 +157,9 @@ const Navbar = ({ hub }: { hub: AppHub | "" }) => {
             data-tooltip-id="tooltip"
             data-tooltip-content="Anime"
           >
-            {pathname === "/anime" || pathname === "/anime-detail" || pathname === "/anime-details" ? (
+            {pathname === "/anime" ||
+            pathname === "/anime-detail" ||
+            pathname === "/anime-details" ? (
               <RiEye2Fill className={styles.active} />
             ) : (
               <RiEye2Line className={styles.inactive} />
@@ -183,7 +185,9 @@ const Navbar = ({ hub }: { hub: AppHub | "" }) => {
             className={styles.mobileHide}
           >
             <RiCalendarScheduleLine
-              className={pathname === "/schedule" ? styles.active : styles.inactive}
+              className={
+                pathname === "/schedule" ? styles.active : styles.inactive
+              }
             />
           </Link>
         </>
@@ -196,7 +200,9 @@ const Navbar = ({ hub }: { hub: AppHub | "" }) => {
         className={styles.mobileHide}
       >
         <GrAnnounce
-          className={pathname === "/announcements" ? styles.active : styles.inactive}
+          className={
+            pathname === "/announcements" ? styles.active : styles.inactive
+          }
         />
       </Link>
       <Link
@@ -206,10 +212,10 @@ const Navbar = ({ hub }: { hub: AppHub | "" }) => {
         data-tooltip-content="Settings"
       >
         {pathname === "/settings" ||
-          pathname === "/downloads" ||
-          pathname === "/disclaimer" ||
-          pathname === "/signup" ||
-          pathname === "/login" ? (
+        pathname === "/downloads" ||
+        pathname === "/disclaimer" ||
+        pathname === "/signup" ||
+        pathname === "/login" ? (
           <MdSettings className={styles.active} />
         ) : (
           <MdOutlineSettings className={styles.inactive} />

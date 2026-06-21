@@ -165,38 +165,70 @@ const AnimeSearchPage = () => {
 
   const filterOptions = useMemo(() => {
     const years = Array.from(
-      new Set(mappedCards.map((item) => String(item?.seasonYear || "")).filter(Boolean)),
+      new Set(
+        mappedCards
+          .map((item) => String(item?.seasonYear || ""))
+          .filter(Boolean),
+      ),
     )
       .sort((a, b) => Number(b) - Number(a))
       .slice(0, 25);
     const tags = Array.from(
-      new Set(mappedCards.map((item) => String(item?.source || "")).filter(Boolean)),
+      new Set(
+        mappedCards.map((item) => String(item?.source || "")).filter(Boolean),
+      ),
     );
     const seasons = Array.from(
-      new Set(mappedCards.map((item) => String(item?.season || "")).filter(Boolean)),
+      new Set(
+        mappedCards.map((item) => String(item?.season || "")).filter(Boolean),
+      ),
     );
     const formats = Array.from(
-      new Set(mappedCards.map((item) => String(item?.format || "")).filter(Boolean)),
+      new Set(
+        mappedCards.map((item) => String(item?.format || "")).filter(Boolean),
+      ),
     );
     const statuses = Array.from(
-      new Set(mappedCards.map((item) => String(item?.status || "")).filter(Boolean)),
+      new Set(
+        mappedCards.map((item) => String(item?.status || "")).filter(Boolean),
+      ),
     );
     return { years, tags, seasons, formats, statuses };
   }, [mappedCards]);
 
   const visibleCards = useMemo(() => {
     const filtered = mappedCards.filter((item) => {
-      if (filters.year !== "all" && String(item?.seasonYear || "") !== filters.year) return false;
+      if (
+        filters.year !== "all" &&
+        String(item?.seasonYear || "") !== filters.year
+      )
+        return false;
       if (
         filters.genre !== "all" &&
-        !item?.genres?.some((genre: string) => genre.toLowerCase() === filters.genre.toLowerCase())
+        !item?.genres?.some(
+          (genre: string) =>
+            genre.toLowerCase() === filters.genre.toLowerCase(),
+        )
       ) {
         return false;
       }
-      if (filters.tag !== "all" && String(item?.source || "") !== filters.tag) return false;
-      if (filters.season !== "all" && String(item?.season || "") !== filters.season) return false;
-      if (filters.format !== "all" && String(item?.format || "") !== filters.format) return false;
-      if (filters.status !== "all" && String(item?.status || "") !== filters.status) return false;
+      if (filters.tag !== "all" && String(item?.source || "") !== filters.tag)
+        return false;
+      if (
+        filters.season !== "all" &&
+        String(item?.season || "") !== filters.season
+      )
+        return false;
+      if (
+        filters.format !== "all" &&
+        String(item?.format || "") !== filters.format
+      )
+        return false;
+      if (
+        filters.status !== "all" &&
+        String(item?.status || "") !== filters.status
+      )
+        return false;
       return true;
     });
 
@@ -206,13 +238,19 @@ const AnimeSearchPage = () => {
         sorted.sort((a, b) => Number(b?.score || 0) - Number(a?.score || 0));
         break;
       case "latest":
-        sorted.sort((a, b) => Number(b?.seasonYear || 0) - Number(a?.seasonYear || 0));
+        sorted.sort(
+          (a, b) => Number(b?.seasonYear || 0) - Number(a?.seasonYear || 0),
+        );
         break;
       case "title":
-        sorted.sort((a, b) => String(a?.title || "").localeCompare(String(b?.title || "")));
+        sorted.sort((a, b) =>
+          String(a?.title || "").localeCompare(String(b?.title || "")),
+        );
         break;
       default:
-        sorted.sort((a, b) => Number(b?.popularity || 0) - Number(a?.popularity || 0));
+        sorted.sort(
+          (a, b) => Number(b?.popularity || 0) - Number(a?.popularity || 0),
+        );
         break;
     }
     return sorted;
@@ -221,7 +259,10 @@ const AnimeSearchPage = () => {
   const renderSuggestionLabel = (item: any) =>
     typeof item === "string"
       ? item
-      : getMiruroDisplayTitle(item) || item?.name || item?.title || String(item?.id || "");
+      : getMiruroDisplayTitle(item) ||
+        item?.name ||
+        item?.title ||
+        String(item?.id || "");
 
   return (
     <div className={styles.MoviePage}>
@@ -252,7 +293,9 @@ const AnimeSearchPage = () => {
             <span className="tooltip-btn">Esc</span>
           )}
         </div>
-        {showSuggestions && suggestions.length > 0 && query.trim().length > 0 ? (
+        {showSuggestions &&
+        suggestions.length > 0 &&
+        query.trim().length > 0 ? (
           <div className={styles.suggestionsBox}>
             {suggestions.map((item, idx) => {
               const label = renderSuggestionLabel(item);
@@ -276,7 +319,8 @@ const AnimeSearchPage = () => {
 
       {searchMode ? (
         <h1>
-          showing results for <span className={styles.serachQuery}>{query}</span>
+          showing results for{" "}
+          <span className={styles.serachQuery}>{query}</span>
         </h1>
       ) : (
         <h1 className={styles.topLine}>
@@ -289,7 +333,10 @@ const AnimeSearchPage = () => {
             <option value="MOVIE">Movie</option>
           </select>
           in
-          <select value={topGenre} onChange={(e) => setTopGenre(e.target.value)}>
+          <select
+            value={topGenre}
+            onChange={(e) => setTopGenre(e.target.value)}
+          >
             {GENRES.map((genre) => (
               <option value={genre} key={genre}>
                 {genre}
@@ -300,7 +347,10 @@ const AnimeSearchPage = () => {
       )}
 
       <div className={styles.filterRow}>
-        <select value={filters.year} onChange={(e) => updateFilter("year", e.target.value)}>
+        <select
+          value={filters.year}
+          onChange={(e) => updateFilter("year", e.target.value)}
+        >
           <option value="all">Year</option>
           {filterOptions.years.map((year) => (
             <option value={year} key={year}>
@@ -308,7 +358,10 @@ const AnimeSearchPage = () => {
             </option>
           ))}
         </select>
-        <select value={filters.genre} onChange={(e) => updateFilter("genre", e.target.value)}>
+        <select
+          value={filters.genre}
+          onChange={(e) => updateFilter("genre", e.target.value)}
+        >
           <option value="all">Genre</option>
           {GENRES.map((genre) => (
             <option value={genre} key={genre}>
@@ -316,7 +369,10 @@ const AnimeSearchPage = () => {
             </option>
           ))}
         </select>
-        <select value={filters.tag} onChange={(e) => updateFilter("tag", e.target.value)}>
+        <select
+          value={filters.tag}
+          onChange={(e) => updateFilter("tag", e.target.value)}
+        >
           <option value="all">Tag</option>
           {filterOptions.tags.map((tag) => (
             <option value={tag} key={tag}>
@@ -324,7 +380,10 @@ const AnimeSearchPage = () => {
             </option>
           ))}
         </select>
-        <select value={filters.season} onChange={(e) => updateFilter("season", e.target.value)}>
+        <select
+          value={filters.season}
+          onChange={(e) => updateFilter("season", e.target.value)}
+        >
           <option value="all">Season</option>
           {filterOptions.seasons.map((season) => (
             <option value={season} key={season}>
@@ -332,7 +391,10 @@ const AnimeSearchPage = () => {
             </option>
           ))}
         </select>
-        <select value={filters.format} onChange={(e) => updateFilter("format", e.target.value)}>
+        <select
+          value={filters.format}
+          onChange={(e) => updateFilter("format", e.target.value)}
+        >
           <option value="all">Format</option>
           {filterOptions.formats.map((format) => (
             <option value={format} key={format}>
@@ -340,7 +402,10 @@ const AnimeSearchPage = () => {
             </option>
           ))}
         </select>
-        <select value={filters.status} onChange={(e) => updateFilter("status", e.target.value)}>
+        <select
+          value={filters.status}
+          onChange={(e) => updateFilter("status", e.target.value)}
+        >
           <option value="all">Status</option>
           {filterOptions.statuses.map((status) => (
             <option value={status} key={status}>
@@ -348,7 +413,10 @@ const AnimeSearchPage = () => {
             </option>
           ))}
         </select>
-        <select value={filters.sort} onChange={(e) => updateFilter("sort", e.target.value)}>
+        <select
+          value={filters.sort}
+          onChange={(e) => updateFilter("sort", e.target.value)}
+        >
           <option value="popularity">Sort</option>
           <option value="score">Score</option>
           <option value="latest">Latest</option>
@@ -358,7 +426,9 @@ const AnimeSearchPage = () => {
 
       <div className={styles.movieList}>
         {loading
-          ? dummyList.map((value) => <Skeleton className={styles.loading} key={value} />)
+          ? dummyList.map((value) => (
+              <Skeleton className={styles.loading} key={value} />
+            ))
           : visibleCards.map((item) => (
               <MovieCardSmall
                 key={item.id}
@@ -370,7 +440,9 @@ const AnimeSearchPage = () => {
             ))}
       </div>
 
-      {!loading && query.trim().length > 1 && visibleCards.length === 0 ? <h2>No Data Found</h2> : null}
+      {!loading && query.trim().length > 1 && visibleCards.length === 0 ? (
+        <h2>No Data Found</h2>
+      ) : null}
 
       {totalPages > 1 ? (
         <ReactPaginate
@@ -384,7 +456,9 @@ const AnimeSearchPage = () => {
           forcePage={currentPage - 1}
           pageCount={totalPages}
           breakLabel=" ... "
-          previousLabel={<AiFillLeftCircle className={styles.paginationIcons} />}
+          previousLabel={
+            <AiFillLeftCircle className={styles.paginationIcons} />
+          }
           nextLabel={<AiFillRightCircle className={styles.paginationIcons} />}
         />
       ) : null}

@@ -181,32 +181,55 @@ export default async function axiosFetch({
   };
   const animeRequestHandlers: Record<string, () => Promise<any>> = {
     animeTrending: () =>
-      fetchJson(`${miruroBase}/trending${page ? `?page=${page}` : ""}`, animeListFallback),
+      fetchJson(
+        `${miruroBase}/trending${page ? `?page=${page}` : ""}`,
+        animeListFallback,
+      ),
     animePopular: () =>
-      fetchJson(`${miruroBase}/popular${page ? `?page=${page}` : ""}`, animeListFallback),
+      fetchJson(
+        `${miruroBase}/popular${page ? `?page=${page}` : ""}`,
+        animeListFallback,
+      ),
     animeRecent: () =>
-      fetchJson(`${miruroBase}/recent${page ? `?page=${page}` : ""}`, animeListFallback),
+      fetchJson(
+        `${miruroBase}/recent${page ? `?page=${page}` : ""}`,
+        animeListFallback,
+      ),
     animeUpcoming: () => fetchJson(`${miruroBase}/upcoming`, animeListFallback),
-    animeSpotlight: () => fetchJson(`${miruroBase}/spotlight`, animeListFallback),
+    animeSpotlight: () =>
+      fetchJson(`${miruroBase}/spotlight`, animeListFallback),
     animeInfo: () => fetchJson(`${miruroBase}/info/${encodePath(id)}`, null),
     animeRelations: () =>
-      fetchJson(`${miruroBase}/anime/${encodePath(id)}/relations`, { relations: [] }),
+      fetchJson(`${miruroBase}/anime/${encodePath(id)}/relations`, {
+        relations: [],
+      }),
     animeRecommendations: () =>
-      fetchJson(`${miruroBase}/anime/${encodePath(id)}/recommendations`, { recommendations: [] }),
+      fetchJson(`${miruroBase}/anime/${encodePath(id)}/recommendations`, {
+        recommendations: [],
+      }),
     animeCharacters: () =>
-      fetchJson(`${miruroBase}/anime/${encodePath(id)}/characters`, { characters: { edges: [] } }),
-    animeEpisodes: () => fetchJson(`${miruroBase}/episodes/${encodePath(id)}`, null),
-    animeWatchEpisode: () => fetchJson(`${miruroBase}/${encodePath(episodeId)}`, null),
+      fetchJson(`${miruroBase}/anime/${encodePath(id)}/characters`, {
+        characters: { edges: [] },
+      }),
+    animeEpisodes: () =>
+      fetchJson(`${miruroBase}/episodes/${encodePath(id)}`, null),
+    animeWatchEpisode: () =>
+      fetchJson(`${miruroBase}/${encodePath(episodeId)}`, null),
     animeSearch: () => {
       const params = new URLSearchParams({
         query: String(query || "").trim(),
         page: String(page || 1),
       });
-      return fetchJson(`${miruroBase}/search?${params.toString()}`, animePagedFallback);
+      return fetchJson(
+        `${miruroBase}/search?${params.toString()}`,
+        animePagedFallback,
+      );
     },
     animeSuggestions: () => {
       const params = new URLSearchParams({ query: String(query || "").trim() });
-      return fetchJson(`${miruroBase}/suggestions?${params.toString()}`, { results: [] });
+      return fetchJson(`${miruroBase}/suggestions?${params.toString()}`, {
+        results: [],
+      });
     },
     animeFilter: () => {
       const params = new URLSearchParams({
@@ -214,7 +237,10 @@ export default async function axiosFetch({
         format: String(format || "TV"),
         page: String(page || 1),
       });
-      return fetchJson(`${miruroBase}/filter?${params.toString()}`, animePagedFallback);
+      return fetchJson(
+        `${miruroBase}/filter?${params.toString()}`,
+        animePagedFallback,
+      );
     },
     animeSchedule: () =>
       fetchJson(`${miruroBase}/schedule?page=${page || 1}`, animePagedFallback),
@@ -227,7 +253,10 @@ export default async function axiosFetch({
     anikotoAnimeDetails: () => {
       const encodedSlug = encodePath(slug);
       return fetchFirstJson(
-        [`${anikotoBase}/anime/${encodedSlug}`, `${anikotoBase}/api/anime/${encodedSlug}`],
+        [
+          `${anikotoBase}/anime/${encodedSlug}`,
+          `${anikotoBase}/api/anime/${encodedSlug}`,
+        ],
         { ok: false, data: null },
         (response: any) => Boolean(response?.data),
       );
@@ -238,7 +267,10 @@ export default async function axiosFetch({
         refresh: "1",
       });
       return fetchFirstJson(
-        [`${anikotoBase}/search?${params.toString()}`, `${anikotoBase}/api/search?${params.toString()}`],
+        [
+          `${anikotoBase}/search?${params.toString()}`,
+          `${anikotoBase}/api/search?${params.toString()}`,
+        ],
         { ok: false, data: [] },
         (response: any) => Boolean(response?.data || response?.results),
       );
@@ -247,7 +279,10 @@ export default async function axiosFetch({
       const encodedSlug = encodePath(slug);
       const params = new URLSearchParams({ ep: String(ep || 1) });
       return fetchFirstJson(
-        [`${anikotoBase}/watch/${encodedSlug}?${params.toString()}`, `${anikotoBase}/api/watch/${encodedSlug}?${params.toString()}`],
+        [
+          `${anikotoBase}/watch/${encodedSlug}?${params.toString()}`,
+          `${anikotoBase}/api/watch/${encodedSlug}?${params.toString()}`,
+        ],
         { ok: false, data: null },
         (response: any) => Boolean(response?.data),
       );
@@ -258,17 +293,28 @@ export default async function axiosFetch({
     return animeRequestHandlers[request]();
   }
 
-  const mangaProvider = String(provider || "weebcentral").replace(/^\/+|\/+$/g, "");
+  const mangaProvider = String(provider || "weebcentral").replace(
+    /^\/+|\/+$/g,
+    "",
+  );
   const mangaRequestHandlers: Record<string, () => Promise<any>> = {
     mangaList: () => {
       if (!consumetBase) return Promise.resolve({ results: [] });
-      const category = String(mangaCategory || "recent").replace(/^\/+|\/+$/g, "");
+      const category = String(mangaCategory || "recent").replace(
+        /^\/+|\/+$/g,
+        "",
+      );
       const params = new URLSearchParams({ page: String(page || 1) });
-      return fetchJson(`${consumetBase}/manga/mangadex/${category}?${params.toString()}`, { results: [] });
+      return fetchJson(
+        `${consumetBase}/manga/mangadex/${category}?${params.toString()}`,
+        { results: [] },
+      );
     },
     mangaRandom: () => {
       if (!consumetBase) return Promise.resolve({ results: [] });
-      return fetchJson(`${consumetBase}/manga/mangadex/random`, { results: [] });
+      return fetchJson(`${consumetBase}/manga/mangadex/random`, {
+        results: [],
+      });
     },
     mangaSearch: () => {
       if (!consumetBase) return Promise.resolve({ results: [] });
@@ -280,12 +326,20 @@ export default async function axiosFetch({
     mangaInfo: () => {
       if (!consumetBase) return Promise.resolve(null);
       const params = new URLSearchParams({ id: String(id || "") });
-      return fetchJson(`${consumetBase}/manga/${mangaProvider}/info?${params.toString()}`, null);
+      return fetchJson(
+        `${consumetBase}/manga/${mangaProvider}/info?${params.toString()}`,
+        null,
+      );
     },
     mangaRead: () => {
       if (!consumetBase) return Promise.resolve([]);
-      const params = new URLSearchParams({ chapterId: String(chapterId || "") });
-      return fetchJson(`${consumetBase}/manga/${mangaProvider}/read?${params.toString()}`, []);
+      const params = new URLSearchParams({
+        chapterId: String(chapterId || ""),
+      });
+      return fetchJson(
+        `${consumetBase}/manga/${mangaProvider}/read?${params.toString()}`,
+        [],
+      );
     },
   };
 

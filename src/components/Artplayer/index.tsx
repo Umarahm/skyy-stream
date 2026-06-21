@@ -9,7 +9,7 @@ function destroyHls(hls: any) {
     hls.stopLoad?.();
     hls.detachMedia?.();
     hls.destroy?.();
-  } catch (_) { }
+  } catch (_) {}
 }
 
 export default function Player({
@@ -52,16 +52,22 @@ export default function Player({
           const hls = new Hls({
             xhrSetup: (xhr, url) => {
               let newUrl = url;
-              
-              if (newUrl.startsWith("http://") && window.location.protocol === "https:") {
+
+              if (
+                newUrl.startsWith("http://") &&
+                window.location.protocol === "https:"
+              ) {
                 newUrl = newUrl.replace(/^http:\/\//, "https://");
               }
-              
+
               if (newUrl.includes("url=http://")) {
                 newUrl = newUrl.replace(/url=http:\/\//g, "url=https://");
               }
               if (newUrl.includes("url=http%3A%2F%2F")) {
-                newUrl = newUrl.replace(/url=http%3A%2F%2F/g, "url=https%3A%2F%2F");
+                newUrl = newUrl.replace(
+                  /url=http%3A%2F%2F/g,
+                  "url=https%3A%2F%2F",
+                );
               }
 
               if (newUrl !== url) {
@@ -97,17 +103,19 @@ export default function Player({
     const defaultCaption =
       captions?.find((c: any) => c?.default) ||
       captions?.find((c: any) =>
-        String(c?.label || "").toLowerCase().includes("english"),
+        String(c?.label || "")
+          .toLowerCase()
+          .includes("english"),
       ) ||
       captions?.[0];
 
     const subtitles =
       captions?.length > 0
         ? captions.map((ele: any) => ({
-          default: Boolean(ele?.default),
-          html: ele?.label,
-          url: ele?.file,
-        }))
+            default: Boolean(ele?.default),
+            html: ele?.label,
+            url: ele?.file,
+          }))
         : [{ html: "No Captions", url: "" }];
 
     // ── Create player ───────────────────────────────────────────────────────
@@ -177,7 +185,11 @@ export default function Player({
               a.href = `https://www.watchparty.me/create?video=${option.url}`;
               a.target = "_blank";
               a.dispatchEvent(
-                new MouseEvent("click", { bubbles: true, cancelable: true, view: window }),
+                new MouseEvent("click", {
+                  bubbles: true,
+                  cancelable: true,
+                  view: window,
+                }),
               );
             },
           },
@@ -189,10 +201,22 @@ export default function Player({
             selector:
               format === "hls"
                 ? [
-                  { html: "Download HLS (Recommended)", url: option.url, opt: 1 },
-                  { html: "Download HLS (mediatools)", url: option.url, opt: 2 },
-                  { html: "Download HLS (thetuhin)", url: option.url, opt: 3 },
-                ]
+                    {
+                      html: "Download HLS (Recommended)",
+                      url: option.url,
+                      opt: 1,
+                    },
+                    {
+                      html: "Download HLS (mediatools)",
+                      url: option.url,
+                      opt: 2,
+                    },
+                    {
+                      html: "Download HLS (thetuhin)",
+                      url: option.url,
+                      opt: 3,
+                    },
+                  ]
                 : [{ html: "Download mp4", url: option.url, opt: 4 }],
             onSelect(item: any) {
               const open = (url: string) => {
@@ -200,11 +224,17 @@ export default function Player({
                 a.href = url;
                 a.target = "_blank";
                 a.dispatchEvent(
-                  new MouseEvent("click", { bubbles: true, cancelable: true, view: window }),
+                  new MouseEvent("click", {
+                    bubbles: true,
+                    cancelable: true,
+                    view: window,
+                  }),
                 );
               };
-              if (item.opt === 1) open(`https://hlsdownload.vidbinge.com/?url=${option.url}`);
-              if (item.opt === 2) open(`https://mediatools.cc/hlsDownloader?query=${option.url}`);
+              if (item.opt === 1)
+                open(`https://hlsdownload.vidbinge.com/?url=${option.url}`);
+              if (item.opt === 2)
+                open(`https://mediatools.cc/hlsDownloader?query=${option.url}`);
               if (item.opt === 3) {
                 navigator?.clipboard?.writeText(option.url);
                 open(`https://hlsdownloader.thetuhin.com/?text=${option.url}`);
@@ -219,19 +249,20 @@ export default function Player({
         plugins:
           format === "hls"
             ? [
-              artplayerPluginHlsQuality({
-                setting: true,
-                getResolution: (level: any) => level.height + "P",
-                title: "Quality",
-                auto: "Auto",
-              }),
-            ]
+                artplayerPluginHlsQuality({
+                  setting: true,
+                  getResolution: (level: any) => level.height + "P",
+                  title: "Quality",
+                  auto: "Auto",
+                }),
+              ]
             : [],
       });
     } catch (error) {
       console.error("Artplayer init failed:", error);
       if (artRef.current) {
-        artRef.current.innerHTML = "<div style='padding:12px;color:#fff'>Video Load Error</div>";
+        artRef.current.innerHTML =
+          "<div style='padding:12px;color:#fff'>Video Load Error</div>";
       }
       if (typeof onPlaybackError === "function") {
         onPlaybackError("Video Load Error");
@@ -253,12 +284,19 @@ export default function Player({
     const skippedRanges = new Set<string>();
     const handleSkipSegments = () => {
       const video = art.video as HTMLVideoElement | undefined;
-      if (!video || !Array.isArray(skipSegments) || skipSegments.length === 0) return;
+      if (!video || !Array.isArray(skipSegments) || skipSegments.length === 0)
+        return;
       const now = video.currentTime;
       const activeSegment = skipSegments.find((segment: any) => {
         const start = Number(segment?.start);
         const end = Number(segment?.end);
-        return Number.isFinite(start) && Number.isFinite(end) && end > start && now >= start && now < end;
+        return (
+          Number.isFinite(start) &&
+          Number.isFinite(end) &&
+          end > start &&
+          now >= start &&
+          now < end
+        );
       });
       if (!activeSegment) return;
       const key = `${activeSegment.type}-${activeSegment.start}-${activeSegment.end}`;
@@ -299,12 +337,12 @@ export default function Player({
           video.removeAttribute("src");
           video.load();
         }
-      } catch (_) { }
+      } catch (_) {}
 
       // Destroy the Artplayer instance
       try {
         art.destroy(true);
-      } catch (_) { }
+      } catch (_) {}
 
       // Wipe container DOM
       if (artRef.current) {

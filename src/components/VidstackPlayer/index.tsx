@@ -12,14 +12,30 @@ import {
 
 // #region agent log
 const __dbgCounts: Record<string, number> = {};
-const __dbg = (location: string, message: string, data: any, hypothesisId: string) => {
+const __dbg = (
+  location: string,
+  message: string,
+  data: any,
+  hypothesisId: string,
+) => {
   const key = location + "|" + message + "|" + (data?.sn ?? "");
   __dbgCounts[key] = (__dbgCounts[key] || 0) + 1;
   if (__dbgCounts[key] > 40) return;
-  const payload = { sessionId: 'be2b7d', hypothesisId, location, message, data: { ...data, n: __dbgCounts[key] }, timestamp: Date.now() };
+  const payload = {
+    sessionId: "be2b7d",
+    hypothesisId,
+    location,
+    message,
+    data: { ...data, n: __dbgCounts[key] },
+    timestamp: Date.now(),
+  };
   // Console is the reliable transport here (the cross-origin ingest POST is
   // blocked, returning 400, so the NDJSON file never gets written).
-  console.log('[DBG hyp=' + hypothesisId + ']', message, JSON.stringify(payload.data));
+  console.log(
+    "[DBG hyp=" + hypothesisId + "]",
+    message,
+    JSON.stringify(payload.data),
+  );
 };
 // #endregion
 
@@ -31,7 +47,9 @@ const __dbg = (location: string, message: string, data: any, hypothesisId: strin
 // retry the same segment forever — hammering the proxy. Remapping the codec
 // string lets the audio buffer be created so playback proceeds normally.
 const remapUnsupportedAudioCodec = (type: unknown) =>
-  typeof type === "string" ? type.replace(/mp4a\.40\.1\b/gi, "mp4a.40.2") : type;
+  typeof type === "string"
+    ? type.replace(/mp4a\.40\.1\b/gi, "mp4a.40.2")
+    : type;
 
 let __aacCodecPatched = false;
 const patchMediaSourceAudioCodec = () => {
@@ -49,7 +67,8 @@ const patchMediaSourceAudioCodec = () => {
 
     if (typeof MS.isTypeSupported === "function") {
       const origIsTypeSupported = MS.isTypeSupported.bind(MS);
-      MS.isTypeSupported = (type: string) => origIsTypeSupported(remapUnsupportedAudioCodec(type) as string);
+      MS.isTypeSupported = (type: string) =>
+        origIsTypeSupported(remapUnsupportedAudioCodec(type) as string);
     }
 
     const proto = MS.prototype;
@@ -59,7 +78,12 @@ const patchMediaSourceAudioCodec = () => {
         const remapped = remapUnsupportedAudioCodec(type) as string;
         // #region agent log
         if (remapped !== type) {
-          __dbg("VidstackPlayer/index.tsx:addSourceBuffer", "remapped audio codec", { from: type, to: remapped }, "post-fix");
+          __dbg(
+            "VidstackPlayer/index.tsx:addSourceBuffer",
+            "remapped audio codec",
+            { from: type, to: remapped },
+            "post-fix",
+          );
         }
         // #endregion
         return origAddSourceBuffer.call(this, remapped);
@@ -102,7 +126,12 @@ export default function VidstackPlayer({
   // #region agent log
   // H-G: does the fetch transport work at all + does the component mount with a url?
   useEffect(() => {
-    __dbg("VidstackPlayer/index.tsx:mount", "VidstackPlayer mounted", { hasUrl: Boolean(url), urlTail: String(url || "").slice(-50) }, "G");
+    __dbg(
+      "VidstackPlayer/index.tsx:mount",
+      "VidstackPlayer mounted",
+      { hasUrl: Boolean(url), urlTail: String(url || "").slice(-50) },
+      "G",
+    );
   }, [url]);
   // #endregion
 
@@ -121,7 +150,10 @@ export default function VidstackPlayer({
       const parsed = new URL(nextUrl);
       const nestedUrl = parsed.searchParams.get("url");
       if (nestedUrl?.startsWith("http://")) {
-        parsed.searchParams.set("url", nestedUrl.replace(/^http:\/\//, "https://"));
+        parsed.searchParams.set(
+          "url",
+          nestedUrl.replace(/^http:\/\//, "https://"),
+        );
         nextUrl = parsed.toString();
       }
     } catch (_) {
@@ -158,11 +190,16 @@ export default function VidstackPlayer({
 
     // #region agent log
     // H-E: confirm our config actually sticks after vidstack initialises hls.
-    __dbg("VidstackPlayer/index.tsx:config", "hls config applied", {
-      fragLoadingMaxRetry: hls.config.fragLoadingMaxRetry,
-      nudgeMaxRetry: hls.config.nudgeMaxRetry,
-      appendErrorMaxRetry: hls.config.appendErrorMaxRetry,
-    }, "E");
+    __dbg(
+      "VidstackPlayer/index.tsx:config",
+      "hls config applied",
+      {
+        fragLoadingMaxRetry: hls.config.fragLoadingMaxRetry,
+        nudgeMaxRetry: hls.config.nudgeMaxRetry,
+        appendErrorMaxRetry: hls.config.appendErrorMaxRetry,
+      },
+      "E",
+    );
     // #endregion
 
     hls.config.xhrSetup = (xhr: XMLHttpRequest, requestUrl: string) => {
@@ -183,10 +220,24 @@ export default function VidstackPlayer({
     // H-J: does ANY fragment ever successfully buffer, or does the first
     // (init) append always fail? Track loads vs buffered.
     hls.on("hlsFragLoaded", (_e: any, d: any) => {
-      __dbg("VidstackPlayer/index.tsx:FRAG_LOADED", "frag loaded", { sn: d?.frag?.sn, level: d?.frag?.level, bytes: d?.payload?.byteLength ?? d?.frag?.stats?.total }, "J");
+      __dbg(
+        "VidstackPlayer/index.tsx:FRAG_LOADED",
+        "frag loaded",
+        {
+          sn: d?.frag?.sn,
+          level: d?.frag?.level,
+          bytes: d?.payload?.byteLength ?? d?.frag?.stats?.total,
+        },
+        "J",
+      );
     });
     hls.on("hlsFragBuffered", (_e: any, d: any) => {
-      __dbg("VidstackPlayer/index.tsx:FRAG_BUFFERED", "frag buffered", { sn: d?.frag?.sn, level: d?.frag?.level }, "J");
+      __dbg(
+        "VidstackPlayer/index.tsx:FRAG_BUFFERED",
+        "frag buffered",
+        { sn: d?.frag?.sn, level: d?.frag?.level },
+        "J",
+      );
     });
     // #endregion
 
@@ -195,16 +246,21 @@ export default function VidstackPlayer({
       // #region agent log
       // H-H: capture the EXACT append exception (name/message) + context.
       const err = data?.error || data?.err;
-      __dbg("VidstackPlayer/index.tsx:hlsError", "hls error", {
-        details: String(data?.details || ""),
-        type: String(data?.type || ""),
-        fatal: Boolean(data?.fatal),
-        parent: String(data?.parent || ""),
-        sn: data?.frag?.sn,
-        errName: err?.name,
-        errMessage: String(err?.message || "").slice(0, 200),
-        mimeType: data?.mimeType,
-      }, "H");
+      __dbg(
+        "VidstackPlayer/index.tsx:hlsError",
+        "hls error",
+        {
+          details: String(data?.details || ""),
+          type: String(data?.type || ""),
+          fatal: Boolean(data?.fatal),
+          parent: String(data?.parent || ""),
+          sn: data?.frag?.sn,
+          errName: err?.name,
+          errMessage: String(err?.message || "").slice(0, 200),
+          mimeType: data?.mimeType,
+        },
+        "H",
+      );
       // #endregion
 
       // For fatal errors use hls.js built-in recovery — never detachMedia()
@@ -214,12 +270,22 @@ export default function VidstackPlayer({
           recoverCount += 1;
           // #region agent log
           // H-I: how many times does media-error recovery fire (loop driver)?
-          __dbg("VidstackPlayer/index.tsx:recoverMediaError", "calling recoverMediaError", { recoverCount, details: String(data?.details || "") }, "I");
+          __dbg(
+            "VidstackPlayer/index.tsx:recoverMediaError",
+            "calling recoverMediaError",
+            { recoverCount, details: String(data?.details || "") },
+            "I",
+          );
           // #endregion
           hls.recoverMediaError?.();
         } else if (data.type === "networkError") {
           // #region agent log
-          __dbg("VidstackPlayer/index.tsx:startLoad", "calling startLoad", { details: String(data?.details || "") }, "I");
+          __dbg(
+            "VidstackPlayer/index.tsx:startLoad",
+            "calling startLoad",
+            { details: String(data?.details || "") },
+            "I",
+          );
           // #endregion
           hls.startLoad?.();
         }
@@ -235,7 +301,12 @@ export default function VidstackPlayer({
     : undefined;
 
   useEffect(() => {
-    if (!player.current || !Array.isArray(skipSegments) || skipSegments.length === 0) return;
+    if (
+      !player.current ||
+      !Array.isArray(skipSegments) ||
+      skipSegments.length === 0
+    )
+      return;
     const skippedRanges = new Set<string>();
     const timer = window.setInterval(() => {
       const instance = player.current;
@@ -245,7 +316,13 @@ export default function VidstackPlayer({
       const activeSegment = skipSegments.find((segment) => {
         const start = Number(segment?.start);
         const end = Number(segment?.end);
-        return Number.isFinite(start) && Number.isFinite(end) && end > start && now >= start && now < end;
+        return (
+          Number.isFinite(start) &&
+          Number.isFinite(end) &&
+          end > start &&
+          now >= start &&
+          now < end
+        );
       });
       if (!activeSegment) return;
       const key = `${activeSegment.type}-${activeSegment.start}-${activeSegment.end}`;

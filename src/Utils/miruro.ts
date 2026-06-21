@@ -21,22 +21,40 @@ const fetchJson = async <T>(
   }
 };
 
-export const getMiruroTrending = async (page?: number): Promise<MiruroListResponse> => {
-  return fetchJson<MiruroListResponse>("animeTrending", { page }, {
-    results: [],
-  });
+export const getMiruroTrending = async (
+  page?: number,
+): Promise<MiruroListResponse> => {
+  return fetchJson<MiruroListResponse>(
+    "animeTrending",
+    { page },
+    {
+      results: [],
+    },
+  );
 };
 
-export const getMiruroPopular = async (page?: number): Promise<MiruroListResponse> => {
-  return fetchJson<MiruroListResponse>("animePopular", { page }, {
-    results: [],
-  });
+export const getMiruroPopular = async (
+  page?: number,
+): Promise<MiruroListResponse> => {
+  return fetchJson<MiruroListResponse>(
+    "animePopular",
+    { page },
+    {
+      results: [],
+    },
+  );
 };
 
-export const getMiruroRecent = async (page?: number): Promise<MiruroListResponse> => {
-  return fetchJson<MiruroListResponse>("animeRecent", { page }, {
-    results: [],
-  });
+export const getMiruroRecent = async (
+  page?: number,
+): Promise<MiruroListResponse> => {
+  return fetchJson<MiruroListResponse>(
+    "animeRecent",
+    { page },
+    {
+      results: [],
+    },
+  );
 };
 
 export const getMiruroUpcoming = async (): Promise<MiruroListResponse> =>
@@ -51,7 +69,9 @@ export const getMiruroInfo = async (id: string | number): Promise<any> =>
 export const getMiruroRelations = async (id: string | number): Promise<any> =>
   fetchJson<any>("animeRelations", { id }, { relations: [] });
 
-export const getMiruroRecommendations = async (id: string | number): Promise<any> =>
+export const getMiruroRecommendations = async (
+  id: string | number,
+): Promise<any> =>
   fetchJson<any>("animeRecommendations", { id }, { recommendations: [] });
 
 export const getMiruroCharacters = async (id: string | number): Promise<any> =>
@@ -60,7 +80,9 @@ export const getMiruroCharacters = async (id: string | number): Promise<any> =>
 export const getMiruroEpisodes = async (id: string | number): Promise<any> =>
   fetchJson<any>("animeEpisodes", { id }, null);
 
-export const getMiruroWatchByEpisodeId = async (episodeId: string): Promise<any> => {
+export const getMiruroWatchByEpisodeId = async (
+  episodeId: string,
+): Promise<any> => {
   const trimmed = String(episodeId || "").replace(/^\/+/, "");
   if (!trimmed) return null;
   return fetchJson<any>("animeWatchEpisode", { episodeId: trimmed }, null);
@@ -71,14 +93,19 @@ export const getMiruroSearch = async (
   page = 1,
 ): Promise<MiruroListResponse> => {
   const trimmedQuery = String(query || "").trim();
-  if (!trimmedQuery) return { results: [], page: 1, perPage: 20, total: 0, hasNextPage: false };
-  return fetchJson<MiruroListResponse>("animeSearch", { query: trimmedQuery, page }, {
-    results: [],
-    page: 1,
-    perPage: 20,
-    total: 0,
-    hasNextPage: false,
-  });
+  if (!trimmedQuery)
+    return { results: [], page: 1, perPage: 20, total: 0, hasNextPage: false };
+  return fetchJson<MiruroListResponse>(
+    "animeSearch",
+    { query: trimmedQuery, page },
+    {
+      results: [],
+      page: 1,
+      perPage: 20,
+      total: 0,
+      hasNextPage: false,
+    },
+  );
 };
 
 export const getMiruroSuggestions = async (query: string): Promise<any[]> => {
@@ -100,31 +127,45 @@ export const getMiruroFiltered = async (
   format: "TV" | "MOVIE",
   page = 1,
 ): Promise<MiruroListResponse> => {
-  return fetchJson<MiruroListResponse>("animeFilter", {
-    genreKeywords: String(genre || "Action"),
-    format,
-    page,
-  }, {
-    results: [],
-    page: 1,
-    perPage: 20,
-    total: 0,
-    hasNextPage: false,
-  });
+  return fetchJson<MiruroListResponse>(
+    "animeFilter",
+    {
+      genreKeywords: String(genre || "Action"),
+      format,
+      page,
+    },
+    {
+      results: [],
+      page: 1,
+      perPage: 20,
+      total: 0,
+      hasNextPage: false,
+    },
+  );
 };
 
-export const getMiruroSchedule = async (page = 1): Promise<MiruroListResponse> =>
-  fetchJson<MiruroListResponse>("animeSchedule", { page }, {
-    results: [],
-    page: 1,
-    perPage: 20,
-    total: 0,
-    hasNextPage: false,
-  });
+export const getMiruroSchedule = async (
+  page = 1,
+): Promise<MiruroListResponse> =>
+  fetchJson<MiruroListResponse>(
+    "animeSchedule",
+    { page },
+    {
+      results: [],
+      page: 1,
+      perPage: 20,
+      total: 0,
+      hasNextPage: false,
+    },
+  );
 
-export const getMiruroScheduleAll = async (maxPages = 10): Promise<MiruroListResponse> => {
+export const getMiruroScheduleAll = async (
+  maxPages = 10,
+): Promise<MiruroListResponse> => {
   const pages = await Promise.all(
-    Array.from({ length: maxPages }, (_, index) => getMiruroSchedule(index + 1)),
+    Array.from({ length: maxPages }, (_, index) =>
+      getMiruroSchedule(index + 1),
+    ),
   );
 
   const seen = new Set<string>();
@@ -132,7 +173,9 @@ export const getMiruroScheduleAll = async (maxPages = 10): Promise<MiruroListRes
 
   pages.forEach((pageData) => {
     (pageData?.results || []).forEach((item) => {
-      const key = String(item?.id || item?.aniId || item?.malId || item?.airingAt);
+      const key = String(
+        item?.id || item?.aniId || item?.malId || item?.airingAt,
+      );
       if (seen.has(key)) return;
       seen.add(key);
       results.push(item);
@@ -171,11 +214,14 @@ export const getScheduleFallbackDays = (): Date[] => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  return Array.from({ length: SCHEDULE_PAST_DAYS + SCHEDULE_FUTURE_DAYS + 1 }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() + index - SCHEDULE_PAST_DAYS);
-    return date;
-  });
+  return Array.from(
+    { length: SCHEDULE_PAST_DAYS + SCHEDULE_FUTURE_DAYS + 1 },
+    (_, index) => {
+      const date = new Date(today);
+      date.setDate(today.getDate() + index - SCHEDULE_PAST_DAYS);
+      return date;
+    },
+  );
 };
 
 export const getScheduleDaysFromData = (items: any[]): Date[] => {

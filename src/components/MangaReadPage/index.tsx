@@ -44,18 +44,14 @@ const CHAPTERS_PER_PAGE = 15;
 const INITIAL_PAGE_BATCH = 3;
 const PAGE_BATCH_SIZE = 3;
 
-const MangaImageWithLoader = ({
-  src,
-  alt,
-}: {
-  src: string;
-  alt: string;
-}) => {
+const MangaImageWithLoader = ({ src, alt }: { src: string; alt: string }) => {
   const [loaded, setLoaded] = useState(false);
 
   return (
     <div className={styles.imageFrame}>
-      {!loaded && <div className={styles.staticImageLoader} aria-hidden="true" />}
+      {!loaded && (
+        <div className={styles.staticImageLoader} aria-hidden="true" />
+      )}
       <img
         src={src}
         alt={alt}
@@ -72,7 +68,9 @@ const MangaReadPage = () => {
   const params = useSearchParams();
   const [provider, setProvider] = useState("weebcentral");
   const [language, setLanguage] = useState("en");
-  const [activeTab, setActiveTab] = useState<"chapters" | "details">("chapters");
+  const [activeTab, setActiveTab] = useState<"chapters" | "details">(
+    "chapters",
+  );
   const [mangaId, setMangaId] = useState("");
   const [mangaInfo, setMangaInfo] = useState<MangaInfo | null>(null);
   const [selectedChapterId, setSelectedChapterId] = useState("");
@@ -112,11 +110,12 @@ const MangaReadPage = () => {
       setExpandedChapterId("");
       setChapterPage(1);
       try {
-        const infoPayload = await axiosFetch({
-          requestID: "mangaInfo",
-          provider,
-          id: mangaId,
-        }) || {};
+        const infoPayload =
+          (await axiosFetch({
+            requestID: "mangaInfo",
+            provider,
+            id: mangaId,
+          })) || {};
         setMangaInfo(infoPayload);
       } catch (err) {
         console.error("Error fetching manga info:", err);
@@ -163,7 +162,9 @@ const MangaReadPage = () => {
   }, [selectedChapterId, provider]);
 
   const selectedChapter = useMemo(() => {
-    return mangaInfo?.chapters?.find((chapter) => chapter.id === selectedChapterId);
+    return mangaInfo?.chapters?.find(
+      (chapter) => chapter.id === selectedChapterId,
+    );
   }, [mangaInfo, selectedChapterId]);
 
   const selectedChapterNumber = useMemo(() => {
@@ -182,7 +183,8 @@ const MangaReadPage = () => {
     return chapterList.slice(start, start + CHAPTERS_PER_PAGE);
   }, [chapterList, chapterPage]);
   const visibleChapterPages = useMemo(
-    () => chapterPages.slice(0, Math.min(visiblePageCount, chapterPages.length)),
+    () =>
+      chapterPages.slice(0, Math.min(visiblePageCount, chapterPages.length)),
     [chapterPages, visiblePageCount],
   );
 
@@ -197,12 +199,17 @@ const MangaReadPage = () => {
   const fullscreenStep = desktopSpread ? 2 : 1;
   const fullscreenPages = useMemo(() => {
     if (!chapterPages.length) return [];
-    return chapterPages.slice(fullscreenIndex, fullscreenIndex + fullscreenStep);
+    return chapterPages.slice(
+      fullscreenIndex,
+      fullscreenIndex + fullscreenStep,
+    );
   }, [chapterPages, fullscreenIndex, fullscreenStep]);
 
   const handleOpenFullscreen = (index: number) => {
     const mobileViewport =
-      typeof window !== "undefined" ? window.innerWidth < 769 : !isDesktopViewport;
+      typeof window !== "undefined"
+        ? window.innerWidth < 769
+        : !isDesktopViewport;
     setFullscreenIndex(index);
     setDesktopSpread(false);
     setIsPdfModeOpen(mobileViewport);
@@ -228,7 +235,8 @@ const MangaReadPage = () => {
   };
 
   const canGoPrevFullscreen = fullscreenIndex > 0;
-  const canGoNextFullscreen = fullscreenIndex + fullscreenStep < chapterPages.length;
+  const canGoNextFullscreen =
+    fullscreenIndex + fullscreenStep < chapterPages.length;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -251,9 +259,17 @@ const MangaReadPage = () => {
     const keyHandler = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         handleCloseFullscreen();
-      } else if (!isPdfModeOpen && event.key === "ArrowLeft" && canGoPrevFullscreen) {
+      } else if (
+        !isPdfModeOpen &&
+        event.key === "ArrowLeft" &&
+        canGoPrevFullscreen
+      ) {
         handlePrevFullscreen();
-      } else if (!isPdfModeOpen && event.key === "ArrowRight" && canGoNextFullscreen) {
+      } else if (
+        !isPdfModeOpen &&
+        event.key === "ArrowRight" &&
+        canGoNextFullscreen
+      ) {
         handleNextFullscreen();
       }
     };
@@ -270,7 +286,8 @@ const MangaReadPage = () => {
   ]);
 
   useEffect(() => {
-    if (loadingPages || !hasMorePagesToRender || !pageLoadSentinelRef.current) return;
+    if (loadingPages || !hasMorePagesToRender || !pageLoadSentinelRef.current)
+      return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -331,48 +348,55 @@ const MangaReadPage = () => {
       <Head>
         <title>
           Rive | Read Manga{" "}
-          {mangaInfo?.title ? `| ${mangaInfo.title}` : mangaId ? `| ${mangaId}` : ""}
+          {mangaInfo?.title
+            ? `| ${mangaInfo.title}`
+            : mangaId
+              ? `| ${mangaId}`
+              : ""}
         </title>
       </Head>
       <div className={styles.MangaReadPage}>
         <div className={styles.biggerPic}>
           <div className={styles.mangaPages} ref={mangaScrollRef}>
-            {loadingPages
-              ? [1, 2, 3].map((item) => (
+            {loadingPages ? (
+              [1, 2, 3].map((item) => (
                 <Skeleton key={item} className={styles.pageSkeleton} />
               ))
-              : !selectedChapterId
-                ? (
-                  <div className={styles.selectChapterState}>
-                    <div className={styles.logoLoader} />
-                    <h2>Select a chapter to start reading</h2>
-                    <p>Thank you for reading manga with rive UwU</p>
-                  </div>
-                )
-                : chapterPages.length > 0
-                  ? visibleChapterPages.map((pageImage, index) => (
-                    <div
-                      className={styles.pageCard}
-                      key={`${pageImage.page}-${pageImage.img}`}
-                      onClick={() => handleOpenFullscreen(index)}
-                    >
-                      <button className={styles.fullscreenBtn} aria-label="Open fullscreen">
-                        <MdFullscreen />
-                      </button>
-                      <span className={styles.pageNumberLabel}>Page {pageImage.page}</span>
-                      <MangaImageWithLoader
-                        src={pageImage.img}
-                        alt={`Page ${pageImage.page}`}
-                      />
-                    </div>
-                  ))
-                  : (
-                    <div className={styles.selectChapterState}>
-                      <div className={styles.logoLoader} />
-                      <h2>No pages found</h2>
-                      <p>Try another chapter from the chapter list.</p>
-                    </div>
-                  )}
+            ) : !selectedChapterId ? (
+              <div className={styles.selectChapterState}>
+                <div className={styles.logoLoader} />
+                <h2>Select a chapter to start reading</h2>
+                <p>Thank you for reading manga with rive UwU</p>
+              </div>
+            ) : chapterPages.length > 0 ? (
+              visibleChapterPages.map((pageImage, index) => (
+                <div
+                  className={styles.pageCard}
+                  key={`${pageImage.page}-${pageImage.img}`}
+                  onClick={() => handleOpenFullscreen(index)}
+                >
+                  <button
+                    className={styles.fullscreenBtn}
+                    aria-label="Open fullscreen"
+                  >
+                    <MdFullscreen />
+                  </button>
+                  <span className={styles.pageNumberLabel}>
+                    Page {pageImage.page}
+                  </span>
+                  <MangaImageWithLoader
+                    src={pageImage.img}
+                    alt={`Page ${pageImage.page}`}
+                  />
+                </div>
+              ))
+            ) : (
+              <div className={styles.selectChapterState}>
+                <div className={styles.logoLoader} />
+                <h2>No pages found</h2>
+                <p>Try another chapter from the chapter list.</p>
+              </div>
+            )}
             {!loadingPages && hasMorePagesToRender && (
               <div className={styles.pageLoadMore} ref={pageLoadSentinelRef}>
                 <div className={styles.logoLoader} />
@@ -400,21 +424,29 @@ const MangaReadPage = () => {
               </select>
             </div>
 
-            <h2 className={styles.mangaTitle}>{mangaInfo?.title || <Skeleton width={160} />}</h2>
+            <h2 className={styles.mangaTitle}>
+              {mangaInfo?.title || <Skeleton width={160} />}
+            </h2>
             <div className={styles.chapterMeta}>
               <p>{selectedChapter?.title || "Select a chapter"}</p>
-              {selectedChapterNumber ? <p>Chapter No: {selectedChapterNumber}</p> : null}
+              {selectedChapterNumber ? (
+                <p>Chapter No: {selectedChapterNumber}</p>
+              ) : null}
             </div>
 
             <div className={styles.tabRow}>
               <button
-                className={activeTab === "chapters" ? styles.activeTab : styles.tab}
+                className={
+                  activeTab === "chapters" ? styles.activeTab : styles.tab
+                }
                 onClick={() => setActiveTab("chapters")}
               >
                 Chapters
               </button>
               <button
-                className={activeTab === "details" ? styles.activeTab : styles.tab}
+                className={
+                  activeTab === "details" ? styles.activeTab : styles.tab
+                }
                 onClick={() => setActiveTab("details")}
               >
                 Details
@@ -427,36 +459,43 @@ const MangaReadPage = () => {
               <div className={`${styles.tabContent} ${styles.episodeList}`}>
                 {loadingInfo
                   ? [1, 2, 3, 4].map((item) => (
-                    <Skeleton key={item} className={styles.chapterSkeleton} />
-                  ))
+                      <Skeleton key={item} className={styles.chapterSkeleton} />
+                    ))
                   : paginatedChapters.map((chapter) => (
-                    <div
-                      key={chapter.id}
-                      className={
-                        chapter.id === selectedChapterId
-                          ? `${styles.chapterItem} ${styles.chapterItemActive} ${expandedChapterId === chapter.id ? styles.chapterExpanded : ""
-                          }`
-                          : styles.chapterItem
-                      }
-                      onClick={() => {
-                        setSelectedChapterId(chapter.id);
-                        setExpandedChapterId((prev) =>
-                          prev === chapter.id ? "" : chapter.id,
-                        );
-                      }}
-                    >
-                      <div className={styles.episodeHeader}>
-                        <div className={styles.details}>
-                          <h4>{chapter.title}</h4>
-                          {chapter.releaseDate ? (
-                            <p>{new Date(chapter.releaseDate).toLocaleDateString()}</p>
-                          ) : (
-                            <p>Release date unavailable</p>
-                          )}
+                      <div
+                        key={chapter.id}
+                        className={
+                          chapter.id === selectedChapterId
+                            ? `${styles.chapterItem} ${styles.chapterItemActive} ${
+                                expandedChapterId === chapter.id
+                                  ? styles.chapterExpanded
+                                  : ""
+                              }`
+                            : styles.chapterItem
+                        }
+                        onClick={() => {
+                          setSelectedChapterId(chapter.id);
+                          setExpandedChapterId((prev) =>
+                            prev === chapter.id ? "" : chapter.id,
+                          );
+                        }}
+                      >
+                        <div className={styles.episodeHeader}>
+                          <div className={styles.details}>
+                            <h4>{chapter.title}</h4>
+                            {chapter.releaseDate ? (
+                              <p>
+                                {new Date(
+                                  chapter.releaseDate,
+                                ).toLocaleDateString()}
+                              </p>
+                            ) : (
+                              <p>Release date unavailable</p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 {!loadingInfo && chapterList.length > CHAPTERS_PER_PAGE && (
                   <ReactPaginate
                     containerClassName={styles.pagination}
@@ -468,8 +507,12 @@ const MangaReadPage = () => {
                     forcePage={chapterPage - 1}
                     pageCount={chapterTotalPages}
                     breakLabel=" ... "
-                    previousLabel={<AiFillLeftCircle className={styles.paginationIcons} />}
-                    nextLabel={<AiFillRightCircle className={styles.paginationIcons} />}
+                    previousLabel={
+                      <AiFillLeftCircle className={styles.paginationIcons} />
+                    }
+                    nextLabel={
+                      <AiFillRightCircle className={styles.paginationIcons} />
+                    }
                   />
                 )}
               </div>
@@ -481,11 +524,12 @@ const MangaReadPage = () => {
                   <Skeleton count={8} />
                 ) : (
                   <div className={styles.detailsInfo}>
-
                     <h3>Title</h3>
                     <p>{mangaInfo?.title || "Unknown"}</p>
                     <h3>Description</h3>
-                    <p>{mangaInfo?.description || "No description available."}</p>
+                    <p>
+                      {mangaInfo?.description || "No description available."}
+                    </p>
                     <h3>Authors</h3>
                     <p>
                       {mangaInfo?.authors?.length
@@ -494,7 +538,9 @@ const MangaReadPage = () => {
                     </p>
                     <h3>Genres</h3>
                     <p>
-                      {mangaInfo?.genres?.length ? mangaInfo.genres.join(", ") : "Unknown"}
+                      {mangaInfo?.genres?.length
+                        ? mangaInfo.genres.join(", ")
+                        : "Unknown"}
                     </p>
                     <h3>Release Date</h3>
                     <p>{mangaInfo?.releaseDate || "Unknown"}</p>
@@ -537,10 +583,11 @@ const MangaReadPage = () => {
             {isPdfModeOpen
               ? "PDF Mode"
               : fullscreenPages[0]?.page
-                ? `Page ${fullscreenPages[0].page}${desktopSpread && fullscreenPages[1]?.page
-                  ? ` - ${fullscreenPages[1].page}`
-                  : ""
-                }`
+                ? `Page ${fullscreenPages[0].page}${
+                    desktopSpread && fullscreenPages[1]?.page
+                      ? ` - ${fullscreenPages[1].page}`
+                      : ""
+                  }`
                 : "Manga Reader"}
           </div>
           <div className={styles.fullscreenActions}>
@@ -583,8 +630,13 @@ const MangaReadPage = () => {
               ref={pdfScrollRef}
             >
               {visibleChapterPages.map((pageImage) => (
-                <div className={styles.pdfPage} key={`pdf-${pageImage.page}-${pageImage.img}`}>
-                  <span className={styles.pageNumberLabel}>Page {pageImage.page}</span>
+                <div
+                  className={styles.pdfPage}
+                  key={`pdf-${pageImage.page}-${pageImage.img}`}
+                >
+                  <span className={styles.pageNumberLabel}>
+                    Page {pageImage.page}
+                  </span>
                   <MangaImageWithLoader
                     src={pageImage.img}
                     alt={`Page ${pageImage.page}`}
@@ -601,12 +653,18 @@ const MangaReadPage = () => {
           ) : (
             <>
               <div
-                className={`${styles.fullscreenBody} ${desktopSpread ? styles.fullscreenBodySpread : ""
-                  }`}
+                className={`${styles.fullscreenBody} ${
+                  desktopSpread ? styles.fullscreenBodySpread : ""
+                }`}
               >
                 {fullscreenPages.map((pageImage) => (
-                  <div className={styles.fullscreenPage} key={`fullscreen-${pageImage.page}`}>
-                    <span className={styles.pageNumberLabel}>Page {pageImage.page}</span>
+                  <div
+                    className={styles.fullscreenPage}
+                    key={`fullscreen-${pageImage.page}`}
+                  >
+                    <span className={styles.pageNumberLabel}>
+                      Page {pageImage.page}
+                    </span>
                     <MangaImageWithLoader
                       src={pageImage.img}
                       alt={`Page ${pageImage.page}`}

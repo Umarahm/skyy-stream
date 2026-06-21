@@ -30,7 +30,11 @@ const toMode = (rawSubtype: string, streamType: string) => {
   const lowered = rawSubtype.toLowerCase();
   if (lowered.includes("embed")) return "embed";
   if (lowered.includes("dl")) return "dl";
-  return String(streamType || "").toLowerCase().includes("embed") ? "embed" : "dl";
+  return String(streamType || "")
+    .toLowerCase()
+    .includes("embed")
+    ? "embed"
+    : "dl";
 };
 
 const toSubType = (rawSubtype: string, streamType: string) => {
@@ -38,9 +42,17 @@ const toSubType = (rawSubtype: string, streamType: string) => {
   if (lowered.includes("h-sub") || lowered.includes("s-sub")) return lowered;
   if (lowered.includes("h-dub") || lowered.includes("s-dub")) return lowered;
   if (lowered.includes("dub")) {
-    return String(streamType || "").toLowerCase().includes("hls") ? "h-dub" : "s-dub";
+    return String(streamType || "")
+      .toLowerCase()
+      .includes("hls")
+      ? "h-dub"
+      : "s-dub";
   }
-  return String(streamType || "").toLowerCase().includes("hls") ? "h-sub" : "s-sub";
+  return String(streamType || "")
+    .toLowerCase()
+    .includes("hls")
+    ? "h-sub"
+    : "s-sub";
 };
 
 const selectPreferredProviderGroup = (groups: any[]) => {
@@ -48,10 +60,16 @@ const selectPreferredProviderGroup = (groups: any[]) => {
   const kiwiPreferred = groups.find(
     (group) =>
       String(group?.provider || "").toLowerCase() === "kiwi" &&
-      String(group?.subType || "").toLowerCase().includes("h-sub"),
+      String(group?.subType || "")
+        .toLowerCase()
+        .includes("h-sub"),
   );
   if (kiwiPreferred) return kiwiPreferred;
-  const firstHSub = groups.find((group) => String(group?.subType || "").toLowerCase().includes("h-sub"));
+  const firstHSub = groups.find((group) =>
+    String(group?.subType || "")
+      .toLowerCase()
+      .includes("h-sub"),
+  );
   if (firstHSub) return firstHSub;
   return groups[0];
 };
@@ -126,9 +144,14 @@ const AnimeMetaDetails = ({
   onPreviewProviderChange?: (provider: string) => void;
   onPreviewTypeChange?: (audioType: "sub" | "dub") => void;
   onPreviewSourceIndexChange?: (index: number) => void;
-  onEpisodePreviewSelect?: (payload: { number: number; provider?: string }) => void;
+  onEpisodePreviewSelect?: (payload: {
+    number: number;
+    provider?: string;
+  }) => void;
 }) => {
-  const isMovie = /movie|film/i.test(String(details?.type || details?.format || ""));
+  const isMovie = /movie|film/i.test(
+    String(details?.type || details?.format || ""),
+  );
   const [category, setCategory] = useState<
     "overview" | "episodes" | "recommended" | "relations" | "characters"
   >("overview");
@@ -138,26 +161,32 @@ const AnimeMetaDetails = ({
   const providerGroups = useMemo(() => {
     const providers = episodesPayload?.providers || {};
     const groups: any[] = [];
-    Object.entries(providers).forEach(([providerName, providerDataRaw]: [string, any]) => {
-      const normalizedProvider = String(providerName || "").toLowerCase();
-      if (!normalizedProvider || HIDDEN_PROVIDERS.has(normalizedProvider)) return;
-      const providerData = providerDataRaw || {};
-      const streamType = String(providerData?.streamType || "");
-      const episodeCollections = providerData?.episodes || {};
-      Object.entries(episodeCollections).forEach(([episodeTypeKey, episodesListRaw]: [string, any]) => {
-        if (!Array.isArray(episodesListRaw) || episodesListRaw.length === 0) return;
-        const mode = toMode(episodeTypeKey, streamType);
-        const subType = toSubType(episodeTypeKey, streamType);
-        groups.push({
-          key: `${providerName}__${mode}__${subType}`,
-          provider: normalizedProvider,
-          mode,
-          subType,
-          label: `${providerName.toUpperCase()} • ${mode} • ${subType}`,
-          episodes: episodesListRaw,
-        });
-      });
-    });
+    Object.entries(providers).forEach(
+      ([providerName, providerDataRaw]: [string, any]) => {
+        const normalizedProvider = String(providerName || "").toLowerCase();
+        if (!normalizedProvider || HIDDEN_PROVIDERS.has(normalizedProvider))
+          return;
+        const providerData = providerDataRaw || {};
+        const streamType = String(providerData?.streamType || "");
+        const episodeCollections = providerData?.episodes || {};
+        Object.entries(episodeCollections).forEach(
+          ([episodeTypeKey, episodesListRaw]: [string, any]) => {
+            if (!Array.isArray(episodesListRaw) || episodesListRaw.length === 0)
+              return;
+            const mode = toMode(episodeTypeKey, streamType);
+            const subType = toSubType(episodeTypeKey, streamType);
+            groups.push({
+              key: `${providerName}__${mode}__${subType}`,
+              provider: normalizedProvider,
+              mode,
+              subType,
+              label: `${providerName.toUpperCase()} • ${mode} • ${subType}`,
+              episodes: episodesListRaw,
+            });
+          },
+        );
+      },
+    );
     return groups;
   }, [episodesPayload]);
 
@@ -165,7 +194,9 @@ const AnimeMetaDetails = ({
     () => selectPreferredProviderGroup(providerGroups),
     [providerGroups],
   );
-  const fallbackEpisodes = Array.isArray(details?.episodes?.episodes) ? details.episodes.episodes : [];
+  const fallbackEpisodes = Array.isArray(details?.episodes?.episodes)
+    ? details.episodes.episodes
+    : [];
   const fallbackEpisodeMap = useMemo(() => {
     const map = new Map<number, any>();
     fallbackEpisodes.forEach((episode: any) => {
@@ -177,43 +208,61 @@ const AnimeMetaDetails = ({
   }, [fallbackEpisodes]);
   const episodeMetaByNumber = useMemo(() => {
     const providers = episodesPayload?.providers || {};
-    const map = new Map<number, { byProvider: Record<string, any>; first: any; filler: boolean }>();
-    Object.entries(providers).forEach(([providerName, providerDataRaw]: [string, any]) => {
-      const normalizedProvider = String(providerName || "").toLowerCase();
-      if (!normalizedProvider || HIDDEN_PROVIDERS.has(normalizedProvider)) return;
-      const providerData = providerDataRaw || {};
-      const episodeCollections = providerData?.episodes || {};
-      Object.values(episodeCollections).forEach((episodesListRaw: any) => {
-        if (!Array.isArray(episodesListRaw)) return;
-        episodesListRaw.forEach((episode: any) => {
-          const number = toEpisodeNumber(episode?.number);
-          if (!number) return;
-          const existing = map.get(number) || { byProvider: {}, first: null, filler: false };
-          if (!existing.byProvider[normalizedProvider] && episode?.id) {
-            existing.byProvider[normalizedProvider] = episode;
-          }
-          if (!existing.first && episode?.id) {
-            existing.first = episode;
-          }
-          existing.filler = existing.filler || Boolean(episode?.filler);
-          map.set(number, existing);
+    const map = new Map<
+      number,
+      { byProvider: Record<string, any>; first: any; filler: boolean }
+    >();
+    Object.entries(providers).forEach(
+      ([providerName, providerDataRaw]: [string, any]) => {
+        const normalizedProvider = String(providerName || "").toLowerCase();
+        if (!normalizedProvider || HIDDEN_PROVIDERS.has(normalizedProvider))
+          return;
+        const providerData = providerDataRaw || {};
+        const episodeCollections = providerData?.episodes || {};
+        Object.values(episodeCollections).forEach((episodesListRaw: any) => {
+          if (!Array.isArray(episodesListRaw)) return;
+          episodesListRaw.forEach((episode: any) => {
+            const number = toEpisodeNumber(episode?.number);
+            if (!number) return;
+            const existing = map.get(number) || {
+              byProvider: {},
+              first: null,
+              filler: false,
+            };
+            if (!existing.byProvider[normalizedProvider] && episode?.id) {
+              existing.byProvider[normalizedProvider] = episode;
+            }
+            if (!existing.first && episode?.id) {
+              existing.first = episode;
+            }
+            existing.filler = existing.filler || Boolean(episode?.filler);
+            map.set(number, existing);
+          });
         });
-      });
-    });
+      },
+    );
     return map;
   }, [episodesPayload]);
   const inferredEpisodeCount = useMemo(() => {
     const providerNumbers = Array.from(episodeMetaByNumber.keys());
     const fallbackNumbers = Array.from(fallbackEpisodeMap.keys());
-    const maxProviderEpisode = providerNumbers.length > 0 ? Math.max(...providerNumbers) : 0;
-    const maxFallbackEpisode = fallbackNumbers.length > 0 ? Math.max(...fallbackNumbers) : 0;
+    const maxProviderEpisode =
+      providerNumbers.length > 0 ? Math.max(...providerNumbers) : 0;
+    const maxFallbackEpisode =
+      fallbackNumbers.length > 0 ? Math.max(...fallbackNumbers) : 0;
     return Math.max(maxProviderEpisode, maxFallbackEpisode);
   }, [episodeMetaByNumber, fallbackEpisodeMap]);
-  const totalEpisodeCount = anilistEpisodeCount && anilistEpisodeCount > 0 ? anilistEpisodeCount : inferredEpisodeCount;
-  const resolvedEpisodeCount = totalEpisodeCount > 0 ? totalEpisodeCount : isMovie && animeId ? 1 : 0;
+  const totalEpisodeCount =
+    anilistEpisodeCount && anilistEpisodeCount > 0
+      ? anilistEpisodeCount
+      : inferredEpisodeCount;
+  const resolvedEpisodeCount =
+    totalEpisodeCount > 0 ? totalEpisodeCount : isMovie && animeId ? 1 : 0;
   const activeEpisodes = useMemo(() => {
     if (!resolvedEpisodeCount) return [];
-    const selectedProviderName = String(selectedProvider?.provider || "").toLowerCase();
+    const selectedProviderName = String(
+      selectedProvider?.provider || "",
+    ).toLowerCase();
     return Array.from({ length: resolvedEpisodeCount }, (_, idx) => {
       const number = idx + 1;
       const providerMeta = episodeMetaByNumber.get(number);
@@ -221,15 +270,29 @@ const AnimeMetaDetails = ({
       const selectedProviderEpisode = selectedProviderName
         ? providerMeta?.byProvider?.[selectedProviderName]
         : null;
-      const sourceEpisode = selectedProviderEpisode || providerMeta?.first || fallbackEpisode || {};
+      const sourceEpisode =
+        selectedProviderEpisode || providerMeta?.first || fallbackEpisode || {};
       return {
         ...sourceEpisode,
         number,
-        filler: Boolean(sourceEpisode?.filler ?? providerMeta?.filler ?? fallbackEpisode?.filler),
-        mappedEpisodeId: selectedProviderEpisode?.id || providerMeta?.first?.id || fallbackEpisode?.id || "",
+        filler: Boolean(
+          sourceEpisode?.filler ??
+          providerMeta?.filler ??
+          fallbackEpisode?.filler,
+        ),
+        mappedEpisodeId:
+          selectedProviderEpisode?.id ||
+          providerMeta?.first?.id ||
+          fallbackEpisode?.id ||
+          "",
       };
     });
-  }, [resolvedEpisodeCount, selectedProvider?.provider, episodeMetaByNumber, fallbackEpisodeMap]);
+  }, [
+    resolvedEpisodeCount,
+    selectedProvider?.provider,
+    episodeMetaByNumber,
+    fallbackEpisodeMap,
+  ]);
   const episodeRanges = useMemo(() => {
     const ranges = [];
     for (let start = 0; start < resolvedEpisodeCount; start += pageSize) {
@@ -247,13 +310,13 @@ const AnimeMetaDetails = ({
     end: Math.min(resolvedEpisodeCount, pageSize),
   };
   const pagedEpisodes = useMemo(
-    () =>
-      activeEpisodes.slice(activeRange.start, activeRange.end),
+    () => activeEpisodes.slice(activeRange.start, activeRange.end),
     [activeEpisodes, activeRange],
   );
   const isEpisodesLoading = loading || episodesLoading;
   const animeSlug = details?.episodes?.slug || details?.slug || "";
-  const detailTitle = getMiruroDisplayTitle(details) || details?.title || "Anime";
+  const detailTitle =
+    getMiruroDisplayTitle(details) || details?.title || "Anime";
   const description = details?.description || details?.synopsis || "";
   const recommendations = details?.recommendations?.nodes || [];
   const relations = details?.relations?.edges || [];
@@ -270,7 +333,9 @@ const AnimeMetaDetails = ({
   const airedText =
     details?.aired ||
     details?.premiered ||
-    (startDateText || endDateText ? `${startDateText}${startDateText && endDateText ? " - " : ""}${endDateText}` : "");
+    (startDateText || endDateText
+      ? `${startDateText}${startDateText && endDateText ? " - " : ""}${endDateText}`
+      : "");
   const typeStatusText = [details?.format || details?.type, details?.status]
     .filter(Boolean)
     .join(" • ");
@@ -357,7 +422,9 @@ const AnimeMetaDetails = ({
                 {description ? (
                   <>
                     <h3>Synopsis</h3>
-                    <p className={styles.preWrap}>{cleanDescription(description)}</p>
+                    <p className={styles.preWrap}>
+                      {cleanDescription(description)}
+                    </p>
                   </>
                 ) : null}
 
@@ -365,7 +432,11 @@ const AnimeMetaDetails = ({
                   <>
                     <h3>MyAnimeList</h3>
                     <p className={styles.ratingRow}>
-                      <img src="/icons/MAL_Logo.svg" alt="MAL" className={styles.malInlineLogo} />
+                      <img
+                        src="/icons/MAL_Logo.svg"
+                        alt="MAL"
+                        className={styles.malInlineLogo}
+                      />
                       <span>{malId}</span>
                     </p>
                   </>
@@ -412,7 +483,11 @@ const AnimeMetaDetails = ({
                           className={styles.studioItem}
                         >
                           <span>{studio?.name}</span>
-                          <small>{studio?.isAnimationStudio ? "Animation Studio" : "Production"}</small>
+                          <small>
+                            {studio?.isAnimationStudio
+                              ? "Animation Studio"
+                              : "Production"}
+                          </small>
                         </a>
                       ))}
                     </div>
@@ -438,7 +513,11 @@ const AnimeMetaDetails = ({
           <div className={styles.largeCardList}>
             {loading ? (
               dummyList.map((item) => (
-                <Skeleton key={item} height={120} style={{ margin: "0.5rem 0" }} />
+                <Skeleton
+                  key={item}
+                  height={120}
+                  style={{ margin: "0.5rem 0" }}
+                />
               ))
             ) : (
               <>
@@ -450,11 +529,15 @@ const AnimeMetaDetails = ({
                       key={`${cardData.id}-${cardData.title}`}
                       data={cardData}
                       media_type={cardData.media_type}
-                      customHref={cardData.id ? `/anime-details?id=${cardData.id}` : "#"}
+                      customHref={
+                        cardData.id ? `/anime-details?id=${cardData.id}` : "#"
+                      }
                     />
                   );
                 })}
-                {recommendations.length === 0 ? <p>No recommendations found.</p> : null}
+                {recommendations.length === 0 ? (
+                  <p>No recommendations found.</p>
+                ) : null}
               </>
             )}
           </div>
@@ -464,7 +547,11 @@ const AnimeMetaDetails = ({
           <div className={styles.largeCardList}>
             {loading ? (
               dummyList.map((item) => (
-                <Skeleton key={item} height={120} style={{ margin: "0.5rem 0" }} />
+                <Skeleton
+                  key={item}
+                  height={120}
+                  style={{ margin: "0.5rem 0" }}
+                />
               ))
             ) : (
               <>
@@ -472,17 +559,26 @@ const AnimeMetaDetails = ({
                   const media = edge?.node || {};
                   const cardData = toLargeCardData(media);
                   return (
-                    <div key={`${edge?.relationType}-${cardData.id}`} className={styles.relationCardWrap}>
-                      <span className={styles.relationType}>{edge?.relationType || "RELATED"}</span>
+                    <div
+                      key={`${edge?.relationType}-${cardData.id}`}
+                      className={styles.relationCardWrap}
+                    >
+                      <span className={styles.relationType}>
+                        {edge?.relationType || "RELATED"}
+                      </span>
                       <MovieCardLarge
                         data={cardData}
                         media_type={cardData.media_type}
-                        customHref={cardData.id ? `/anime-details?id=${cardData.id}` : "#"}
+                        customHref={
+                          cardData.id ? `/anime-details?id=${cardData.id}` : "#"
+                        }
                       />
                     </div>
                   );
                 })}
-                {relations.length === 0 ? <p>No related titles found.</p> : null}
+                {relations.length === 0 ? (
+                  <p>No related titles found.</p>
+                ) : null}
               </>
             )}
           </div>
@@ -492,17 +588,30 @@ const AnimeMetaDetails = ({
           <div className={styles.cardGrid}>
             {loading ? (
               dummyList.map((item) => (
-                <Skeleton key={item} height={90} style={{ margin: "0.5rem 0" }} />
+                <Skeleton
+                  key={item}
+                  height={90}
+                  style={{ margin: "0.5rem 0" }}
+                />
               ))
             ) : (
               <>
                 {characters.map((edge: any) => {
                   const character = edge?.node;
                   const charName =
-                    character?.name?.full || character?.name?.native || character?.name || "Unknown";
+                    character?.name?.full ||
+                    character?.name?.native ||
+                    character?.name ||
+                    "Unknown";
                   return (
-                    <div key={`${character?.id}-${charName}`} className={styles.metaCard}>
-                      <img src={character?.image?.large || "/images/logo.svg"} alt={charName} />
+                    <div
+                      key={`${character?.id}-${charName}`}
+                      className={styles.metaCard}
+                    >
+                      <img
+                        src={character?.image?.large || "/images/logo.svg"}
+                        alt={charName}
+                      />
                       <div>
                         <h4>{charName}</h4>
                         {edge?.role ? <p>{edge.role}</p> : null}
@@ -520,7 +629,11 @@ const AnimeMetaDetails = ({
           <div className={styles.EpisodeList}>
             {isEpisodesLoading ? (
               dummyList.map((item) => (
-                <Skeleton key={item} height={64} style={{ margin: "0.5rem 0" }} />
+                <Skeleton
+                  key={item}
+                  height={64}
+                  style={{ margin: "0.5rem 0" }}
+                />
               ))
             ) : (
               <>
@@ -548,7 +661,9 @@ const AnimeMetaDetails = ({
                           id="episode-audio"
                           value={previewType}
                           onChange={(event) =>
-                            onPreviewTypeChange?.(event.target.value === "dub" ? "dub" : "sub")
+                            onPreviewTypeChange?.(
+                              event.target.value === "dub" ? "dub" : "sub",
+                            )
                           }
                         >
                           {availablePreviewTypes.map((audioType) => (
@@ -561,7 +676,9 @@ const AnimeMetaDetails = ({
                         <select
                           id="episode-provider"
                           value={previewProvider}
-                          onChange={(event) => onPreviewProviderChange?.(event.target.value)}
+                          onChange={(event) =>
+                            onPreviewProviderChange?.(event.target.value)
+                          }
                         >
                           {availablePreviewProviders.map((provider) => (
                             <option key={provider} value={provider}>
@@ -573,12 +690,21 @@ const AnimeMetaDetails = ({
                         <select
                           id="episode-stream"
                           value={previewSourceIndex}
-                          onChange={(event) => onPreviewSourceIndexChange?.(Number(event.target.value))}
-                          disabled={previewLoading || previewSources.length === 0}
+                          onChange={(event) =>
+                            onPreviewSourceIndexChange?.(
+                              Number(event.target.value),
+                            )
+                          }
+                          disabled={
+                            previewLoading || previewSources.length === 0
+                          }
                         >
                           {previewSources.length > 0 ? (
                             previewSources.map((source: any, idx: number) => (
-                              <option key={`${source?.server || "src"}-${idx}`} value={idx}>
+                              <option
+                                key={`${source?.server || "src"}-${idx}`}
+                                value={idx}
+                              >
                                 {source?.server || `Source ${idx + 1}`}
                               </option>
                             ))
@@ -626,7 +752,9 @@ const AnimeMetaDetails = ({
                         rel={animeId || animeSlug ? undefined : "noreferrer"}
                       >
                         <div className={styles.episodeTileHead}>
-                          <span className={styles.episodeNumber}>{episodeNumber}</span>
+                          <span className={styles.episodeNumber}>
+                            {episodeNumber}
+                          </span>
                         </div>
                       </Link>
                     );

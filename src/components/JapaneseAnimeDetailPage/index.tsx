@@ -10,9 +10,14 @@ import { BsShare } from "react-icons/bs";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { navigatorShare } from "@/Utils/share";
-import { getAnikotoAnimeDetails, getAnikotoWatchByKeyword } from "@/Utils/anikoto";
+import {
+  getAnikotoAnimeDetails,
+  getAnikotoWatchByKeyword,
+} from "@/Utils/anikoto";
 import AnimeMetaDetails from "./AnimeMetaDetails";
-import ProviderCheckModal, { type ProviderProbeItem } from "./ProviderCheckModal";
+import ProviderCheckModal, {
+  type ProviderProbeItem,
+} from "./ProviderCheckModal";
 import axiosFetch from "@/Utils/fetchBackend";
 import { getAniListAnimeDetails } from "@/Utils/anilist";
 import Player from "@/components/Artplayer";
@@ -71,58 +76,80 @@ const buildMiruroProxyUrl = (streamUrl: string, referer: string) => {
   return `${cleanBase}/fetch?url=${encodeURIComponent(streamUrl)}${refererQuery}`;
 };
 
-const getEpisodeIdLookupForEpisode = (episodesPayload: any, episodeNo: number) => {
+const getEpisodeIdLookupForEpisode = (
+  episodesPayload: any,
+  episodeNo: number,
+) => {
   const providers = episodesPayload?.providers || {};
   const lookup: Record<string, { sub?: string; dub?: string }> = {};
-  Object.entries(providers).forEach(([providerName, providerDataRaw]: [string, any]) => {
-    const provider = String(providerName || "").toLowerCase();
-    if (!provider || HIDDEN_PROVIDERS.has(provider)) return;
-    const providerData = providerDataRaw || {};
-    const episodeCollections = providerData?.episodes || {};
-    const store = (lookup[provider] ||= {});
-    Object.entries(episodeCollections).forEach(([key, listRaw]: [string, any]) => {
-      if (!Array.isArray(listRaw) || listRaw.length === 0) return;
-      const lowered = String(key || "").toLowerCase();
-      const audio: "sub" | "dub" = lowered.includes("dub") ? "dub" : "sub";
-      const match = listRaw.find((episode: any) => Number(episode?.number || 0) === episodeNo);
-      if (match?.id) {
-        store[audio] = match.id;
-      }
-    });
-  });
+  Object.entries(providers).forEach(
+    ([providerName, providerDataRaw]: [string, any]) => {
+      const provider = String(providerName || "").toLowerCase();
+      if (!provider || HIDDEN_PROVIDERS.has(provider)) return;
+      const providerData = providerDataRaw || {};
+      const episodeCollections = providerData?.episodes || {};
+      const store = (lookup[provider] ||= {});
+      Object.entries(episodeCollections).forEach(
+        ([key, listRaw]: [string, any]) => {
+          if (!Array.isArray(listRaw) || listRaw.length === 0) return;
+          const lowered = String(key || "").toLowerCase();
+          const audio: "sub" | "dub" = lowered.includes("dub") ? "dub" : "sub";
+          const match = listRaw.find(
+            (episode: any) => Number(episode?.number || 0) === episodeNo,
+          );
+          if (match?.id) {
+            store[audio] = match.id;
+          }
+        },
+      );
+    },
+  );
   return lookup;
 };
 
 const getProviderAudioSupport = (episodesPayload: any) => {
   const providers = episodesPayload?.providers || {};
   const support: Record<string, { sub: boolean; dub: boolean }> = {};
-  Object.entries(providers).forEach(([providerName, providerDataRaw]: [string, any]) => {
-    const provider = String(providerName || "").toLowerCase();
-    if (!provider || HIDDEN_PROVIDERS.has(provider)) return;
-    const providerData = providerDataRaw || {};
-    const episodeCollections = providerData?.episodes || {};
-    const store = (support[provider] ||= { sub: false, dub: false });
-    Object.entries(episodeCollections).forEach(([key, listRaw]: [string, any]) => {
-      if (!Array.isArray(listRaw) || listRaw.length === 0) return;
-      const lowered = String(key || "").toLowerCase();
-      if (lowered.includes("dub")) store.dub = true;
-      if (lowered.includes("sub") || !lowered.includes("dub")) store.sub = true;
-      const hasEpisodeTaggedDub = listRaw.some((episode: any) =>
-        String(episode?.title || "").toLowerCase().includes("dub"),
+  Object.entries(providers).forEach(
+    ([providerName, providerDataRaw]: [string, any]) => {
+      const provider = String(providerName || "").toLowerCase();
+      if (!provider || HIDDEN_PROVIDERS.has(provider)) return;
+      const providerData = providerDataRaw || {};
+      const episodeCollections = providerData?.episodes || {};
+      const store = (support[provider] ||= { sub: false, dub: false });
+      Object.entries(episodeCollections).forEach(
+        ([key, listRaw]: [string, any]) => {
+          if (!Array.isArray(listRaw) || listRaw.length === 0) return;
+          const lowered = String(key || "").toLowerCase();
+          if (lowered.includes("dub")) store.dub = true;
+          if (lowered.includes("sub") || !lowered.includes("dub"))
+            store.sub = true;
+          const hasEpisodeTaggedDub = listRaw.some((episode: any) =>
+            String(episode?.title || "")
+              .toLowerCase()
+              .includes("dub"),
+          );
+          if (hasEpisodeTaggedDub) store.dub = true;
+        },
       );
-      if (hasEpisodeTaggedDub) store.dub = true;
-    });
-  });
+    },
+  );
   return support;
 };
 
-const mapMiruroWatchToSources = (payload: any, provider: string, audioType: "sub" | "dub") => {
+const mapMiruroWatchToSources = (
+  payload: any,
+  provider: string,
+  audioType: "sub" | "dub",
+) => {
   const providerName = String(provider || "").toLowerCase();
   const streams = Array.isArray(payload?.streams) ? payload.streams : [];
   let usableStreams = streams
     .filter((item: any) => {
       const streamType = String(item?.type || "").toLowerCase();
-      return Boolean(item?.url) && (streamType === "hls" || streamType === "mp4");
+      return (
+        Boolean(item?.url) && (streamType === "hls" || streamType === "mp4")
+      );
     })
     .filter((item: any) => item?.isActive !== false);
 
@@ -139,7 +166,8 @@ const mapMiruroWatchToSources = (payload: any, provider: string, audioType: "sub
       providerName === "kiwi"
         ? buildAnimeRealmsProxyUrl(stream.url, ref)
         : buildMiruroProxyUrl(stream.url, ref);
-    const streamFormat = String(stream?.type || "").toLowerCase() === "hls" ? "hls" : "mp4";
+    const streamFormat =
+      String(stream?.type || "").toLowerCase() === "hls" ? "hls" : "mp4";
     return {
       type: audioType,
       server: `${providerName.toUpperCase()} ${stream?.server || stream?.quality || streamFormat.toUpperCase()}`,
@@ -162,7 +190,9 @@ const probeStreamAvailability = async (url: string) => {
       signal: controller.signal,
     });
     if (!response.ok) return false;
-    const type = String(response.headers.get("content-type") || "").toLowerCase();
+    const type = String(
+      response.headers.get("content-type") || "",
+    ).toLowerCase();
     return (
       type.includes("mpegurl") ||
       type.includes("video") ||
@@ -185,21 +215,31 @@ const JapaneseAnimeDetailPage = () => {
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [episodesLoading, setEpisodesLoading] = useState(false);
-  const [anilistEpisodeCount, setAnilistEpisodeCount] = useState<number | null>(null);
+  const [anilistEpisodeCount, setAnilistEpisodeCount] = useState<number | null>(
+    null,
+  );
   const [previewEpisode, setPreviewEpisode] = useState<number | null>(null);
   const [previewProvider, setPreviewProvider] = useState("kiwi");
   const [previewType, setPreviewType] = useState<"sub" | "dub">("sub");
   const [previewSources, setPreviewSources] = useState<any[]>([]);
   const [previewSourceIndex, setPreviewSourceIndex] = useState(0);
   const [previewLoading, setPreviewLoading] = useState(false);
-  const [previewAnikotoTypes, setPreviewAnikotoTypes] = useState<Array<"sub" | "dub">>(["sub"]);
+  const [previewAnikotoTypes, setPreviewAnikotoTypes] = useState<
+    Array<"sub" | "dub">
+  >(["sub"]);
   const lastStreamToastKeyRef = useRef("");
   const [providerModalOpen, setProviderModalOpen] = useState(false);
-  const [providerProbeItems, setProviderProbeItems] = useState<ProviderProbeItem[]>([]);
-  const [providerProbeEpisode, setProviderProbeEpisode] = useState<number | null>(null);
-  const manualSelectionRef = useRef<{ episode: number; provider: string; type: "sub" | "dub" } | null>(
-    null,
-  );
+  const [providerProbeItems, setProviderProbeItems] = useState<
+    ProviderProbeItem[]
+  >([]);
+  const [providerProbeEpisode, setProviderProbeEpisode] = useState<
+    number | null
+  >(null);
+  const manualSelectionRef = useRef<{
+    episode: number;
+    provider: string;
+    type: "sub" | "dub";
+  } | null>(null);
   const modalRunIdRef = useRef(0);
 
   const id = params.get("id");
@@ -239,8 +279,10 @@ const JapaneseAnimeDetailPage = () => {
           (item?.backdrop_path || item?.id),
       );
       const animeMatch =
-        results.find((item: any) => item?.media_type === "tv" && isLikelyAnimeTmdbResult(item)) ||
-        results.find(isLikelyAnimeTmdbResult);
+        results.find(
+          (item: any) =>
+            item?.media_type === "tv" && isLikelyAnimeTmdbResult(item),
+        ) || results.find(isLikelyAnimeTmdbResult);
 
       if (animeMatch) return animeMatch;
     }
@@ -284,7 +326,9 @@ const JapaneseAnimeDetailPage = () => {
             getMiruroInfo(id),
             getMiruroEpisodes(id),
             getMiruroCharacters(id),
-            Number.isFinite(numericId) ? getAniListAnimeDetails(numericId) : Promise.resolve(null),
+            Number.isFinite(numericId)
+              ? getAniListAnimeDetails(numericId)
+              : Promise.resolve(null),
           ]);
           details = info;
           episodeInfo = episodes;
@@ -299,14 +343,20 @@ const JapaneseAnimeDetailPage = () => {
         setEpisodesData(episodeInfo);
         setCharactersData(charactersInfo);
         setAnilistEpisodeCount(
-          typeof aniListDetails?.episodes === "number" && aniListDetails.episodes > 0
+          typeof aniListDetails?.episodes === "number" &&
+            aniListDetails.episodes > 0
             ? aniListDetails.episodes
             : null,
         );
         const queryTitle = sanitizeTitleForTmdb(
-          getMiruroDisplayTitle(details) || details?.title || details?.titleJp || "",
+          getMiruroDisplayTitle(details) ||
+            details?.title ||
+            details?.titleJp ||
+            "",
         );
-        const tmdbMatch = queryTitle ? await findAnimeTmdbMatch(queryTitle) : null;
+        const tmdbMatch = queryTitle
+          ? await findAnimeTmdbMatch(queryTitle)
+          : null;
         const imageArr = tmdbMatch ? await getTmdbBackdrops(tmdbMatch) : [];
         setImages(imageArr.length > 0 ? imageArr : ["/images/logo.svg"]);
       } catch (error) {
@@ -319,7 +369,11 @@ const JapaneseAnimeDetailPage = () => {
     load();
   }, [id, slug]);
 
-  const title = getMiruroDisplayTitle(animeData) || animeData?.title || animeData?.titleJp || "Anime";
+  const title =
+    getMiruroDisplayTitle(animeData) ||
+    animeData?.title ||
+    animeData?.titleJp ||
+    "Anime";
   const aniListScoreRaw =
     typeof animeData?.averageScore === "number"
       ? animeData.averageScore
@@ -341,7 +395,9 @@ const JapaneseAnimeDetailPage = () => {
           : styles.titleLg;
 
   const handleShare = () => {
-    const shareUrl = id ? `/anime-details?id=${id}` : `/anime-detail?slug=${slug}`;
+    const shareUrl = id
+      ? `/anime-details?id=${id}`
+      : `/anime-detail?slug=${slug}`;
     navigatorShare({ text: title, url: shareUrl });
   };
 
@@ -357,14 +413,23 @@ const JapaneseAnimeDetailPage = () => {
         : {},
     [episodesData, previewEpisode],
   );
-  const providerAudioSupport = useMemo(() => getProviderAudioSupport(episodesData), [episodesData]);
+  const providerAudioSupport = useMemo(
+    () => getProviderAudioSupport(episodesData),
+    [episodesData],
+  );
   const availablePreviewProviders = useMemo(() => {
-    const keys = Object.keys(providerEpisodeLookup || {}).filter((providerName) => {
-      const entry = providerEpisodeLookup?.[providerName] || {};
-      return Boolean(entry?.sub || entry?.dub);
-    });
+    const keys = Object.keys(providerEpisodeLookup || {}).filter(
+      (providerName) => {
+        const entry = providerEpisodeLookup?.[providerName] || {};
+        return Boolean(entry?.sub || entry?.dub);
+      },
+    );
     if (!keys.includes("anikoto")) keys.push("anikoto");
-    if (keys.includes("kiwi")) return ["kiwi", ...keys.filter((providerName) => providerName !== "kiwi")];
+    if (keys.includes("kiwi"))
+      return [
+        "kiwi",
+        ...keys.filter((providerName) => providerName !== "kiwi"),
+      ];
     return keys;
   }, [providerEpisodeLookup]);
   const providersByAudioType = useMemo(() => {
@@ -393,27 +458,35 @@ const JapaneseAnimeDetailPage = () => {
           : [];
         const normalized = sourceList
           .map((source: any, idx: number) => {
-            const type =
-              String(source?.type || "").toLowerCase().includes("dub") ? "dub" : "sub";
-            const streamUrl = source?.proxyUrl || source?.url || source?.src || "";
+            const type = String(source?.type || "")
+              .toLowerCase()
+              .includes("dub")
+              ? "dub"
+              : "sub";
+            const streamUrl =
+              source?.proxyUrl || source?.url || source?.src || "";
             if (!streamUrl) return null;
             return {
               type,
               server: source?.server || source?.name || `ANIKOTO ${idx + 1}`,
               proxyUrl: String(streamUrl),
-              streamFormat:
-                String(source?.streamFormat || source?.format || "")
-                  .toLowerCase()
-                  .includes("mp4")
-                  ? "mp4"
-                  : "hls",
+              streamFormat: String(source?.streamFormat || source?.format || "")
+                .toLowerCase()
+                .includes("mp4")
+                ? "mp4"
+                : "hls",
             };
           })
           .filter(Boolean);
-        const exactType = normalized.filter((source: any) => source.type === audioType);
+        const exactType = normalized.filter(
+          (source: any) => source.type === audioType,
+        );
         if (exactType.length > 0) return { audioType, sources: exactType };
         const fallbackType = normalized[0]?.type === "dub" ? "dub" : "sub";
-        return { audioType: fallbackType as "sub" | "dub", sources: normalized };
+        return {
+          audioType: fallbackType as "sub" | "dub",
+          sources: normalized,
+        };
       }
       const episodeEntry = lookup?.[providerName] || {};
       const episodeId =
@@ -422,7 +495,11 @@ const JapaneseAnimeDetailPage = () => {
         episodeEntry?.dub;
       if (!episodeId) return { audioType, sources: [] };
       const watchPayload = await getMiruroWatchByEpisodeId(episodeId);
-      const mapped = mapMiruroWatchToSources(watchPayload, providerName, audioType);
+      const mapped = mapMiruroWatchToSources(
+        watchPayload,
+        providerName,
+        audioType,
+      );
       return { audioType, sources: mapped };
     };
   };
@@ -454,14 +531,27 @@ const JapaneseAnimeDetailPage = () => {
 
   useEffect(() => {
     if (!previewEpisode || previewProvider === "anikoto") return;
-    const supportsSelectedType = Boolean(providerEpisodeLookup?.[previewProvider]?.[previewType]);
+    const supportsSelectedType = Boolean(
+      providerEpisodeLookup?.[previewProvider]?.[previewType],
+    );
     if (supportsSelectedType) return;
     const fallbackProviders =
-      previewType === "dub" ? providersByAudioType.dub : providersByAudioType.sub;
-    if (fallbackProviders.length > 0 && fallbackProviders[0] !== previewProvider) {
+      previewType === "dub"
+        ? providersByAudioType.dub
+        : providersByAudioType.sub;
+    if (
+      fallbackProviders.length > 0 &&
+      fallbackProviders[0] !== previewProvider
+    ) {
       setPreviewProvider(fallbackProviders[0]);
     }
-  }, [previewEpisode, previewProvider, previewType, providerEpisodeLookup, providersByAudioType]);
+  }, [
+    previewEpisode,
+    previewProvider,
+    previewType,
+    providerEpisodeLookup,
+    providersByAudioType,
+  ]);
 
   useEffect(() => {
     const loadInlinePreview = async () => {
@@ -479,46 +569,61 @@ const JapaneseAnimeDetailPage = () => {
         setPreviewLoading(true);
         if (previewProvider === "anikoto") {
           const keyword = getMiruroDisplayTitle(animeData) || title;
-          const watchPayload = await getAnikotoWatchByKeyword(keyword, previewEpisode);
+          const watchPayload = await getAnikotoWatchByKeyword(
+            keyword,
+            previewEpisode,
+          );
           const anikotoSources = Array.isArray(watchPayload?.data?.sources)
             ? watchPayload.data.sources
             : [];
           const typeSet = new Set<"sub" | "dub">();
           const normalized = anikotoSources
             .map((source: any, idx: number) => {
-              const type =
-                String(source?.type || "").toLowerCase().includes("dub") ? "dub" : "sub";
+              const type = String(source?.type || "")
+                .toLowerCase()
+                .includes("dub")
+                ? "dub"
+                : "sub";
               typeSet.add(type);
-              const streamUrl = source?.proxyUrl || source?.url || source?.src || "";
+              const streamUrl =
+                source?.proxyUrl || source?.url || source?.src || "";
               if (!streamUrl) return null;
               return {
                 type,
                 server: source?.server || source?.name || `ANIKOTO ${idx + 1}`,
                 proxyUrl: String(streamUrl),
-                streamFormat:
-                  String(source?.streamFormat || source?.format || "")
-                    .toLowerCase()
-                    .includes("mp4")
-                    ? "mp4"
-                    : "hls",
+                streamFormat: String(
+                  source?.streamFormat || source?.format || "",
+                )
+                  .toLowerCase()
+                  .includes("mp4")
+                  ? "mp4"
+                  : "hls",
               };
             })
             .filter(Boolean);
           const nextTypes = Array.from(typeSet.values());
           setPreviewAnikotoTypes(nextTypes.length > 0 ? nextTypes : ["sub"]);
-          const filteredByType = normalized.filter((source: any) => source.type === previewType);
-          setPreviewSources(filteredByType.length > 0 ? filteredByType : normalized);
+          const filteredByType = normalized.filter(
+            (source: any) => source.type === previewType,
+          );
+          setPreviewSources(
+            filteredByType.length > 0 ? filteredByType : normalized,
+          );
         } else {
           const preferredProviders = [
             previewProvider,
-            ...(previewType === "dub" ? providersByAudioType.dub : providersByAudioType.sub),
+            ...(previewType === "dub"
+              ? providersByAudioType.dub
+              : providersByAudioType.sub),
             ...availablePreviewProviders,
           ].filter(Boolean);
           const providerOrder = Array.from(new Set(preferredProviders));
           let targetEpisodeId = "";
           let selectedProviderForSource = previewProvider;
           for (const candidateProvider of providerOrder) {
-            const episodeEntry = providerEpisodeLookup?.[candidateProvider] || {};
+            const episodeEntry =
+              providerEpisodeLookup?.[candidateProvider] || {};
             const candidateEpisodeId =
               (previewType === "dub" ? episodeEntry?.dub : episodeEntry?.sub) ||
               episodeEntry?.sub ||
@@ -566,7 +671,8 @@ const JapaneseAnimeDetailPage = () => {
   ]);
 
   useEffect(() => {
-    if (!previewEpisode || previewLoading || !selectedPreviewSource?.proxyUrl) return;
+    if (!previewEpisode || previewLoading || !selectedPreviewSource?.proxyUrl)
+      return;
     const toastKey = `${previewEpisode}__${previewProvider}__${previewType}__${previewSourceIndex}__${selectedPreviewSource?.proxyUrl}`;
     if (lastStreamToastKeyRef.current === toastKey) return;
     lastStreamToastKeyRef.current = toastKey;
@@ -583,7 +689,10 @@ const JapaneseAnimeDetailPage = () => {
     title,
   ]);
 
-  const runProviderProbe = async (episodeNo: number, preferredAudio: "sub" | "dub") => {
+  const runProviderProbe = async (
+    episodeNo: number,
+    preferredAudio: "sub" | "dub",
+  ) => {
     const runId = modalRunIdRef.current + 1;
     modalRunIdRef.current = runId;
     const lookup = getEpisodeIdLookupForEpisode(episodesData, episodeNo);
@@ -591,7 +700,9 @@ const JapaneseAnimeDetailPage = () => {
     const providerCandidates = Array.from(
       new Set([
         ...Object.keys(lookup || {}),
-        ...Object.keys(support || {}).filter((provider) => support?.[provider]?.[preferredAudio]),
+        ...Object.keys(support || {}).filter(
+          (provider) => support?.[provider]?.[preferredAudio],
+        ),
         "anikoto",
       ]),
     ).filter(Boolean);
@@ -612,7 +723,9 @@ const JapaneseAnimeDetailPage = () => {
       message: string,
     ) => {
       setProviderProbeItems((current) =>
-        current.map((item) => (item.provider === provider ? { ...item, status, message } : item)),
+        current.map((item) =>
+          item.provider === provider ? { ...item, status, message } : item,
+        ),
       );
     };
 
@@ -622,7 +735,10 @@ const JapaneseAnimeDetailPage = () => {
       if (modalRunIdRef.current !== runId) return null;
       updateStatus(provider, "checking", "Checking for videos...");
       try {
-        const { audioType, sources } = await getSources(provider, preferredAudio);
+        const { audioType, sources } = await getSources(
+          provider,
+          preferredAudio,
+        );
         if (!Array.isArray(sources) || sources.length === 0) {
           updateStatus(provider, "failed", "No stream sources available");
           continue;
@@ -630,7 +746,9 @@ const JapaneseAnimeDetailPage = () => {
         const probePool = sources.slice(0, 3);
         let playableFound = false;
         for (const source of probePool) {
-          const ok = await probeStreamAvailability(String(source?.proxyUrl || ""));
+          const ok = await probeStreamAvailability(
+            String(source?.proxyUrl || ""),
+          );
           if (ok) {
             playableFound = true;
             break;
@@ -673,7 +791,9 @@ const JapaneseAnimeDetailPage = () => {
                 {previewLoading ? (
                   <Skeleton className={styles.CarouselLoading} />
                 ) : !selectedPreviewSource?.proxyUrl ? (
-                  <div className={styles.previewEmpty}>No playable source found for this episode.</div>
+                  <div className={styles.previewEmpty}>
+                    No playable source found for this episode.
+                  </div>
                 ) : (
                   <Player
                     option={{ url: selectedPreviewSource?.proxyUrl || "" }}
@@ -721,9 +841,15 @@ const JapaneseAnimeDetailPage = () => {
                   </span>
                 </div>
                 {animeData ? (
-                  <div className={styles.anilistScoreBadge}>{aniListScoreText || "N/A"}</div>
+                  <div className={styles.anilistScoreBadge}>
+                    {aniListScoreText || "N/A"}
+                  </div>
                 ) : (
-                  <Skeleton width={42} height={18} className={styles.anilistScoreSkeleton} />
+                  <Skeleton
+                    width={42}
+                    height={18}
+                    className={styles.anilistScoreSkeleton}
+                  />
                 )}
                 {animeData ? (
                   <img
@@ -745,19 +871,32 @@ const JapaneseAnimeDetailPage = () => {
                 </h1>
                 <div className={styles.HomeHeroMetaRow2}>
                   <p className={styles.type}>
-                    {animeData ? getMiruroMediaLabel(animeData) : <Skeleton width={60} />}
+                    {animeData ? (
+                      getMiruroMediaLabel(animeData)
+                    ) : (
+                      <Skeleton width={60} />
+                    )}
                   </p>
                   {animeData ? (
                     <>
                       <Link
                         className={styles.links}
                         href={watchHref}
-                        target={watchHref.startsWith("http") ? "_blank" : undefined}
-                        rel={watchHref.startsWith("http") ? "noreferrer" : undefined}
+                        target={
+                          watchHref.startsWith("http") ? "_blank" : undefined
+                        }
+                        rel={
+                          watchHref.startsWith("http")
+                            ? "noreferrer"
+                            : undefined
+                        }
                       >
                         watch <FaPlay />
                       </Link>
-                      <BsShare className={styles.HomeHeroIcons} onClick={handleShare} />
+                      <BsShare
+                        className={styles.HomeHeroIcons}
+                        onClick={handleShare}
+                      />
                     </>
                   ) : (
                     <div>
@@ -790,13 +929,19 @@ const JapaneseAnimeDetailPage = () => {
             previewSourceIndex={previewSourceIndex}
             availablePreviewProviders={availablePreviewProviders}
             availablePreviewTypes={availablePreviewTypes}
-            onPreviewProviderChange={(providerName) => setPreviewProvider(providerName)}
+            onPreviewProviderChange={(providerName) =>
+              setPreviewProvider(providerName)
+            }
             onPreviewTypeChange={(audioType) => setPreviewType(audioType)}
-            onPreviewSourceIndexChange={(sourceIdx) => setPreviewSourceIndex(sourceIdx)}
+            onPreviewSourceIndexChange={(sourceIdx) =>
+              setPreviewSourceIndex(sourceIdx)
+            }
             onEpisodePreviewSelect={async (payload) => {
               const episodeNo = Number(payload?.number || 1);
               const preferredAudio = previewType;
-              const preferredProvider = String(payload?.provider || "kiwi").toLowerCase();
+              const preferredProvider = String(
+                payload?.provider || "kiwi",
+              ).toLowerCase();
               setPreviewEpisode(null);
               setPreviewSources([]);
               setPreviewSourceIndex(0);
@@ -808,7 +953,9 @@ const JapaneseAnimeDetailPage = () => {
                 toast.error("No working stream found for this episode.");
                 return;
               }
-              const chosenProvider = String(result.provider || preferredProvider).toLowerCase();
+              const chosenProvider = String(
+                result.provider || preferredProvider,
+              ).toLowerCase();
               const chosenType = result.audioType === "dub" ? "dub" : "sub";
               manualSelectionRef.current = {
                 episode: episodeNo,

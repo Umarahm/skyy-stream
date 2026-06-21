@@ -108,7 +108,9 @@ const MobileMangaSidebar = ({
 
         <div className={styles.chapterMeta}>
           <p>{selectedChapter?.title || "Select a chapter"}</p>
-          {selectedChapterNumber ? <p>Chapter No: {selectedChapterNumber}</p> : null}
+          {selectedChapterNumber ? (
+            <p>Chapter No: {selectedChapterNumber}</p>
+          ) : null}
         </div>
 
         <div className={styles.tabRow}>
@@ -134,32 +136,36 @@ const MobileMangaSidebar = ({
           <div className={`${styles.tabContent} ${styles.episodeList}`}>
             {loadingInfo
               ? [1, 2, 3, 4].map((item) => (
-                <Skeleton key={item} className={styles.chapterSkeleton} />
-              ))
+                  <Skeleton key={item} className={styles.chapterSkeleton} />
+                ))
               : paginatedChapters.map((chapter) => (
-                <button
-                  type="button"
-                  key={chapter.id}
-                  className={
-                    chapter.id === selectedChapterId
-                      ? `${styles.chapterItem} ${styles.chapterItemActive} ${
-                          expandedChapterId === chapter.id ? styles.chapterExpanded : ""
-                        }`
-                      : styles.chapterItem
-                  }
-                  onClick={() => {
-                    onChapterSelect(chapter.id);
-                    setIsOpen(false);
-                  }}
-                >
-                  <span>{chapter.title}</span>
-                  {chapter.releaseDate ? (
-                    <p>{new Date(chapter.releaseDate).toLocaleDateString()}</p>
-                  ) : (
-                    <p>Release date unavailable</p>
-                  )}
-                </button>
-              ))}
+                  <button
+                    type="button"
+                    key={chapter.id}
+                    className={
+                      chapter.id === selectedChapterId
+                        ? `${styles.chapterItem} ${styles.chapterItemActive} ${
+                            expandedChapterId === chapter.id
+                              ? styles.chapterExpanded
+                              : ""
+                          }`
+                        : styles.chapterItem
+                    }
+                    onClick={() => {
+                      onChapterSelect(chapter.id);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <span>{chapter.title}</span>
+                    {chapter.releaseDate ? (
+                      <p>
+                        {new Date(chapter.releaseDate).toLocaleDateString()}
+                      </p>
+                    ) : (
+                      <p>Release date unavailable</p>
+                    )}
+                  </button>
+                ))}
             {!loadingInfo && chapterListLength > CHAPTERS_PER_PAGE && (
               <ReactPaginate
                 containerClassName={styles.pagination}
@@ -171,8 +177,12 @@ const MobileMangaSidebar = ({
                 forcePage={chapterPage - 1}
                 pageCount={chapterTotalPages}
                 breakLabel=" ... "
-                previousLabel={<AiFillLeftCircle className={styles.paginationIcons} />}
-                nextLabel={<AiFillRightCircle className={styles.paginationIcons} />}
+                previousLabel={
+                  <AiFillLeftCircle className={styles.paginationIcons} />
+                }
+                nextLabel={
+                  <AiFillRightCircle className={styles.paginationIcons} />
+                }
               />
             )}
           </div>
@@ -189,9 +199,17 @@ const MobileMangaSidebar = ({
                 <h3>Description</h3>
                 <p>{mangaInfo?.description || "No description available."}</p>
                 <h3>Authors</h3>
-                <p>{mangaInfo?.authors?.length ? mangaInfo.authors.join(", ") : "Unknown"}</p>
+                <p>
+                  {mangaInfo?.authors?.length
+                    ? mangaInfo.authors.join(", ")
+                    : "Unknown"}
+                </p>
                 <h3>Genres</h3>
-                <p>{mangaInfo?.genres?.length ? mangaInfo.genres.join(", ") : "Unknown"}</p>
+                <p>
+                  {mangaInfo?.genres?.length
+                    ? mangaInfo.genres.join(", ")
+                    : "Unknown"}
+                </p>
                 <h3>Release Date</h3>
                 <p>{mangaInfo?.releaseDate || "Unknown"}</p>
                 <h3>Status</h3>

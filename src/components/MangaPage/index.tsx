@@ -39,7 +39,9 @@ const getMangaResults = (response: any) => {
   const list =
     payload?.results || payload?.result || payload?.data || payload || [];
   if (Array.isArray(list)) {
-    return list.map((item: any, index: number) => mapMangaCardData(item, index));
+    return list.map((item: any, index: number) =>
+      mapMangaCardData(item, index),
+    );
   }
   if (list && typeof list === "object") {
     return [mapMangaCardData(list, 0)];
@@ -142,13 +144,20 @@ const MangaPage = () => {
     fetchRandomManga();
   }, []);
 
-  const handleSectionScroll = (sectionKey: "recent" | "latest" | "popular", e: any) => {
+  const handleSectionScroll = (
+    sectionKey: "recent" | "latest" | "popular",
+    e: any,
+  ) => {
     const node = e?.currentTarget;
     const reachedEnd =
       node.scrollLeft + node.clientWidth >= node.scrollWidth - 120;
     if (!reachedEnd) return;
 
-    if (sectionKey === "recent" && !loadingRecent && recentPage < MAX_MANGA_PAGES) {
+    if (
+      sectionKey === "recent" &&
+      !loadingRecent &&
+      recentPage < MAX_MANGA_PAGES
+    ) {
       const nextPage = recentPage + 1;
       setRecentPage(nextPage);
       fetchSection({
@@ -158,7 +167,11 @@ const MangaPage = () => {
         setLoading: setLoadingRecent,
       });
     }
-    if (sectionKey === "latest" && !loadingLatest && latestPage < MAX_MANGA_PAGES) {
+    if (
+      sectionKey === "latest" &&
+      !loadingLatest &&
+      latestPage < MAX_MANGA_PAGES
+    ) {
       const nextPage = latestPage + 1;
       setLatestPage(nextPage);
       fetchSection({
@@ -168,7 +181,11 @@ const MangaPage = () => {
         setLoading: setLoadingLatest,
       });
     }
-    if (sectionKey === "popular" && !loadingPopular && popularPage < MAX_MANGA_PAGES) {
+    if (
+      sectionKey === "popular" &&
+      !loadingPopular &&
+      popularPage < MAX_MANGA_PAGES
+    ) {
       const nextPage = popularPage + 1;
       setPopularPage(nextPage);
       fetchSection({
@@ -227,7 +244,7 @@ const MangaPage = () => {
                   onClick={() => {
                     document
                       .querySelectorAll(`.${styles.MangaListSection}`)
-                    [index].scrollBy(-700, 0);
+                      [index].scrollBy(-700, 0);
                   }}
                   data-tooltip-id="tooltip"
                   data-tooltip-content="Swipe Left"
@@ -237,7 +254,7 @@ const MangaPage = () => {
                   onClick={() => {
                     document
                       .querySelectorAll(`.${styles.MangaListSection}`)
-                    [index].scrollBy(700, 0);
+                      [index].scrollBy(700, 0);
                   }}
                   data-tooltip-id="tooltip"
                   data-tooltip-content="Swipe Right"
@@ -247,7 +264,10 @@ const MangaPage = () => {
             <div
               className={styles.MangaListSection}
               onScroll={(e) =>
-                handleSectionScroll(section.key as "recent" | "latest" | "popular", e)
+                handleSectionScroll(
+                  section.key as "recent" | "latest" | "popular",
+                  e,
+                )
               }
             >
               {section.list.map((manga) => (
@@ -267,7 +287,10 @@ const MangaPage = () => {
                 section.loading &&
                 section.page <= MAX_MANGA_PAGES &&
                 [1, 2].map((ele) => (
-                  <Skeleton className={styles.loading} key={`${section.key}-more-${ele}`} />
+                  <Skeleton
+                    className={styles.loading}
+                    key={`${section.key}-more-${ele}`}
+                  />
                 ))}
             </div>
           </div>

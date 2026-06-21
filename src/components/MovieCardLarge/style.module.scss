@@ -13,7 +13,11 @@
   transition: border-color 0.2s ease;
 
   &:hover {
-    border-color: color-mix(in srgb, var(--color-blue) 50%, var(--primary-2) 50%);
+    border-color: color-mix(
+      in srgb,
+      var(--color-blue) 50%,
+      var(--primary-2) 50%
+    );
   }
   desktopOverflow {
     height: 12rem;

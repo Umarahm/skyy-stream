@@ -21,8 +21,8 @@ const JapaneseMangaDetailPage = () => {
         <div className={styles.overlay}>
           <h1>{title}</h1>
           <p>
-            Open this title on WeebCentral. If you have a better title match, search manually by
-            editing the query.
+            Open this title on WeebCentral. If you have a better title match,
+            search manually by editing the query.
           </p>
           <a
             href={`https://weebcentral.com/search?q=${weebcentralQuery}`}

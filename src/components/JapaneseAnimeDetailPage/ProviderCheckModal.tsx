@@ -40,7 +40,10 @@ const ProviderCheckModal = ({
             </p>
             <div className={styles.list}>
               {items.map((item) => (
-                <div key={item.provider} className={`${styles.item} ${styles[item.status]}`}>
+                <div
+                  key={item.provider}
+                  className={`${styles.item} ${styles[item.status]}`}
+                >
                   <span className={styles.dot}></span>
                   <div>
                     <h4>{item.provider.toUpperCase()}</h4>

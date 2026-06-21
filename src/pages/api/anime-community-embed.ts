@@ -1,6 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export default async function handler(_req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  _req: NextApiRequest,
+  res: NextApiResponse,
+) {
   try {
     const response = await fetch("https://theanimecommunity.com/embed.js", {
       method: "GET",

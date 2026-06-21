@@ -51,7 +51,10 @@ export const getAnikotoAnimeDetails = async (
   slug: string,
 ): Promise<AnikotoAnimeDetailsResponse> => {
   try {
-    const response = await axiosFetch({ requestID: "anikotoAnimeDetails", slug });
+    const response = await axiosFetch({
+      requestID: "anikotoAnimeDetails",
+      slug,
+    });
     return response?.data ? response : { ok: false, data: null };
   } catch (error) {
     return { ok: false, data: null };
@@ -60,7 +63,8 @@ export const getAnikotoAnimeDetails = async (
 
 const extractSlug = (item: any): string => {
   if (!item) return "";
-  if (typeof item?.slug === "string" && item.slug.trim()) return item.slug.trim();
+  if (typeof item?.slug === "string" && item.slug.trim())
+    return item.slug.trim();
   if (typeof item?.href === "string" && item.href.trim()) {
     const cleaned = item.href.split("?")[0];
     const parts = cleaned.split("/").filter(Boolean);
@@ -85,13 +89,18 @@ const pickBestSearchMatch = (items: any[], keyword: string) => {
   const normalizedKeyword = normalizeTitle(keyword);
   const loweredKeyword = normalizedKeyword.toLowerCase();
   const rank = (item: any) => {
-    const titles = getSearchTitleCandidates(item).map((title) => normalizeTitle(title));
+    const titles = getSearchTitleCandidates(item).map((title) =>
+      normalizeTitle(title),
+    );
     if (titles.some((title) => title === normalizedKeyword)) return 0;
-    if (titles.some((title) => title.toLowerCase() === loweredKeyword)) return 1;
+    if (titles.some((title) => title.toLowerCase() === loweredKeyword))
+      return 1;
     if (titles.some((title) => title.startsWith(normalizedKeyword))) return 2;
-    if (titles.some((title) => title.toLowerCase().startsWith(loweredKeyword))) return 3;
+    if (titles.some((title) => title.toLowerCase().startsWith(loweredKeyword)))
+      return 3;
     if (titles.some((title) => title.includes(normalizedKeyword))) return 4;
-    if (titles.some((title) => title.toLowerCase().includes(loweredKeyword))) return 5;
+    if (titles.some((title) => title.toLowerCase().includes(loweredKeyword)))
+      return 5;
     return 999;
   };
 
@@ -185,4 +194,3 @@ export const getAnikotoWatchByKeyword = async (
   if (!slug) return { ok: false, data: null };
   return getAnikotoWatch(slug, ep);
 };
-

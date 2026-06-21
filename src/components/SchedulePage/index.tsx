@@ -125,13 +125,18 @@ const SchedulePage = () => {
                     className={`${styles.timelineRow} ${isEven ? styles.leftSide : styles.rightSide}`}
                   >
                     <div className={styles.cardContainer}>
-                      <Link href={getDetailHref(item)} className={styles.animeCard}>
+                      <Link
+                        href={getDetailHref(item)}
+                        className={styles.animeCard}
+                      >
                         <div className={styles.posterWrapper}>
                           <div
                             className={styles.poster}
                             style={{ backgroundImage: `url(${image})` }}
                           ></div>
-                          <div className={styles.episodeBadge}>E{item.next_episode}</div>
+                          <div className={styles.episodeBadge}>
+                            E{item.next_episode}
+                          </div>
                         </div>
                         <div className={styles.info}>
                           <h3
@@ -160,8 +165,12 @@ const SchedulePage = () => {
                     </div>
 
                     <div className={styles.timeContainer}>
-                      <div className={styles.timeText}>{formatTime(item.airingAt)}</div>
-                      <div className={styles.episodeText}>EPISODE {item.next_episode}</div>
+                      <div className={styles.timeText}>
+                        {formatTime(item.airingAt)}
+                      </div>
+                      <div className={styles.episodeText}>
+                        EPISODE {item.next_episode}
+                      </div>
                     </div>
                   </div>
                 );

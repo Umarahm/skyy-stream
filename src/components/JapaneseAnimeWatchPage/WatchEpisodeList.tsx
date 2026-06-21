@@ -19,7 +19,11 @@ const toMode = (rawSubtype: string, streamType: string) => {
   const lowered = String(rawSubtype || "").toLowerCase();
   if (lowered.includes("embed")) return "embed";
   if (lowered.includes("dl")) return "dl";
-  return String(streamType || "").toLowerCase().includes("embed") ? "embed" : "dl";
+  return String(streamType || "")
+    .toLowerCase()
+    .includes("embed")
+    ? "embed"
+    : "dl";
 };
 
 const toSubType = (rawSubtype: string, streamType: string) => {
@@ -27,9 +31,17 @@ const toSubType = (rawSubtype: string, streamType: string) => {
   if (lowered.includes("h-sub") || lowered.includes("s-sub")) return lowered;
   if (lowered.includes("h-dub") || lowered.includes("s-dub")) return lowered;
   if (lowered.includes("dub")) {
-    return String(streamType || "").toLowerCase().includes("hls") ? "h-dub" : "s-dub";
+    return String(streamType || "")
+      .toLowerCase()
+      .includes("hls")
+      ? "h-dub"
+      : "s-dub";
   }
-  return String(streamType || "").toLowerCase().includes("hls") ? "h-sub" : "s-sub";
+  return String(streamType || "")
+    .toLowerCase()
+    .includes("hls")
+    ? "h-sub"
+    : "s-sub";
 };
 
 const WatchEpisodeList = ({
@@ -44,17 +56,24 @@ const WatchEpisodeList = ({
   const [episodeSearch, setEpisodeSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "cards">("cards");
 
-  const fallbackEpisodes = Array.isArray(episodesPayload?.episodes) ? episodesPayload.episodes : [];
+  const fallbackEpisodes = Array.isArray(episodesPayload?.episodes)
+    ? episodesPayload.episodes
+    : [];
   const providerData = episodesPayload?.providers?.[selectedProvider] || {};
   const providerGroups = useMemo(() => {
     const streamType = String(providerData?.streamType || "");
     const episodeCollections = providerData?.episodes || {};
     return Object.entries(episodeCollections)
       .map(([episodeTypeKey, episodesListRaw]: [string, any]) => {
-        if (!Array.isArray(episodesListRaw) || episodesListRaw.length === 0) return null;
+        if (!Array.isArray(episodesListRaw) || episodesListRaw.length === 0)
+          return null;
         const mode = toMode(episodeTypeKey, streamType);
         const subType = toSubType(episodeTypeKey, streamType);
-        const audioHint = String(episodeTypeKey || "").toLowerCase().includes("dub") ? "dub" : "sub";
+        const audioHint = String(episodeTypeKey || "")
+          .toLowerCase()
+          .includes("dub")
+          ? "dub"
+          : "sub";
         return {
           key: `${selectedProvider}__${mode}__${subType}`,
           mode,
@@ -74,13 +93,15 @@ const WatchEpisodeList = ({
 
   const selectedGroup = useMemo(() => {
     if (providerGroups.length === 0) return null;
-    const preferred = providerGroups.find((group) =>
-      group.audioHint === String(selectedType || "").toLowerCase(),
+    const preferred = providerGroups.find(
+      (group) => group.audioHint === String(selectedType || "").toLowerCase(),
     );
     return preferred || providerGroups[0];
   }, [providerGroups, selectedType]);
 
-  const activeEpisodes = selectedGroup?.episodes?.length ? selectedGroup.episodes : fallbackEpisodes;
+  const activeEpisodes = selectedGroup?.episodes?.length
+    ? selectedGroup.episodes
+    : fallbackEpisodes;
   const hasEpisodes = activeEpisodes.length > 0;
 
   const episodeRanges = useMemo(() => {
@@ -153,7 +174,11 @@ const WatchEpisodeList = ({
         </div>
       </div>
 
-      <div className={viewMode === "grid" ? styles.episodeGridWrap : styles.episodeCardWrap}>
+      <div
+        className={
+          viewMode === "grid" ? styles.episodeGridWrap : styles.episodeCardWrap
+        }
+      >
         {pagedEpisodes.map((ep: any) => {
           const epNumber = Number(ep?.number);
           const isActive = epNumber === currentEpisode;
@@ -177,9 +202,13 @@ const WatchEpisodeList = ({
                     <span className={styles.episodeNumber}>EP {epNumber}</span>
                   </div>
                   <div className={styles.episodeCardContent}>
-                    <span className={styles.episodeTitle}>{ep?.title || `Episode ${epNumber}`}</span>
+                    <span className={styles.episodeTitle}>
+                      {ep?.title || `Episode ${epNumber}`}
+                    </span>
                     <span className={styles.episodeMeta}>
-                      <span className={styles.episodeMetaBadge}>{ep?.filler ? "Filler" : "Canon"}</span>
+                      <span className={styles.episodeMetaBadge}>
+                        {ep?.filler ? "Filler" : "Canon"}
+                      </span>
                       {ep?.airDate ? <span>{ep.airDate}</span> : null}
                     </span>
                   </div>
