@@ -35,14 +35,19 @@ const WatchHeader = ({
         <p className={styles.headingMeta}>
           Season {season} • Episode {episode}
         </p>
-        {providerMeta ? <p className={styles.headingMeta}>{providerMeta}</p> : null}
+        {providerMeta ? (
+          <p className={styles.headingMeta}>{providerMeta}</p>
+        ) : null}
       </div>
       <div className={styles.controls}>
         <Link href={backHref} className="btn">
           Back to Detail
         </Link>
         {providerOptions.length > 0 ? (
-          <select value={selectedProvider} onChange={(e) => onProviderChange(e.target.value)}>
+          <select
+            value={selectedProvider}
+            onChange={(e) => onProviderChange(e.target.value)}
+          >
             {providerOptions.map((providerOption) => (
               <option key={providerOption} value={providerOption}>
                 {providerOption.toUpperCase()}
@@ -55,8 +60,12 @@ const WatchHeader = ({
             value={selectedType}
             onChange={(e) => onTypeChange(e.target.value as "sub" | "dub")}
           >
-            {sourceTypes.includes("sub") ? <option value="sub">SUB Sources</option> : null}
-            {sourceTypes.includes("dub") ? <option value="dub">DUB Sources</option> : null}
+            {sourceTypes.includes("sub") ? (
+              <option value="sub">SUB Sources</option>
+            ) : null}
+            {sourceTypes.includes("dub") ? (
+              <option value="dub">DUB Sources</option>
+            ) : null}
           </select>
         ) : null}
       </div>

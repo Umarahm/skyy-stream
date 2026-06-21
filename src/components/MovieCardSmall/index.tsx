@@ -17,7 +17,12 @@ const getPosterUrl = (posterPath: string | null | undefined) => {
   return `${process.env.NEXT_PUBLIC_TMBD_IMAGE_URL?.replace("/original", "/w185")}${posterPath}`;
 };
 
-const MovieCardSmall = ({ data, media_type, customHref, openInNewTab }: any) => {
+const MovieCardSmall = ({
+  data,
+  media_type,
+  customHref,
+  openInNewTab,
+}: any) => {
   const [imageLoading, setImageLoading] = useState(true);
   const [imagePlaceholder, setImagePlaceholder] = useState(false);
   const href =
@@ -52,7 +57,9 @@ const MovieCardSmall = ({ data, media_type, customHref, openInNewTab }: any) => 
         <div
           className={`${styles.img} ${data?.poster_path !== null && data?.poster_path !== undefined ? "skeleton" : null}`}
         >
-          {data?.mediaLabel ? <span className={styles.mediaLabel}>{data.mediaLabel}</span> : null}
+          {data?.mediaLabel ? (
+            <span className={styles.mediaLabel}>{data.mediaLabel}</span>
+          ) : null}
           {/* if rllic package is not available, then start using this code again, and comment/delete the rllic code */}
           {/* <AnimatePresence mode="sync">
           <motion.img
@@ -84,7 +91,11 @@ const MovieCardSmall = ({ data, media_type, customHref, openInNewTab }: any) => 
           {/* react-lazy-load-image-component */}
           <LazyLoadImage
             key={data?.id}
-            src={imagePlaceholder ? "/images/logo.svg" : getPosterUrl(data?.poster_path)}
+            src={
+              imagePlaceholder
+                ? "/images/logo.svg"
+                : getPosterUrl(data?.poster_path)
+            }
             height="100%"
             width="100%"
             useIntersectionObserver={true}
@@ -102,7 +113,7 @@ const MovieCardSmall = ({ data, media_type, customHref, openInNewTab }: any) => 
               setImageLoading(false);
             }}
             alt={data?.id || "sm"}
-          // style={!imageLoading ? { opacity: 1 } : { opacity: 0 }}
+            // style={!imageLoading ? { opacity: 1 } : { opacity: 0 }}
           />
         </div>
       </motion.div>

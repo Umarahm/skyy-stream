@@ -62,4 +62,3 @@ export const isRouteAllowedForHub = (
   if (hub === "movieTv") return MOVIE_TV_ROUTES.has(section);
   return JAPANESE_ROUTES.has(section);
 };
-

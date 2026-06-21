@@ -10,7 +10,10 @@ const JapaneseMediaCard = ({
   mediaType: "anime" | "manga";
 }) => {
   const title =
-    media?.title?.english || media?.title?.romaji || media?.title?.native || "N/A";
+    media?.title?.english ||
+    media?.title?.romaji ||
+    media?.title?.native ||
+    "N/A";
 
   return (
     <Link

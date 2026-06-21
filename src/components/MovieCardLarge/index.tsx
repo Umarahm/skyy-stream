@@ -76,11 +76,17 @@ const MovieCardLarge = ({
       data-tooltip-id="tooltip"
       data-tooltip-html={`${data?.title?.length > 50 || data?.name?.length > 50 ? data?.title || data?.name : ""}`}
     >
-      <img 
-        src={imagePlaceholder ? "/images/logo.svg" : getImageSrc(data?.poster_path || data?.profile_path || data?.still_path)} 
-        className={styles.bgImage} 
-        alt="" 
-        aria-hidden="true" 
+      <img
+        src={
+          imagePlaceholder
+            ? "/images/logo.svg"
+            : getImageSrc(
+                data?.poster_path || data?.profile_path || data?.still_path,
+              )
+        }
+        className={styles.bgImage}
+        alt=""
+        aria-hidden="true"
       />
       <div
         className={`${styles.img} ${data?.poster_path !== null && data?.poster_path !== undefined ? "skeleton" : null}`}
@@ -120,7 +126,9 @@ const MovieCardLarge = ({
           src={
             imagePlaceholder
               ? "/images/logo.svg"
-              : getImageSrc(data?.poster_path || data?.profile_path || data?.still_path)
+              : getImageSrc(
+                  data?.poster_path || data?.profile_path || data?.still_path,
+                )
           }
           height="100%"
           width="100%"
@@ -140,7 +148,7 @@ const MovieCardLarge = ({
             setImageLoading(false);
           }}
           alt={data?.id || "sm"}
-        // style={!imageLoading ? { opacity: 1 } : { opacity: 0 }}
+          // style={!imageLoading ? { opacity: 1 } : { opacity: 0 }}
         />
       </div>
       <div className={`${styles.metaData}`}>
@@ -149,11 +157,11 @@ const MovieCardLarge = ({
           {capitalizeFirstLetter(data?.media_type || media_type)}
           {data?.vote_average ? ` • ${data?.vote_average.toFixed(1)}` : null}
           {!Number.isNaN(year) && year > 0 ? ` • ${year}` : null}{" "}
-          {lang !== undefined && lang !== "" ? ` • ${lang.toUpperCase()}` : null}
+          {lang !== undefined && lang !== ""
+            ? ` • ${lang.toUpperCase()}`
+            : null}
         </p>
-        <p>
-          {Genres?.length > 0 ? Genres.join(", ") : data?.mediaLabel}
-        </p>
+        <p>{Genres?.length > 0 ? Genres.join(", ") : data?.mediaLabel}</p>
       </div>
     </Link>
   );

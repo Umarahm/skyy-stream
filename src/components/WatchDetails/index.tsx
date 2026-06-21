@@ -40,7 +40,9 @@ const WatchDetails = ({
   const [totalpages, setTotalpages] = useState(1);
   const [genreListMovie, setGenreListMovie] = useState<any>();
   const [genreListTv, setGenreListTv] = useState<any>();
-  const [episodeViewMode, setEpisodeViewMode] = useState<"grid" | "name">("name");
+  const [episodeViewMode, setEpisodeViewMode] = useState<"grid" | "name">(
+    "name",
+  );
   const [isJapaneseHub, setIsJapaneseHub] = useState(false);
   const watchDetailsPage: any = useRef(null);
 
@@ -202,20 +204,30 @@ const WatchDetails = ({
                 <div className={styles.episodeViewToggle}>
                   <button
                     type="button"
-                    className={episodeViewMode === "grid" ? styles.activeView : ""}
+                    className={
+                      episodeViewMode === "grid" ? styles.activeView : ""
+                    }
                     onClick={() => {
                       setEpisodeViewMode("grid");
-                      localStorage.setItem("RiveStreamJapaneseEpisodeView", "grid");
+                      localStorage.setItem(
+                        "RiveStreamJapaneseEpisodeView",
+                        "grid",
+                      );
                     }}
                   >
                     Grid View
                   </button>
                   <button
                     type="button"
-                    className={episodeViewMode === "name" ? styles.activeView : ""}
+                    className={
+                      episodeViewMode === "name" ? styles.activeView : ""
+                    }
                     onClick={() => {
                       setEpisodeViewMode("name");
-                      localStorage.setItem("RiveStreamJapaneseEpisodeView", "name");
+                      localStorage.setItem(
+                        "RiveStreamJapaneseEpisodeView",
+                        "name",
+                      );
                     }}
                   >
                     Name View
@@ -289,7 +301,8 @@ const WatchDetails = ({
                           href={`/watch?type=tv&id=${ele?.show_id}&season=${ele?.season_number}&episode=${ele?.episode_number}`}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          {episodeViewMode === "grid" ? "Open" : "watch"} <FaPlay />
+                          {episodeViewMode === "grid" ? "Open" : "watch"}{" "}
+                          <FaPlay />
                         </Link>
                       </div>
                     </div>

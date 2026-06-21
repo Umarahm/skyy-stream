@@ -91,7 +91,11 @@
     color: var(--primary-2);
   }
 
-  :global(.DetailPage) :global(.biggerDetail):not(:hover) & .category p:nth-child(4) {
+  :global(.DetailPage)
+    :global(.biggerDetail):not(:hover)
+    &
+    .category
+    p:nth-child(4) {
     flex: 0 0 100%;
     width: 100%;
     text-align: center;

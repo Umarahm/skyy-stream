@@ -10,7 +10,10 @@ const toNumberValue = (value: string | string[] | undefined) => {
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse<any>) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<any>,
+) {
   const ApiQuery = req.query;
   const cacheKey = JSON.stringify(ApiQuery);
 

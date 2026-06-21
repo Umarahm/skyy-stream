@@ -16,7 +16,11 @@ type WatchCommentsPanelProps = {
   episode: number;
 };
 
-const WatchCommentsPanel = ({ malId, aniListId, episode }: WatchCommentsPanelProps) => {
+const WatchCommentsPanel = ({
+  malId,
+  aniListId,
+  episode,
+}: WatchCommentsPanelProps) => {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!malId && !aniListId) return;
@@ -35,7 +39,9 @@ const WatchCommentsPanel = ({ malId, aniListId, episode }: WatchCommentsPanelPro
     if (!mount) return;
     mount.innerHTML = "";
 
-    const currentScript = document.getElementById("anime-community-script") as HTMLScriptElement | null;
+    const currentScript = document.getElementById(
+      "anime-community-script",
+    ) as HTMLScriptElement | null;
     if (currentScript) {
       window.theAnimeCommunity?.reload?.();
       return;
@@ -54,7 +60,10 @@ const WatchCommentsPanel = ({ malId, aniListId, episode }: WatchCommentsPanelPro
       {!malId && !aniListId ? (
         <p className={styles.empty}>Comments unavailable for this title.</p>
       ) : (
-        <div id="anime-community-comment-section" className={styles.commentsMount} />
+        <div
+          id="anime-community-comment-section"
+          className={styles.commentsMount}
+        />
       )}
     </section>
   );

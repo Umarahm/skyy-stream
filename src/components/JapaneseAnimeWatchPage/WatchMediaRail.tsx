@@ -9,10 +9,22 @@ type WatchMediaRailProps = {
 
 const toLargeCardData = (media: any) => ({
   id: media?.id,
-  title: media?.title?.english || media?.title?.romaji || media?.title?.native || media?.title || media?.name || "Untitled",
-  poster_path: media?.coverImage?.large || media?.coverImage?.extraLarge || media?.image,
+  title:
+    media?.title?.english ||
+    media?.title?.romaji ||
+    media?.title?.native ||
+    media?.title ||
+    media?.name ||
+    "Untitled",
+  poster_path:
+    media?.coverImage?.large || media?.coverImage?.extraLarge || media?.image,
   media_type: String(media?.type || media?.format || "anime").toLowerCase(),
-  vote_average: typeof media?.averageScore === "number" ? media.averageScore / 10 : typeof media?.meanScore === "number" ? media.meanScore / 10 : null,
+  vote_average:
+    typeof media?.averageScore === "number"
+      ? media.averageScore / 10
+      : typeof media?.meanScore === "number"
+        ? media.meanScore / 10
+        : null,
   release_date: media?.startDate?.year ? String(media.startDate.year) : "",
   original_language: media?.countryOfOrigin?.toLowerCase() || "jp",
   genre_ids: [],
@@ -34,7 +46,9 @@ const WatchMediaRail = ({ title, items, emptyText }: WatchMediaRailProps) => {
                 key={`${cardData.id}-${cardData.title}`}
                 data={cardData}
                 media_type={cardData.media_type}
-                customHref={cardData.id ? `/anime-details?id=${cardData.id}` : "#"}
+                customHref={
+                  cardData.id ? `/anime-details?id=${cardData.id}` : "#"
+                }
               />
             );
           })}

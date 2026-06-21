@@ -68,7 +68,9 @@
       font-size: 1.5rem;
       cursor: pointer;
       z-index: 10;
-      transition: background 0.2s, transform 0.2s;
+      transition:
+        background 0.2s,
+        transform 0.2s;
 
       &:hover {
         background: rgba(0, 0, 0, 0.8);
@@ -90,7 +92,7 @@
       overflow-x: auto;
       scroll-behavior: smooth;
       padding: 0 1.5rem 1rem 1.5rem;
-      
+
       &::-webkit-scrollbar {
         display: none;
       }
@@ -111,7 +113,7 @@
 
         &:hover {
           transform: translateY(-5px);
-          
+
           .posterWrap .poster {
             transform: scale(1.05);
           }

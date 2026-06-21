@@ -15,7 +15,7 @@ const firebaseConfig = {
 
 export const isFirebaseConfigured = Boolean(
   typeof process.env.NEXT_PUBLIC_FB_API_KEY === "string" &&
-    process.env.NEXT_PUBLIC_FB_API_KEY.trim().length > 0,
+  process.env.NEXT_PUBLIC_FB_API_KEY.trim().length > 0,
 );
 
 function createFirebaseApp(): FirebaseApp | null {

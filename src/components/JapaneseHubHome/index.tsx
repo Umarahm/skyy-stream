@@ -56,15 +56,21 @@ const getTmdbAnimeBackdrop = async (title: string) => {
     (item: any) => item?.media_type === "tv" || item?.media_type === "movie",
   );
   const match =
-    results.find((item: any) => item?.media_type === "tv" && isStrictAnimeTmdbResult(item)) ||
-    results.find(isStrictAnimeTmdbResult);
+    results.find(
+      (item: any) => item?.media_type === "tv" && isStrictAnimeTmdbResult(item),
+    ) || results.find(isStrictAnimeTmdbResult);
 
-  if (cleanTitle.toLowerCase() === "one piece" && match?.id && match?.media_type) {
+  if (
+    cleanTitle.toLowerCase() === "one piece" &&
+    match?.id &&
+    match?.media_type
+  ) {
     const images: any = await axiosFetch({
       requestID: `${match.media_type}Images`,
       id: String(match.id),
     });
-    const nextBackdrop = images?.backdrops?.[1]?.file_path || images?.backdrops?.[0]?.file_path;
+    const nextBackdrop =
+      images?.backdrops?.[1]?.file_path || images?.backdrops?.[0]?.file_path;
     return getTmdbImageUrl(nextBackdrop);
   }
 
@@ -86,12 +92,13 @@ const JapaneseHubHome = () => {
     const load = async () => {
       try {
         setLoading(true);
-        const [spotlightRes, trendingRes, popularRes, upcomingRes] = await Promise.all([
-          getMiruroSpotlight(),
-          getMiruroTrending(),
-          getMiruroPopular(),
-          getMiruroUpcoming(),
-        ]);
+        const [spotlightRes, trendingRes, popularRes, upcomingRes] =
+          await Promise.all([
+            getMiruroSpotlight(),
+            getMiruroTrending(),
+            getMiruroPopular(),
+            getMiruroUpcoming(),
+          ]);
         const spotlightList = spotlightRes?.results || [];
         setSpotlight(spotlightList);
         setTrending(trendingRes?.results || []);
@@ -157,7 +164,8 @@ const JapaneseHubHome = () => {
     const id = getId(item);
     return id ? `/anime-details?id=${id}` : "/anime";
   };
-  const hero = heroSlides?.[heroIndex]?.item || heroSlides?.[0]?.item || spotlight?.[0];
+  const hero =
+    heroSlides?.[heroIndex]?.item || heroSlides?.[0]?.item || spotlight?.[0];
   const heroImages = heroSlides.map((slide) => slide.image);
   const heroTitle = getName(hero);
   const heroTitleLength = heroTitle.length;
@@ -243,7 +251,6 @@ const JapaneseHubHome = () => {
         </div>
       </section>
 
-
       <div className={styles.HomeListAll}>
         {sections.map((section, sectionIndex) => (
           <section className={styles.section} key={section.label}>
@@ -254,7 +261,7 @@ const JapaneseHubHome = () => {
                   onClick={() => {
                     document
                       .querySelectorAll(`.${styles.HomeListSection}`)
-                    [sectionIndex]?.scrollBy(-700, 0);
+                      [sectionIndex]?.scrollBy(-700, 0);
                   }}
                   data-tooltip-id="tooltip"
                   data-tooltip-content="Swipe Left"
@@ -264,7 +271,7 @@ const JapaneseHubHome = () => {
                   onClick={() => {
                     document
                       .querySelectorAll(`.${styles.HomeListSection}`)
-                    [sectionIndex]?.scrollBy(700, 0);
+                      [sectionIndex]?.scrollBy(700, 0);
                   }}
                   data-tooltip-id="tooltip"
                   data-tooltip-content="Swipe Right"
@@ -294,7 +301,6 @@ const JapaneseHubHome = () => {
           </section>
         ))}
         <AnimeSchedule />
-
       </div>
     </div>
   );

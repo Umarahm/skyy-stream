@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
 import styles from "./style.module.scss";
 import Link from "next/link";
-import { MdOutlineCalendarToday, MdArrowForward, MdChevronLeft, MdChevronRight } from "react-icons/md";
+import {
+  MdOutlineCalendarToday,
+  MdArrowForward,
+  MdChevronLeft,
+  MdChevronRight,
+} from "react-icons/md";
 import { filterScheduleByDay, getMiruroScheduleAll } from "@/Utils/miruro";
 
 const AnimeSchedule = () => {
@@ -35,7 +40,7 @@ const AnimeSchedule = () => {
     const date = new Date(timestamp * 1000);
     let hours = date.getHours();
     const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const ampm = hours >= 12 ? "PM" : "AM";
     hours = hours % 12;
     hours = hours ? hours : 12; // the hour '0' should be '12'
     return `${hours}:${String(minutes).padStart(2, "0")} ${ampm}`;
@@ -71,7 +76,10 @@ const AnimeSchedule = () => {
       </div>
 
       <div className={styles.sliderWrapper}>
-        <button className={`${styles.navBtn} ${styles.left}`} onClick={() => scrollSlider("left")}>
+        <button
+          className={`${styles.navBtn} ${styles.left}`}
+          onClick={() => scrollSlider("left")}
+        >
           <MdChevronLeft />
         </button>
         <div className={styles.slider} ref={sliderRef}>
@@ -86,17 +94,28 @@ const AnimeSchedule = () => {
                 "/images/logo.svg";
 
               return (
-                <Link key={idx} href={getDetailHref(item)} className={styles.card}>
-                  <div className={styles.timePill}>{formatTime(item.airingAt)}</div>
+                <Link
+                  key={idx}
+                  href={getDetailHref(item)}
+                  className={styles.card}
+                >
+                  <div className={styles.timePill}>
+                    {formatTime(item.airingAt)}
+                  </div>
                   <div className={styles.posterWrap}>
                     <div
                       className={styles.poster}
                       style={{ backgroundImage: `url(${image})` }}
                     ></div>
-                    <div className={styles.episodeBadge}>E{item.next_episode}</div>
+                    <div className={styles.episodeBadge}>
+                      E{item.next_episode}
+                    </div>
                   </div>
                   <div className={styles.info}>
-                    <h3 className={styles.animeTitle} title={item.title?.english || item.title?.romaji}>
+                    <h3
+                      className={styles.animeTitle}
+                      title={item.title?.english || item.title?.romaji}
+                    >
                       {item.title?.english || item.title?.romaji}
                     </h3>
                     <p className={styles.meta}>
@@ -109,7 +128,7 @@ const AnimeSchedule = () => {
           ) : (
             <p className={styles.message}>No anime scheduled for today.</p>
           )}
-          
+
           {!loading && todaysSchedule.length > 0 && (
             <Link href="/schedule" className={styles.viewAllCard}>
               <div className={styles.iconCircle}>
@@ -119,7 +138,10 @@ const AnimeSchedule = () => {
             </Link>
           )}
         </div>
-        <button className={`${styles.navBtn} ${styles.right}`} onClick={() => scrollSlider("right")}>
+        <button
+          className={`${styles.navBtn} ${styles.right}`}
+          onClick={() => scrollSlider("right")}
+        >
           <MdChevronRight />
         </button>
       </div>

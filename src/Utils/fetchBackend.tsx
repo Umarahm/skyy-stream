@@ -47,7 +47,10 @@ export default async function axiosFetch({
   const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
   const baseURL = "/api/backendfetch";
   const randomURL = process.env.NEXT_PUBLIC_RANDOM_URL;
-  const backendRequest = (requestID: string, params: Record<string, any> = {}) => {
+  const backendRequest = (
+    requestID: string,
+    params: Record<string, any> = {},
+  ) => {
     const searchParams = new URLSearchParams({ requestID });
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== "") {

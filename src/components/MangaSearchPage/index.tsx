@@ -24,9 +24,7 @@ const mapMangaCardData = (item: any, index: number) => {
     id: item?.id || item?.mangaId || item?.slug || `${item?.title}-${index}`,
     title: item?.title || item?.name || "Unknown Manga",
     poster_path: posterPath,
-    href: item?.id
-      ? `/manga-read?id=${encodeURIComponent(item.id)}`
-      : "#",
+    href: item?.id ? `/manga-read?id=${encodeURIComponent(item.id)}` : "#",
   };
 };
 
@@ -149,7 +147,8 @@ const MangaSearchPage = () => {
 
       {query.length > 1 ? (
         <h1>
-          showing results for <span className={styles.searchQuery}>{query}</span>
+          showing results for{" "}
+          <span className={styles.searchQuery}>{query}</span>
         </h1>
       ) : (
         <h1>
@@ -160,20 +159,22 @@ const MangaSearchPage = () => {
       <div className={styles.mangaList}>
         {loading
           ? dummyList.map((ele, i) => (
-            <Skeleton className={styles.loading} key={`${ele}-${i}`} />
-          ))
+              <Skeleton className={styles.loading} key={`${ele}-${i}`} />
+            ))
           : data.map((manga) => (
-            <MovieCardSmall
-              key={manga?.id}
-              data={manga}
-              media_type="manga"
-              customHref={manga?.href}
-              openInNewTab={false}
-            />
-          ))}
+              <MovieCardSmall
+                key={manga?.id}
+                data={manga}
+                media_type="manga"
+                customHref={manga?.href}
+                openInNewTab={false}
+              />
+            ))}
       </div>
 
-      {!loading && query.length > 1 && data.length === 0 ? <h2>No Data Found</h2> : null}
+      {!loading && query.length > 1 && data.length === 0 ? (
+        <h2>No Data Found</h2>
+      ) : null}
 
       {totalPages > 1 && (
         <ReactPaginate
@@ -187,7 +188,9 @@ const MangaSearchPage = () => {
           forcePage={currentPage - 1}
           pageCount={totalPages}
           breakLabel=" ... "
-          previousLabel={<AiFillLeftCircle className={styles.paginationIcons} />}
+          previousLabel={
+            <AiFillLeftCircle className={styles.paginationIcons} />
+          }
           nextLabel={<AiFillRightCircle className={styles.paginationIcons} />}
         />
       )}
