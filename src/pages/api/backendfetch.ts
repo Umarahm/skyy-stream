@@ -39,6 +39,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     provider,
     mangaCategory,
     chapterId,
+    sport,
+    league,
+    dates,
   } = ApiQuery;
 
   const result: any = await axiosFetch({
@@ -61,8 +64,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     provider: toStringValue(provider),
     mangaCategory: toStringValue(mangaCategory),
     chapterId: toStringValue(chapterId),
+    sport: toStringValue(sport),
+    league: toStringValue(league),
+    dates: toStringValue(dates),
   });
 
-  setCache(cacheKey, result);
+  // Live scoreboard data goes stale fast — cache it for 30s instead of the
+  // default 30 minutes so homepage polling actually gets fresh scores.
+  const ttlSeconds = toStringValue(requestID) === "sportsScoreboard" ? 30 : undefined;
+  setCache(cacheKey, result, ttlSeconds);
   return res.status(200).json(result);
 }

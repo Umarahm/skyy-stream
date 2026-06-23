@@ -1,0 +1,89 @@
+.article {
+  max-width: 48rem;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.backLink {
+  display: inline-block;
+  color: var(--ascent-color);
+  font-weight: 700;
+  font-size: 0.85rem;
+  margin-bottom: 1.2rem;
+}
+
+.articleImage {
+  width: 100%;
+  max-height: 24rem;
+  object-fit: cover;
+  border-radius: 1rem;
+  margin-bottom: 1rem;
+}
+
+.articleDate {
+  color: var(--ascent-color);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem;
+}
+
+.articleHeadline {
+  color: var(--primary-3);
+  font-size: 1.8rem;
+  margin: 0 0 1rem;
+}
+
+.articleDescription {
+  color: var(--primary-2);
+  font-size: 1.05rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.articleBody {
+  color: var(--primary-2);
+  font-size: 1.05rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+
+  p {
+    margin: 0 0 1rem;
+  }
+
+  ul,
+  ol {
+    margin: 0 0 1rem;
+    padding-left: 1.4rem;
+  }
+
+  li {
+    margin-bottom: 0.4rem;
+  }
+
+  a {
+    color: var(--ascent-color);
+    text-decoration: underline;
+  }
+
+  u {
+    color: var(--primary-3);
+    font-weight: 700;
+  }
+}
+
+.readFullStory {
+  display: inline-block;
+  background: var(--ascent-color);
+  color: var(--primary-1);
+  font-weight: 700;
+  padding: 0.7rem 1.2rem;
+  border-radius: 0.6rem;
+  text-decoration: none;
+}
+
+@media (max-width: 769px) {
+  .articleHeadline {
+    font-size: 1.4rem;
+  }
+}

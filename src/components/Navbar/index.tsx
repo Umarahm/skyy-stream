@@ -58,13 +58,14 @@ const Navbar = ({ hub }: { hub: AppHub | "" }) => {
   return (
     <div className={styles.navbar}>
       <Link
-        href={hub === "japanese" ? "/japanese" : "/"}
+        href={hub === "japanese" ? "/japanese" : hub === "sports" ? "/sports" : "/"}
         aria-label="Home"
         data-tooltip-id="tooltip"
         data-tooltip-content="Home"
       >
         {pathname === "/" ||
         pathname === "/japanese" ||
+        pathname === "/sports" ||
         pathname === "/recommendation" ? (
           <MdHome className={styles.active} />
         ) : (
@@ -83,7 +84,7 @@ const Navbar = ({ hub }: { hub: AppHub | "" }) => {
           <MdOutlineSearch className={styles.inactive} />
         )}
       </Link>
-      {hub !== "japanese" ? (
+      {hub === "sports" ? null : hub !== "japanese" ? (
         <>
           <Link
             href="/movie"

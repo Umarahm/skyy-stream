@@ -18,6 +18,9 @@ interface Fetch {
   provider?: string;
   mangaCategory?: string;
   chapterId?: string;
+  sport?: string;
+  league?: string;
+  dates?: string;
 }
 export default async function axiosFetch({
   requestID,
@@ -39,6 +42,9 @@ export default async function axiosFetch({
   provider,
   mangaCategory,
   chapterId,
+  sport,
+  league,
+  dates,
 }: Fetch) {
   const request = requestID;
   const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
@@ -59,10 +65,12 @@ export default async function axiosFetch({
     process.env.CONSUMET_API?.trim() ||
     process.env.NEXT_PUBLIC_CONSUMET_API?.trim() ||
     "";
+  const THESPORTSDB_KEY = process.env.THESPORTSDB_API_KEY?.trim() || "123";
   const cleanBaseUrl = (value: string) => value.replace(/\/+$/, "");
   const miruroBase = cleanBaseUrl(MIRURO_BASE_URL);
   const anikotoBase = cleanBaseUrl(ANIKOTO_BASE_URL);
   const consumetBase = cleanBaseUrl(CONSUMET_BASE_URL);
+  const sportsDbBase = `https://www.thesportsdb.com/api/v1/json/${THESPORTSDB_KEY}`;
   const encodePath = (value: string | number | null | undefined) =>
     String(value || "")
       .replace(/^\/+/, "")
@@ -291,6 +299,105 @@ export default async function axiosFetch({
 
   if (mangaRequestHandlers[request]) {
     return mangaRequestHandlers[request]();
+  }
+
+  const sportsRequestHandlers: Record<string, () => Promise<any>> = {
+    // ESPN — scoreboard/fixtures. Cricket's `scoreboard` resource 404s on ESPN's
+    // site API, so it's routed to the Core API `events` resource instead.
+    sportsScoreboard: () => {
+      if (!sport || !league) return Promise.resolve({ events: [] });
+      if (sport === "cricket") {
+        return fetchJson(
+          `https://sports.core.api.espn.com/v2/sports/cricket/leagues/${encodePath(league)}/events`,
+          { items: [] },
+        );
+      }
+      const datesParam = dates ? `?dates=${encodeURIComponent(dates)}` : "";
+      return fetchJson(
+        `https://site.api.espn.com/apis/site/v2/sports/${encodePath(sport)}/${encodePath(league)}/scoreboard${datesParam}`,
+        { events: [] },
+      );
+    },
+    // ESPN standings live under `/apis/v2/`, not `/apis/site/v2/` — the latter
+    // returns an empty/stub response for most leagues.
+    sportsStandings: () => {
+      if (!sport || !league) return Promise.resolve({ children: [] });
+      return fetchJson(
+        `https://site.api.espn.com/apis/v2/sports/${encodePath(sport)}/${encodePath(league)}/standings`,
+        { children: [] },
+      );
+    },
+    // Full match report — boxscore, rosters (formation/coach/positions/subs),
+    // and key events (goals/cards) for a finished or in-progress match.
+    sportsSummary: () => {
+      if (!sport || !league || !id) return Promise.resolve({});
+      return fetchJson(
+        `https://site.api.espn.com/apis/site/v2/sports/${encodePath(sport)}/${encodePath(league)}/summary?event=${encodeURIComponent(id)}`,
+        {},
+      );
+    },
+    sportsNews: () => {
+      if (!sport || !league) return Promise.resolve({ articles: [] });
+      return fetchJson(
+        `https://site.api.espn.com/apis/site/v2/sports/${encodePath(sport)}/${encodePath(league)}/news`,
+        { articles: [] },
+      );
+    },
+    // Full article body (HTML in `headlines[0].story`) — the site API's
+    // `news` list only carries a short description, this is ESPN's own CMS
+    // lookup-by-id endpoint that backs each article's actual story page.
+    sportsArticle: () => {
+      if (!id) return Promise.resolve({ headlines: [] });
+      return fetchJson(`https://content.core.api.espn.com/v1/sports/news/${encodeURIComponent(id)}`, {
+        headlines: [],
+      });
+    },
+    // TheSportsDB — direct id-based lookups work fully on the free key, used
+    // here as the standings/fixtures source for leagues ESPN covers poorly
+    // (e.g. cricket), and as a fallback elsewhere.
+    sportsdbTable: () => {
+      if (!league) return Promise.resolve({ table: [] });
+      const params = new URLSearchParams({ l: String(league) });
+      if (season) params.set("s", String(season));
+      return fetchJson(`${sportsDbBase}/lookuptable.php?${params.toString()}`, { table: [] });
+    },
+    sportsdbEventsSeason: () => {
+      if (!league) return Promise.resolve({ events: [] });
+      const params = new URLSearchParams({ id: String(league) });
+      if (season) params.set("s", String(season));
+      return fetchJson(`${sportsDbBase}/eventsseason.php?${params.toString()}`, { events: [] });
+    },
+    // `sport` here is TheSportsDB's human-readable sport name ("Soccer",
+    // "Cricket", "Basketball", ...), not an ESPN/streamed.pk slug — the
+    // sport-filtered eventsday call returns full real data; the unfiltered
+    // one is capped to a small sample on the free key.
+    sportsdbEventsDay: () => {
+      if (!dates || !sport) return Promise.resolve({ events: [] });
+      const params = new URLSearchParams({ d: dates, s: sport });
+      return fetchJson(`${sportsDbBase}/eventsday.php?${params.toString()}`, { events: [] });
+    },
+    // Basic event lookup — used as the cricket match-detail fallback, since
+    // TheSportsDB's stats/lineup endpoints return null on the free key for
+    // every league tested (a tier-wide gate, not a league-specific gap).
+    sportsdbEvent: () => {
+      if (!id) return Promise.resolve({ events: [] });
+      return fetchJson(`${sportsDbBase}/lookupevent.php?id=${encodeURIComponent(id)}`, { events: [] });
+    },
+    // YouTube highlight links per match day. Requires `d`; the league-only
+    // form errors, so callers loop a bounded set of days and filter by league.
+    sportsdbHighlights: () => {
+      if (!dates || !sport) return Promise.resolve({ tvhighlights: [] });
+      const params = new URLSearchParams({ d: dates, s: sport });
+      return fetchJson(`${sportsDbBase}/eventshighlights.php?${params.toString()}`, { tvhighlights: [] });
+    },
+    // Note: streamed.pk endpoints are NOT proxied here — server-side Node
+    // fetches to streamed.pk get blocked (TLS/JA3 fingerprinting, see
+    // docs/sports/streamed-pk-api.md), so `src/Utils/sports.ts` calls
+    // streamed.pk directly from the browser instead.
+  };
+
+  if (sportsRequestHandlers[request]) {
+    return sportsRequestHandlers[request]();
   }
 
   const final_request = requests[request];

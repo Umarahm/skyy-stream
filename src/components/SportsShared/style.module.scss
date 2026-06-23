@@ -1,0 +1,337 @@
+.message {
+  text-align: center;
+  color: var(--primary-2);
+  font-size: 1rem;
+  padding: 2rem 0;
+}
+
+.railHeading {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--primary-3);
+  font-size: 1.4rem;
+
+  .railControls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 1rem;
+    font-size: 0.8rem;
+    color: var(--primary-2);
+
+    svg {
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+  }
+}
+
+.railRow {
+  display: flex;
+  width: 100%;
+  overflow: auto;
+  padding: 0.95rem 0.25rem 0.6rem;
+  gap: 1.2rem;
+  margin-bottom: 2rem;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (max-width: 769px) {
+  .railHeading .railControls {
+    display: none;
+  }
+}
+
+.matchCardLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.statsLink {
+  text-align: center;
+  color: var(--ascent-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.matchCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: border-color 0.2s, transform 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &.live {
+    border-color: rgba(22, 163, 74, 0.5);
+  }
+
+  .matchStatus {
+    display: flex;
+    justify-content: center;
+
+    .liveBadge {
+      color: #16a34a;
+      font-weight: 800;
+      font-size: 0.75rem;
+      letter-spacing: 0.5px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .statusText {
+      color: var(--primary-2);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+  }
+
+  .matchTeams {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+
+    .team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      flex: 1;
+      min-width: 0;
+
+      .teamBadge {
+        width: 36px;
+        height: 36px;
+        object-fit: contain;
+        border-radius: 0.3rem;
+      }
+
+      .teamName {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--primary-3);
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
+      }
+
+      &.winner .teamName {
+        color: var(--ascent-color);
+        font-weight: 800;
+      }
+    }
+
+    .winnerScore {
+      color: var(--ascent-color);
+    }
+
+    .score {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--primary-3);
+      white-space: nowrap;
+      padding: 0 0.5rem;
+    }
+  }
+
+  .watchLiveBtn {
+    background: var(--ascent-color);
+    color: var(--primary-1);
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+}
+
+.standingsWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.standingsGroup {
+  h3 {
+    color: var(--primary-2);
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.standingsTable {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 0.5rem;
+  overflow: hidden;
+
+  th,
+  td {
+    padding: 0.6rem 0.8rem;
+    text-align: center;
+    color: var(--primary-2);
+    font-size: 0.85rem;
+  }
+
+  th {
+    color: var(--primary-3);
+    font-weight: 700;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .teamCell {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-align: left;
+    color: var(--primary-3);
+    font-weight: 600;
+
+    .standingsBadge {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+    }
+  }
+
+  tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .topRow {
+    background: rgba(22, 163, 74, 0.12);
+
+    td {
+      color: var(--primary-3);
+      font-weight: 700;
+    }
+
+    .teamCell {
+      color: #16a34a;
+    }
+  }
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.modalContent {
+  background: var(--bg-color);
+  border-radius: 1rem;
+  width: 100%;
+  max-width: 800px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h3 {
+    color: var(--primary-3);
+    font-size: 1.1rem;
+  }
+
+  .modalClose {
+    background: transparent;
+    border: none;
+    color: var(--primary-2);
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+
+    &:hover {
+      color: var(--primary-3);
+    }
+  }
+}
+
+.modalPlayer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: black;
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+}
+
+.streamPicker {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  .streamOption {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--primary-2);
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    font-family: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+
+    &.active {
+      background: var(--ascent-color);
+      color: var(--primary-1);
+      font-weight: 700;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@media (max-width: 769px) {
+  .modalContent {
+    max-width: 100%;
+  }
+}

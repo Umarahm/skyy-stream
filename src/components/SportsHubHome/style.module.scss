@@ -1,0 +1,439 @@
+.SportsHero {
+  height: 90vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+
+  .changeHubBtn {
+    position: absolute;
+    top: 1.2rem;
+    left: 0.7rem;
+    z-index: 6;
+    padding: 0.45rem 0.8rem;
+    border-radius: 0.4rem;
+    font-size: 0.85rem;
+  }
+
+  .HeroCarousel {
+    height: 80vh;
+    max-width: calc(100vw - 5rem);
+    margin: 1rem 0 0 0;
+    border-radius: 2rem;
+    position: relative;
+
+    .CarouselLoading {
+      height: calc(80vh - 1rem);
+      width: 100%;
+      margin: 1rem 0 0 0;
+      border-radius: 2rem;
+      position: relative;
+    }
+
+    .curvy {
+      position: absolute;
+      height: 2.2rem;
+      width: 2.2rem;
+      left: clamp(1rem, calc(35vw - 2.87rem), 50vw);
+      bottom: 0;
+      border-radius: 0 0 2rem 0;
+      box-shadow: 70px 70px 0 70px var(--bg-color);
+    }
+    .curvy2 {
+      position: absolute;
+      height: 2.2rem;
+      width: 2.2rem;
+      left: clamp(1rem, calc(35vw - 2.87rem + 23.55rem), 70rem);
+      bottom: 0;
+      border-radius: 0 0 0 2rem;
+      box-shadow: -70px 70px 0 70px var(--bg-color);
+    }
+    .curvy3 {
+      position: absolute;
+      height: 2.2rem;
+      width: 2.2rem;
+      left: 0;
+      top: 0;
+      border-radius: 2rem 0 0 0;
+      box-shadow: -70px -70px 0 70px var(--bg-color);
+    }
+    .curvy4 {
+      position: absolute;
+      height: 2.2rem;
+      width: 2.2rem;
+      right: 0;
+      top: 0;
+      border-radius: 0 2rem 0 0;
+      box-shadow: 70px -70px 0 70px var(--bg-color);
+    }
+  }
+
+  .HeroMeta {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: -2rem;
+    border-radius: 1.5rem;
+    outline: 0.7rem solid var(--bg-color);
+    background: var(--primary-1);
+    padding: 1rem 1.5rem;
+    text-align: center;
+    min-width: 22rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+
+    .competition {
+      color: var(--primary-2);
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .scoreRow {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+
+      .team {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        width: 6rem;
+
+        img {
+          width: 48px;
+          height: 48px;
+          object-fit: contain;
+          border-radius: 0.4rem;
+        }
+
+        span {
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: var(--primary-3);
+          text-align: center;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          max-width: 100%;
+        }
+      }
+
+      .score {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--primary-3);
+        white-space: nowrap;
+
+        .statusLine {
+          font-size: 0.7rem;
+          font-weight: 700;
+          color: #16a34a;
+          text-transform: uppercase;
+        }
+      }
+    }
+  }
+}
+
+.fifaPromo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: linear-gradient(135deg, rgba(22, 163, 74, 0.15), rgba(255, 255, 255, 0.03));
+  border: 1px solid rgba(22, 163, 74, 0.3);
+  border-radius: 1rem;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, transform 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba(22, 163, 74, 0.6);
+  }
+
+  h3 {
+    color: var(--primary-3);
+    font-size: 1.1rem;
+    margin: 0 0 0.2rem 0;
+  }
+
+  p {
+    color: var(--primary-2);
+    font-size: 0.85rem;
+    margin: 0;
+  }
+}
+
+.fifaPromoLogo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.newsTile {
+  flex-shrink: 0;
+  width: 16rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.newsTileImage {
+  width: 100%;
+  height: 9rem;
+  object-fit: cover;
+  border-radius: 0.75rem;
+}
+
+.newsTileTitle {
+  color: var(--primary-3);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.leagueTile {
+  flex-shrink: 0;
+  width: 9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: var(--primary-3);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 1rem;
+  padding: 1rem 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: transform 0.2s, border-color 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.leagueLogo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.wideCardLink {
+  display: block;
+  flex-shrink: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.wideCard {
+  flex-shrink: 0;
+  width: 20rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s, border-color 0.2s;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &.live {
+    border-color: rgba(22, 163, 74, 0.5);
+  }
+
+  .wideCardBackdrop {
+    height: 10rem;
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .wideCardBody {
+    padding: 0.8rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+
+    .wideCardTop {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .sportLabel {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--primary-2);
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.15rem 0.5rem;
+        border-radius: 1rem;
+      }
+
+      .liveBadge {
+        color: #16a34a;
+        font-weight: 800;
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+      }
+
+      .statusText {
+        color: var(--primary-2);
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+    }
+
+    .wideCardTeams {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+
+      .team {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        flex: 1;
+        min-width: 0;
+
+        .teamBadge {
+          width: 28px;
+          height: 28px;
+          object-fit: contain;
+          border-radius: 0.3rem;
+        }
+
+        span {
+          font-size: 0.8rem;
+          font-weight: 600;
+          color: var(--primary-3);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .score {
+        font-size: 1rem;
+        font-weight: 800;
+        color: var(--primary-3);
+        white-space: nowrap;
+        padding: 0 0.3rem;
+      }
+    }
+
+    .goalScorers {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      font-size: 0.75rem;
+      color: var(--primary-2);
+
+      li {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .watchLiveBtn {
+      background: var(--ascent-color);
+      color: var(--primary-1);
+      border: none;
+      border-radius: 0.5rem;
+      padding: 0.4rem;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+
+      &:hover {
+        opacity: 0.85;
+      }
+    }
+
+    .statsLink {
+      text-align: center;
+      color: var(--ascent-color);
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+  }
+}
+
+.content {
+  width: 100%;
+  padding: 2rem 1.5rem;
+}
+
+@media (max-width: 769px) {
+  .SportsHero {
+    height: 70vh;
+
+    .changeHubBtn {
+      top: 1.1rem;
+      left: 0.4rem;
+      font-size: 0.78rem;
+      padding: 0.35rem 0.6rem;
+    }
+
+    .HeroCarousel {
+      height: 60vh;
+      max-width: calc(100vw - 2rem);
+      .CarouselLoading {
+        height: 60vh;
+      }
+      .curvy {
+        display: none;
+      }
+    }
+
+    .HeroMeta {
+      min-width: unset;
+      width: 90vw;
+      padding: 0.8rem 1rem;
+
+      .scoreRow {
+        gap: 0.6rem;
+        .team {
+          width: 4.5rem;
+        }
+      }
+    }
+  }
+
+  .wideCard {
+    width: 16rem;
+  }
+
+  .content {
+    padding: 2rem 1rem;
+  }
+}

@@ -65,6 +65,13 @@
   }
 }
 
+.sportsCard {
+  &:hover {
+    border-color: #16a34a;
+    box-shadow: 0 10px 30px rgba(22, 163, 74, 0.2);
+  }
+}
+
 .hubCardContent {
   display: flex;
   flex-direction: column;

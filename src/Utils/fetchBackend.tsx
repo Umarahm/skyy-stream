@@ -21,6 +21,9 @@ interface Fetch {
   provider?: string;
   mangaCategory?: string;
   chapterId?: string;
+  sport?: string;
+  league?: string;
+  dates?: string;
 }
 export default async function axiosFetch({
   requestID,
@@ -42,6 +45,9 @@ export default async function axiosFetch({
   provider,
   mangaCategory,
   chapterId,
+  sport,
+  league,
+  dates,
 }: Fetch) {
   const request = requestID;
   const API_KEY = process.env.NEXT_PUBLIC_TMDB_API_KEY;
@@ -150,6 +156,18 @@ export default async function axiosFetch({
     mangaSearch: backendRequest("mangaSearch", { provider, query, page }),
     mangaInfo: backendRequest("mangaInfo", { provider, id }),
     mangaRead: backendRequest("mangaRead", { provider, chapterId }),
+
+    // sports
+    sportsScoreboard: backendRequest("sportsScoreboard", { sport, league, dates }),
+    sportsStandings: backendRequest("sportsStandings", { sport, league }),
+    sportsSummary: backendRequest("sportsSummary", { sport, league, id }),
+    sportsNews: backendRequest("sportsNews", { sport, league }),
+    sportsArticle: backendRequest("sportsArticle", { id }),
+    sportsdbTable: backendRequest("sportsdbTable", { league, season }),
+    sportsdbEventsSeason: backendRequest("sportsdbEventsSeason", { league, season }),
+    sportsdbEventsDay: backendRequest("sportsdbEventsDay", { dates, sport }),
+    sportsdbEvent: backendRequest("sportsdbEvent", { id }),
+    sportsdbHighlights: backendRequest("sportsdbHighlights", { dates, sport }),
   };
   const final_request = requests[request];
   if (!id && request.includes("Data")) {
@@ -179,7 +197,10 @@ export default async function axiosFetch({
     const payload = response?.data;
     if (payload !== null && payload !== undefined) {
       try {
-        await setCache(cacheKey, payload);
+        // Live scoreboard data goes stale fast — cache it client-side for
+        // 30s instead of the default 30 minutes so polling sees fresh scores.
+        const ttlSeconds = request === "sportsScoreboard" ? 30 : undefined;
+        await setCache(cacheKey, payload, ttlSeconds);
       } catch (error) {
         console.error("Client cache write failed:", error);
       }

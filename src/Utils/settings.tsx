@@ -1,4 +1,4 @@
-export type AppHub = "movieTv" | "japanese";
+export type AppHub = "movieTv" | "japanese" | "sports";
 
 export type RiveSettings = {
   theme: string;

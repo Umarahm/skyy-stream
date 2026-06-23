@@ -134,7 +134,7 @@ const Layout = ({ children }: any) => {
         </Head>
       )}
       <div
-        className={`${styles.background} ${mode === "dark" && "dark"} ${mode === "light" && "light"} ${hub === "japanese" ? "hub-japanese" : "hub-movieTv"}`}
+        className={`${styles.background} ${mode === "dark" && "dark"} ${mode === "light" && "light"} ${hub === "japanese" ? "hub-japanese" : hub === "sports" ? "hub-sports" : "hub-movieTv"}`}
       >
         {!hub && isHubInitialized ? (
           <div className={styles.hubGate}>
@@ -162,6 +162,16 @@ const Layout = ({ children }: any) => {
                     alt="Japanese hub logo"
                   />
                   <h2>Rive Anime & Manga</h2>
+                </div>
+              </button>
+              <button
+                className={`${styles.hubChoiceCard} ${styles.sportsCard}`}
+                onClick={() => handleHubSelect("sports")}
+                type="button"
+              >
+                <div className={styles.hubCardContent}>
+                  <img src="/images/sports-logo.webp" alt="Rive Sports hub logo" />
+                  <h2>Rive Sports</h2>
                 </div>
               </button>
             </div>

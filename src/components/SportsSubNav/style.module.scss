@@ -1,0 +1,55 @@
+.subNav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.5rem;
+  border-radius: 1rem;
+  margin-bottom: 2rem;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.tabPill {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.8rem;
+  color: var(--primary-2);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--primary-3);
+  }
+
+  &.active {
+    background: var(--primary-3);
+    color: var(--bg-color);
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+  }
+}
+
+.fifaPill {
+  gap: 0.5rem;
+}
+
+.fifaLogo {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+@media (max-width: 769px) {
+  .subNav {
+    width: 100%;
+  }
+}

@@ -1,0 +1,61 @@
+.highlightsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.2rem;
+  width: 100%;
+}
+
+.highlightCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.highlightThumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: none;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  background: black;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .playIcon {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    background: rgba(0, 0, 0, 0.35);
+  }
+}
+
+.highlightPlayer {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 0.75rem;
+  overflow: hidden;
+
+  iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+}
+
+.highlightTitle {
+  color: var(--primary-3);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 0;
+}

@@ -188,6 +188,7 @@ const SettingsPage = ({
             >
               <option value="movieTv">Movie / TV Hub</option>
               <option value="japanese">Japanese Hub</option>
+              <option value="sports">Rive Sports</option>
             </select>
           </div>
         </div>

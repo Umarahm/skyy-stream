@@ -1,0 +1,86 @@
+.sportsPage {
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-left: 5rem;
+  background-color: var(--bg-color);
+
+  .content {
+    width: 100%;
+    padding: 2rem 1.5rem;
+  }
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+  width: 100%;
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--primary-3);
+    margin: 0 0 0.5rem 0;
+    letter-spacing: 0.5px;
+  }
+
+  p {
+    color: var(--primary-2);
+    font-size: 1rem;
+    margin: 0;
+  }
+}
+
+.section {
+  width: 100%;
+  margin-bottom: 3rem;
+
+  h2 {
+    color: var(--primary-3);
+    font-size: 1.4rem;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+}
+
+.dayHeading {
+  text-align: left !important;
+  font-size: 1.1rem !important;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.message {
+  text-align: center;
+  color: var(--primary-2);
+  font-size: 1rem;
+  padding: 2rem 0;
+  width: 100%;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (max-width: 769px) {
+  .sportsPage {
+    padding-left: 0;
+    padding-bottom: 4rem;
+
+    .content {
+      padding: 2rem 1rem;
+    }
+  }
+
+  .header h1 {
+    font-size: 1.8rem;
+  }
+
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}

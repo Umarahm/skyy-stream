@@ -3,6 +3,7 @@ import type { AppHub } from "./settings";
 export const HUB_DEFAULT_ROUTE: Record<AppHub, string> = {
   movieTv: "/",
   japanese: "/japanese",
+  sports: "/sports",
 };
 
 const SHARED_ROUTES = new Set([
@@ -46,6 +47,19 @@ const JAPANESE_ROUTES = new Set([
   "/schedule",
 ]);
 
+const SPORTS_ROUTES = new Set([
+  "/sports",
+  "/sports-live",
+  "/sports-cricket",
+  "/sports-fifa-schedule",
+  "/sports-fifa-standings",
+  "/sports-fifa-news",
+  "/sports-fifa-news-article",
+  "/sports-fifa-highlights",
+  "/sports-league",
+  "/sports-match",
+]);
+
 export const getRouteSection = (pathname: string | null) => {
   if (!pathname) return "/";
   const normalizedPath = pathname.split("?")[0].split("#")[0];
@@ -60,6 +74,7 @@ export const isRouteAllowedForHub = (
   const section = getRouteSection(pathname);
   if (SHARED_ROUTES.has(section)) return true;
   if (hub === "movieTv") return MOVIE_TV_ROUTES.has(section);
+  if (hub === "sports") return SPORTS_ROUTES.has(section);
   return JAPANESE_ROUTES.has(section);
 };
 

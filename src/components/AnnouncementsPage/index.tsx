@@ -11,6 +11,21 @@ type ChangelogEntry = {
 
 const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "3.0",
+    date: "June 24, 2026",
+    title: "Rive 3.0 — Rive Sports",
+    highlights: [
+      "Brand new Rive Sports hub, alongside Movies/TV and Anime & Manga, with its own logo and a movie/TV-style hero carousel that always spells out whether a match is live, upcoming, or final — with kickoff times shown in your own local time.",
+      "Homepage rails for Live Now (streamed.pk), Live & Upcoming across football, cricket, basketball, baseball and hockey, FIFA World Cup news, and Football/Cricket league browsing.",
+      "Live football scores now poll automatically and show who scored and when directly on the homepage's Live Now cards, with a Watch Live button that reconciles fixtures against streamed.pk automatically.",
+      "A curated, toggleable FIFA World Cup section with its own Schedule (grouped by day, winners highlighted), Standings (all groups, top team highlighted), News, and Highlights pages.",
+      "FIFA news articles now open and read fully inside Rive instead of bouncing out to ESPN.",
+      "Match detail pages for finished football and cricket games, with team stats comparisons, a key-events timeline, and a true pitch graphic showing real formations, player positions, goals, and cards.",
+      "All Leagues browsing for football (Premier League, La Liga, Bundesliga, Serie A, Champions League) and cricket (IPL, Big Bash, Major League Cricket), each with its own fixtures and standings page.",
+      "Live page with a streamed.pk-style sport-pill filter row and Popular/Live Now rails.",
+    ],
+  },
+  {
     version: "2.0",
     date: "June 17, 2026",
     title: "Rive 2.0 — Japanese Hub & Streaming",
