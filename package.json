@@ -20,7 +20,7 @@
     "artplayer": "^5.1.6",
     "artplayer-plugin-hls-quality": "^2.0.0",
     "axios": "^1.18.1",
-    "firebase": "^10.12.2",
+    "firebase": "^12.15.0",
     "framer-motion": "^12.41.0",
     "hls.js": "^1.5.12",
     "lottie-react": "^2.4.1",
