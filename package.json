@@ -33,7 +33,7 @@
     "react-lazy-load-image-component": "^1.6.2",
     "react-loading-skeleton": "^3.4.0",
     "react-paginate": "^8.2.0",
-    "react-tooltip": "^5.27.0",
+    "react-tooltip": "^6.0.8",
     "sass": "^1.101.0",
     "serwist": "^9.5.11",
     "sonner": "^2.0.7"
