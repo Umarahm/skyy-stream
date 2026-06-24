@@ -1,9 +1,8 @@
-import withPWA from "next-pwa";
+import withSerwistInit from "@serwist/next";
 
-const pwa = withPWA({
-  dest: "public",
-  register: true,
-  skipWaiting: true,
+const withSerwist = withSerwistInit({
+  swSrc: "src/sw.js",
+  swDest: "public/sw.js",
   disable: process.env.NODE_ENV === "development",
 });
 
@@ -13,4 +12,4 @@ const nextConfig = {
   // Add any other Next.js configuration options here
 };
 
-export default pwa(nextConfig);
+export default withSerwist(nextConfig);
