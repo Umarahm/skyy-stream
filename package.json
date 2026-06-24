@@ -18,7 +18,7 @@
     "@vidstack/react": "^1.15.6",
     "artplayer": "^5.1.6",
     "artplayer-plugin-hls-quality": "^2.0.0",
-    "axios": "^1.7.2",
+    "axios": "^1.18.1",
     "babel-loader": "^9.1.3",
     "firebase": "^10.12.2",
     "framer-motion": "^11.2.12",
@@ -35,7 +35,7 @@
     "react-loading-skeleton": "^3.4.0",
     "react-paginate": "^8.2.0",
     "react-tooltip": "^5.27.0",
-    "sass": "^1.77.6",
+    "sass": "^1.101.0",
     "sonner": "^1.5.0"
   },
   "devDependencies": {
@@ -45,7 +45,7 @@
     "@types/react-dom": "^18",
     "@types/react-lazy-load-image-component": "^1.6.4",
     "husky": "^9.0.11",
-    "prettier": "^3.3.3",
+    "prettier": "^3.8.4",
     "typescript": "^5"
   }
 }
