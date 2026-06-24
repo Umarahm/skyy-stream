@@ -136,7 +136,7 @@ const Layout = ({ children }: any) => {
       <div
         className={`${styles.background} ${mode === "dark" && "dark"} ${mode === "light" && "light"} ${hub === "japanese" ? "hub-japanese" : hub === "sports" ? "hub-sports" : "hub-movieTv"}`}
       >
-        {!hub && isHubInitialized ? (
+        {!isHubInitialized ? null : !hub ? (
           <div className={styles.hubGate}>
             <h1>Choose your hub</h1>
             <p>Select where you want to start. You can switch anytime.</p>
@@ -176,7 +176,7 @@ const Layout = ({ children }: any) => {
               </button>
             </div>
           </div>
-        ) : (
+        ) : !isRouteAllowedForHub(hub, path) ? null : (
           <>
             <Navbar hub={hub} />
             <motion.div
