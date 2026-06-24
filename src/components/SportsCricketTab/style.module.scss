@@ -1,0 +1,109 @@
+.cricketCard {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  transition: border-color 0.2s, transform 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  &.cricketLive {
+    border-color: rgba(22, 163, 74, 0.5);
+  }
+}
+
+.cricketStatus {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.2rem;
+
+  .cricketLiveBadge {
+    color: #16a34a;
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+  }
+
+  .cricketStatusText {
+    color: var(--primary-2);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    text-align: center;
+  }
+}
+
+.cricketTeamRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.5rem;
+
+  &.cricketWinner {
+    background: rgba(22, 163, 74, 0.1);
+
+    .cricketTeamName {
+      color: var(--ascent-color);
+      font-weight: 800;
+    }
+  }
+}
+
+.cricketBadge {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  border-radius: 0.3rem;
+  flex-shrink: 0;
+  background: transparent !important;
+}
+
+.cricketTeamName {
+  flex: 1;
+  min-width: 0;
+  color: var(--primary-3);
+  font-weight: 600;
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cricketScore {
+  color: var(--primary-2);
+  font-size: 0.85rem;
+  font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cricketOutcome {
+  text-align: center;
+  color: var(--primary-3);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin: 0.2rem 0 0;
+}
+
+.watchLiveBtn {
+  background: var(--ascent-color);
+  color: var(--primary-1);
+  border: none;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}

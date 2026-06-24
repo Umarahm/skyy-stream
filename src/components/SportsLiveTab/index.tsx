@@ -26,7 +26,7 @@ const ALL_SPORT: SportEntry = { id: "all", name: "All" };
 const getMatchImage = (match: StreamedMatchRaw) =>
   resolveStreamedAsset(match.poster) ||
   resolveStreamedAsset(match.teams?.home?.badge) ||
-  "/images/logo.svg";
+  "/images/NoSportImgFound.svg";
 
 const LiveMatchCard = ({
   match,

@@ -46,14 +46,18 @@ const Standings = ({ table }: { table: any[] }) => {
                 >
                   <td>{row.intRank}</td>
                   <td className={styles.teamCell}>
-                    <LazyLoadImage
-                      src={row.strBadge || "/images/logo.svg"}
-                      alt={row.strTeam}
-                      effect="opacity"
-                      className={`${styles.standingsBadge} skeleton`}
-                      width={20}
-                      height={20}
-                    />
+                    {row.strBadge ? (
+                      <LazyLoadImage
+                        src={row.strBadge}
+                        alt={row.strTeam}
+                        effect="opacity"
+                        className={`${styles.standingsBadge} skeleton`}
+                        width={20}
+                        height={20}
+                      />
+                    ) : (
+                      <div className={styles.standingsBadge} />
+                    )}
                     {row.strTeam}
                   </td>
                   <td>{row.intPlayed}</td>

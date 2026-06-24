@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./style.module.scss";
 import { BsCaretLeftFill, BsCaretRightFill } from "react-icons/bs";
@@ -7,13 +7,19 @@ import { BsCaretLeftFill, BsCaretRightFill } from "react-icons/bs";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/opacity.css";
 
-const Carousel = ({
+// Exposed via ref so a caller (e.g. SportsHero) can drive the slide forward/
+// back with its own buttons — this component's own prev/next controls
+// (.slide_direction) are hidden globally via CSS, shared as-is by every page
+// that uses this carousel.
+export type CarouselHandle = { next: () => void; previous: () => void };
+
+const Carousel = forwardRef<CarouselHandle, any>(({
   imageArr,
   setIndex,
   mobileHeight,
   desktopHeight,
   objectFit,
-}: any) => {
+}: any, ref) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState("");
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -99,6 +105,8 @@ const Carousel = ({
     );
   };
 
+  useImperativeHandle(ref, () => ({ next: handleNext, previous: handlePrevious }));
+
   return (
     <div className={styles.carousel}>
       <div
@@ -174,5 +182,6 @@ const Carousel = ({
       </div>
     </div>
   );
-};
+});
+Carousel.displayName = "Carousel";
 export default Carousel;

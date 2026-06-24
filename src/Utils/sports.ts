@@ -26,11 +26,14 @@ export const SPORTS_CONFIG: Record<SportKey, SportConfig> = {
   cricket: {
     label: "Cricket",
     espnSport: "cricket",
-    // Cricket has no fixed ESPN league slug (documented gotcha) and no
-    // currently-active competition was found on the ESPN side — TheSportsDB
-    // is the source of truth for cricket in v1.
-    espnLeague: "",
-    sportsDbLeagueId: "5401", // Major League Cricket — the active competition
+    // Despite the soccer-style slugs (e.g. "fifa.world"), ESPN's cricket
+    // coverage is keyed by numeric league id — "8048" is the IPL. Confirmed
+    // working: site.api.espn.com/.../cricket/8048/scoreboard?dates=<year>
+    // returns the full season with real score strings ("161/5 (18/20 ov)")
+    // and an explicit per-team `winner` flag, unlike TheSportsDB's bare
+    // run-total which made "highest number wins" the only signal available.
+    espnLeague: "8048",
+    sportsDbLeagueId: "5401", // Major League Cricket — kept for streamed.pk-style fallbacks
     sportsDbSeason: "2026",
     streamedId: "cricket",
   },
@@ -56,6 +59,17 @@ export const getEspnScoreboard = async (
 ): Promise<{ events: any[] }> =>
   fetchJson("sportsScoreboard", { sport, league, dates }, { events: [] });
 
+// Same scoreboard endpoint as above, but typed to also carry the `standings`
+// array ESPN embeds in the response — used for cricket, where a `dates`
+// value of just a year (e.g. "2026") returns the whole season's fixtures
+// plus a season standings snapshot in one call.
+export const getEspnScoreboardFull = async (
+  sport: string,
+  league: string,
+  dates?: string,
+): Promise<{ events: any[]; standings: any[] }> =>
+  fetchJson("sportsScoreboard", { sport, league, dates }, { events: [], standings: [] });
+
 export const getSportsDbEventsSeason = async (
   league: string,
   season?: string,
@@ -68,36 +82,75 @@ export const getSportsDbEventsDay = async (
 ): Promise<{ events: any[] }> =>
   fetchJson("sportsdbEventsDay", { dates: date, sport: sportName }, { events: [] });
 
+// TheSportsDB's free-tier key is rate-limited, and the homepage's eager
+// batch already fires several `eventsday.php` calls back-to-back (one per
+// sport) — staggering their *dispatch* by a small, fixed gap (without
+// waiting for each to finish) avoids slamming the limiter with a true
+// simultaneous burst, while still resolving in roughly max(latency) instead
+// of sum(latency) like a sequential await chain would.
+const staggeredAll = <T, R>(items: T[], fn: (item: T, index: number) => Promise<R>, gapMs = 120): Promise<R[]> =>
+  Promise.all(
+    items.map(
+      (item, index) =>
+        new Promise<R>((resolve) => {
+          setTimeout(() => fn(item, index).then(resolve), index * gapMs);
+        }),
+    ),
+  );
+
 // TheSportsDB sport names for the homepage's cross-sport rail. Football is
 // deliberately excluded — ESPN's scoreboard covers the active World Cup far
 // better (live score + goal scorers/time) and is polled separately by
 // SportsHubHome on its own short cadence instead of going through TheSportsDB.
 export const HOMEPAGE_SPORTS_DB_NAMES = ["Cricket", "Basketball", "Baseball", "Ice Hockey"];
 
+// Shared ordering for every cross-sport match list on the homepage — live
+// first, then upcoming, then finished, ties broken by kickoff time. Kept in
+// one place so the hero, the cross-sport rail, and any future feed all agree
+// on order instead of each re-implementing the same sort.
+const STATUS_WEIGHT: Record<NormalizedMatch["status"], number> = { in: 0, pre: 1, post: 2 };
+export const sortMatchesByStatus = (items: NormalizedMatch[]): NormalizedMatch[] =>
+  [...items].sort((a, b) => {
+    const weightDiff = STATUS_WEIGHT[a.status] - STATUS_WEIGHT[b.status];
+    if (weightDiff !== 0) return weightDiff;
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
+  });
+
 export const getMultiSportEventsToday = async (date: string): Promise<NormalizedMatch[]> => {
-  const results = await Promise.all(
-    HOMEPAGE_SPORTS_DB_NAMES.map((sportName) => getSportsDbEventsDay(date, sportName)),
+  const results = await staggeredAll(HOMEPAGE_SPORTS_DB_NAMES, (sportName) =>
+    getSportsDbEventsDay(date, sportName),
   );
-  const statusWeight: Record<NormalizedMatch["status"], number> = { in: 0, pre: 1, post: 2 };
-  return results
+  const matches = results
     .flatMap((result) => result.events || [])
     .map(normalizeSportsDbEvent)
-    .filter((match): match is NormalizedMatch => Boolean(match))
-    .sort((a, b) => {
-      const weightDiff = statusWeight[a.status] - statusWeight[b.status];
-      if (weightDiff !== 0) return weightDiff;
-      return new Date(a.date).getTime() - new Date(b.date).getTime();
-    });
+    .filter((match): match is NormalizedMatch => Boolean(match));
+  return sortMatchesByStatus(matches);
+};
+
+// TheSportsDB's Soccer eventsday call returns the World Cup fixture as one
+// record carrying score, team badges, AND match artwork (strThumb/strBanner)
+// together — confirmed live: eventsday.php?s=Soccer, filtered to
+// idLeague === sportsDbLeagueId. Kept as raw events (not normalized here)
+// because `findSportsDbBackdrop` also reuses this single fetch to attach
+// artwork onto the ESPN-sourced football fixtures shown elsewhere on the
+// page (ESPN has no image field at all, but better live score precision).
+export const getWorldCupEventsToday = async (date: string): Promise<any[]> => {
+  const result = await getSportsDbEventsDay(date, "Soccer");
+  return (result.events || []).filter(
+    (event: any) => event.idLeague === SPORTS_CONFIG.football.sportsDbLeagueId,
+  );
 };
 
 // Live football fixtures for the homepage — fetched independently from
 // getMultiSportEventsToday so the caller can poll it on its own short
 // cadence without re-hitting TheSportsDB/streamed.pk on every tick.
-export const getFootballLiveToday = async (): Promise<NormalizedMatch[]> => {
+export const getFootballLiveToday = async (label?: string): Promise<NormalizedMatch[]> => {
   const football = SPORTS_CONFIG.football;
   const scoreboard = await getEspnScoreboard(football.espnSport, football.espnLeague);
   return (scoreboard.events || [])
-    .map((event: any) => normalizeEspnEvent(event, football.label, football.espnSport, football.espnLeague))
+    .map((event: any) =>
+      normalizeEspnEvent(event, label || football.label, football.espnSport, football.espnLeague),
+    )
     .filter((match): match is NormalizedMatch => Boolean(match));
 };
 
@@ -136,7 +189,13 @@ export const getStreamedMatches = async (sport: string): Promise<any[]> =>
 
 export const getStreamedLiveAll = async (): Promise<any[]> => fetchStreamedJson("/matches/live", []);
 
-export const getStreamedAllMatches = async (): Promise<any[]> => fetchStreamedJson("/matches/all", []);
+// "/matches/all" returns every match streamed.pk has ever indexed, across all
+// sports — a much heavier payload than the homepage's "More Live Events" rail
+// needs, and slow enough on its own that it risked starving the other
+// requests fired alongside it. "/matches/all-today" is the same shape, scoped
+// to today, so it stays fast and lazy-loadable on scroll.
+export const getStreamedAllTodayMatches = async (): Promise<any[]> =>
+  fetchStreamedJson("/matches/all-today", []);
 
 export const getStreamedPopularAll = async (): Promise<any[]> =>
   fetchStreamedJson("/matches/all/popular", []);
@@ -171,6 +230,11 @@ export type NormalizedMatch = {
   awayLogo?: string;
   homeScore?: string;
   awayScore?: string;
+  // Explicit per-side result flag, straight from ESPN's `competitor.winner`
+  // — more reliable than comparing scores client-side (cricket's score is a
+  // formatted string like "161/5 (18/20 ov)", not a bare number to compare).
+  homeWinner?: boolean;
+  awayWinner?: boolean;
   sportLabel?: string;
   competition?: string;
   backdrop?: string;
@@ -182,6 +246,11 @@ export type NormalizedMatch = {
   // Goal/card timeline — populated for ESPN-sourced football matches only
   // (scoreboard and summary both expose the same `details[]` shape).
   keyEvents?: MatchKeyEvent[];
+  // TheSportsDB's dedicated matchup artwork (`strBanner`) — distinct from
+  // `backdrop`, which is the full-bleed background image. Only set when the
+  // source actually has a banner; the hero carousel skips rendering it
+  // otherwise rather than duplicating `backdrop`.
+  banner?: string;
 };
 
 // Shared by the scoreboard (`competitions[0].details`) and the match summary
@@ -221,8 +290,14 @@ export const normalizeEspnEvent = (
     awayLogo: away.team?.logo,
     homeScore: home.score,
     awayScore: away.score,
+    homeWinner: typeof home.winner === "boolean" ? home.winner : undefined,
+    awayWinner: typeof away.winner === "boolean" ? away.winner : undefined,
     sportLabel,
-    competition: event.shortName || event.name,
+    // `sportLabel` is the tournament/league name passed in by the caller
+    // (e.g. "FIFA World Cup") — `event.shortName`/`event.name` are the
+    // *match* name ("QAT @ BIH"), which is the wrong thing to show as the
+    // competition label in the hero/carousel.
+    competition: sportLabel,
     espnSport,
     espnLeague,
     keyEvents: normalizeEspnEventDetails(comp),
@@ -252,6 +327,7 @@ export const normalizeSportsDbEvent = (event: any): NormalizedMatch | null => {
     sportLabel: event.strSport,
     competition: event.strLeague,
     backdrop: event.strThumb || event.strBanner || event.strPoster || event.strLeagueBadge,
+    banner: event.strBanner || undefined,
     sportsDbLeagueId: event.idLeague,
   };
 };
@@ -265,15 +341,20 @@ type RawStreamedMatch = {
   teams?: { home?: { name: string; badge: string }; away?: { name: string; badge: string } };
 };
 
-// streamed.pk's `poster`/`badge` fields come back as full paths already
-// (e.g. "/api/images/proxy/<hash>.webp"), not bare filenames as the docs'
-// example suggested — so this just resolves against the host, it does not
-// add the /api/images/.../<id>.webp wrapping itself (doing both doubled the
-// path and the extension).
+// streamed.pk is inconsistent about this field's shape depending on category:
+// `poster` usually comes back as a full path already, e.g.
+// "/api/images/proxy/<hash>.webp" — just needs the host prepended. But
+// `teams.home/away.badge` (confirmed on football/World Cup matches) comes
+// back as a *bare* hash with no leading slash and no extension at all, e.g.
+// "GwZg7AZpYEZgHCAjAJgCzrA...IQA" — that needs both the `/api/images/proxy/`
+// prefix AND a `.webp` extension added, or the request 404s.
+const IMAGE_EXTENSION_RE = /\.(webp|png|jpe?g)$/i;
 export const resolveStreamedAsset = (path?: string): string | undefined => {
   if (!path) return undefined;
   if (path.startsWith("http")) return path;
-  return `https://streamed.pk${path.startsWith("/") ? path : `/${path}`}`;
+  if (path.startsWith("/")) return `https://streamed.pk${path}`;
+  const withExtension = IMAGE_EXTENSION_RE.test(path) ? path : `${path}.webp`;
+  return `https://streamed.pk/api/images/proxy/${withExtension}`;
 };
 
 // streamed.pk has no score/status fields — `status` is supplied by the caller
@@ -290,7 +371,11 @@ export const normalizeStreamedMatch = (
     id: String(match.id),
     source: "streamed",
     status,
-    statusDetail: status === "in" ? "LIVE" : "",
+    // `getMatchStatusLabel` already prepends "LIVE" for status "in" — putting
+    // it here too produced "LIVE LIVE" on every streamed.pk-only card.
+    // streamed.pk has no minute/period data, so there's nothing else to put
+    // in this field.
+    statusDetail: "",
     date: new Date(match.date).toISOString(),
     homeName,
     awayName,
@@ -326,6 +411,18 @@ export const espnStandingsToTableRows = (data: { children: any[] }): any[] => {
     })),
   );
 };
+
+// ESPN's cricket standings come back flat (no groups) and much sparser than
+// football's — just rank and match points, no games-played/win/loss split.
+// Maps onto the same row shape so the one `Standings` component still works.
+export const espnCricketStandingsToTableRows = (standings: any[]): any[] =>
+  (standings || []).map((entry: any) => ({
+    idStanding: entry.team?.id,
+    intRank: Number(getEspnStat(entry, "rank")) || 0,
+    strTeam: entry.team?.displayName,
+    strBadge: entry.team?.logos?.[0]?.href || entry.team?.logo,
+    intPoints: getEspnStat(entry, "matchPoints"),
+  }));
 
 // One label/tone everywhere a match's status is shown, so the carousel,
 // rails, and schedule grid never disagree on wording — and kickoff times are

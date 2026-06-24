@@ -27,6 +27,18 @@
   display: block;
 }
 
+.iconBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
 @media (max-width: 769px) {
   .navbar {
     padding: 1.5rem;

@@ -6,20 +6,31 @@ import { NormalizedMatch, getMatchDetailHref, getMatchStatusLabel } from "@/Util
 
 const TeamBadge = ({ name, logo, isWinner }: { name: string; logo?: string; isWinner: boolean }) => (
   <div className={`${styles.team} ${isWinner ? styles.winner : ""}`}>
-    <LazyLoadImage
-      src={logo || "/images/logo.svg"}
-      alt={name}
-      effect="opacity"
-      className={`${styles.teamBadge} skeleton`}
-      width={36}
-      height={36}
-    />
+    {logo ? (
+      <LazyLoadImage
+        src={logo}
+        alt={name}
+        effect="opacity"
+        className={`${styles.teamBadge} skeleton`}
+        width={36}
+        height={36}
+      />
+    ) : (
+      <div className={styles.teamBadge} />
+    )}
     <span className={styles.teamName}>{name}</span>
   </div>
 );
 
 const getWinner = (match: NormalizedMatch): "home" | "away" | null => {
   if (match.status !== "post") return null;
+  // Prefer ESPN's explicit per-side result flag when present — comparing
+  // scores as numbers breaks for any sport whose score isn't a bare number.
+  if (typeof match.homeWinner === "boolean" || typeof match.awayWinner === "boolean") {
+    if (match.homeWinner) return "home";
+    if (match.awayWinner) return "away";
+    return null;
+  }
   const home = Number(match.homeScore);
   const away = Number(match.awayScore);
   if (Number.isNaN(home) || Number.isNaN(away)) return null;

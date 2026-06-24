@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import styles from "./style.module.scss";
-import Carousel from "@/components/Carousel";
+import Carousel, { CarouselHandle } from "@/components/Carousel";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/opacity.css";
+import { MdChevronLeft, MdChevronRight } from "react-icons/md";
 import { setHub } from "@/Utils/settings";
 import { useRouter } from "next/navigation";
 import { NormalizedMatch, getMatchStatusLabel } from "@/Utils/sports";
@@ -14,8 +15,9 @@ const HERO_SLIDE_COUNT = 8;
 const SportsHero = ({ matches }: { matches: NormalizedMatch[] }) => {
   const { push } = useRouter();
   const [index, setIndex] = useState(0);
+  const carouselRef = useRef<CarouselHandle>(null);
   const slides = matches.slice(0, HERO_SLIDE_COUNT);
-  const images = slides.map((match) => match.backdrop || "/images/logo.svg");
+  const images = slides.map((match) => match.backdrop || "/images/NoSportImgFound.svg");
   const current = slides[index];
 
   return (
@@ -32,13 +34,29 @@ const SportsHero = ({ matches }: { matches: NormalizedMatch[] }) => {
       </button>
       <div className={styles.HeroCarousel}>
         {images.length > 0 ? (
-          <Carousel
-            imageArr={images}
-            setIndex={setIndex}
-            mobileHeight="60vh"
-            desktopHeight="80vh"
-            objectFit={"cover"}
-          />
+          <>
+            <Carousel
+              ref={carouselRef}
+              imageArr={images}
+              setIndex={setIndex}
+              mobileHeight="60vh"
+              desktopHeight="80vh"
+              objectFit={"cover"}
+            />
+            <div className={styles.heroNavControls}>
+              <MdChevronLeft
+                onClick={() => carouselRef.current?.previous()}
+                data-tooltip-id="tooltip"
+                data-tooltip-content="Previous"
+              />
+              swipe
+              <MdChevronRight
+                onClick={() => carouselRef.current?.next()}
+                data-tooltip-id="tooltip"
+                data-tooltip-content="Next"
+              />
+            </div>
+          </>
         ) : (
           <Skeleton className={styles.CarouselLoading} />
         )}
@@ -50,17 +68,29 @@ const SportsHero = ({ matches }: { matches: NormalizedMatch[] }) => {
         <div className={styles.HeroMeta}>
           {current ? (
             <>
+              {current.banner && current.banner !== current.backdrop && (
+                <LazyLoadImage
+                  src={current.banner}
+                  alt={`${current.homeName} vs ${current.awayName}`}
+                  effect="opacity"
+                  className={`${styles.matchupBanner} skeleton`}
+                />
+              )}
               <p className={styles.competition}>{current.competition || current.sportLabel}</p>
               <div className={styles.scoreRow}>
                 <div className={styles.team}>
-                  <LazyLoadImage
-                    src={current.homeLogo || "/images/logo.svg"}
-                    alt={current.homeName}
-                    effect="opacity"
-                    className="skeleton"
-                    width={48}
-                    height={48}
-                  />
+                  {current.homeLogo ? (
+                    <LazyLoadImage
+                      src={current.homeLogo}
+                      alt={current.homeName}
+                      effect="opacity"
+                      className="skeleton"
+                      width={48}
+                      height={48}
+                    />
+                  ) : (
+                    <div style={{ width: 48, height: 48 }} />
+                  )}
                   <span>{current.homeName}</span>
                 </div>
                 <div className={styles.score}>
@@ -74,14 +104,18 @@ const SportsHero = ({ matches }: { matches: NormalizedMatch[] }) => {
                   <span className={styles.statusLine}>{getMatchStatusLabel(current).label}</span>
                 </div>
                 <div className={styles.team}>
-                  <LazyLoadImage
-                    src={current.awayLogo || "/images/logo.svg"}
-                    alt={current.awayName}
-                    effect="opacity"
-                    className="skeleton"
-                    width={48}
-                    height={48}
-                  />
+                  {current.awayLogo ? (
+                    <LazyLoadImage
+                      src={current.awayLogo}
+                      alt={current.awayName}
+                      effect="opacity"
+                      className="skeleton"
+                      width={48}
+                      height={48}
+                    />
+                  ) : (
+                    <div style={{ width: 48, height: 48 }} />
+                  )}
                   <span>{current.awayName}</span>
                 </div>
               </div>

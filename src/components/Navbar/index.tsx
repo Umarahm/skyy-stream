@@ -40,12 +40,14 @@ import { RiEye2Line, RiEye2Fill, RiCalendarScheduleLine } from "react-icons/ri";
 import { GrAnnounce } from "react-icons/gr";
 import { usePathname, useSearchParams } from "next/navigation";
 import { AppHub } from "@/Utils/settings";
+import SportsSearchPopover from "@/components/SportsShared/SportsSearchPopover";
 
 const Navbar = ({ hub }: { hub: AppHub | "" }) => {
   const path = usePathname();
   const params = useSearchParams();
   // const query=
   const [pathname, setPathname] = useState(path);
+  const [sportsSearchOpen, setSportsSearchOpen] = useState(false);
   useEffect(() => {
     if (params.get("type") !== null) setPathname("/" + params.get("type"));
     // else setPathname(path);
@@ -72,18 +74,35 @@ const Navbar = ({ hub }: { hub: AppHub | "" }) => {
           <MdOutlineHome className={styles.inactive} />
         )}
       </Link>
-      <Link
-        href={hub === "japanese" ? "/anime-search" : "/search"}
-        aria-label="Search"
-        data-tooltip-id="tooltip"
-        data-tooltip-html="<div>Search <span class='tooltip-btn'>CTRL + K</span></div>"
-      >
-        {pathname === "/search" || pathname === "/anime-search" ? (
-          <MdSearch className={styles.active} />
-        ) : (
-          <MdOutlineSearch className={styles.inactive} />
-        )}
-      </Link>
+      {hub === "sports" ? (
+        <button
+          type="button"
+          className={styles.iconBtn}
+          onClick={() => setSportsSearchOpen(true)}
+          aria-label="Search"
+          data-tooltip-id="tooltip"
+          data-tooltip-content="Search this page"
+        >
+          {sportsSearchOpen ? (
+            <MdSearch className={styles.active} />
+          ) : (
+            <MdOutlineSearch className={styles.inactive} />
+          )}
+        </button>
+      ) : (
+        <Link
+          href={hub === "japanese" ? "/anime-search" : "/search"}
+          aria-label="Search"
+          data-tooltip-id="tooltip"
+          data-tooltip-html="<div>Search <span class='tooltip-btn'>CTRL + K</span></div>"
+        >
+          {pathname === "/search" || pathname === "/anime-search" ? (
+            <MdSearch className={styles.active} />
+          ) : (
+            <MdOutlineSearch className={styles.inactive} />
+          )}
+        </Link>
+      )}
       {hub === "sports" ? null : hub !== "japanese" ? (
         <>
           <Link
@@ -216,6 +235,7 @@ const Navbar = ({ hub }: { hub: AppHub | "" }) => {
           <MdOutlineSettings className={styles.inactive} />
         )}
       </Link>
+      {sportsSearchOpen && <SportsSearchPopover onClose={() => setSportsSearchOpen(false)} />}
     </div>
   );
 };

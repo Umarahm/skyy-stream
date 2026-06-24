@@ -65,6 +65,26 @@
       border-radius: 0 2rem 0 0;
       box-shadow: 70px -70px 0 70px var(--bg-color);
     }
+
+    .heroNavControls {
+      position: absolute;
+      top: 1.2rem;
+      right: 1rem;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: rgba(0, 0, 0, 0.45);
+      color: var(--primary-3);
+      border-radius: 1rem;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.75rem;
+
+      svg {
+        font-size: 1.5rem;
+        cursor: pointer;
+      }
+    }
   }
 
   .HeroMeta {
@@ -83,6 +103,15 @@
     flex-direction: column;
     align-items: center;
     gap: 0.6rem;
+
+    .matchupBanner {
+      width: 100%;
+      max-width: 20rem;
+      height: 5rem;
+      object-fit: cover;
+      border-radius: 0.75rem;
+      background: transparent !important;
+    }
 
     .competition {
       color: var(--primary-2);
@@ -109,6 +138,7 @@
           height: 48px;
           object-fit: contain;
           border-radius: 0.4rem;
+          background: transparent !important;
         }
 
         span {
@@ -233,10 +263,25 @@
   }
 }
 
+// Tournament badges come from TheSportsDB with a transparent background and
+// no guaranteed color — some (e.g. dark-on-transparent crests) are nearly
+// invisible against this dark tile. A light, fixed-color chip behind every
+// logo guarantees contrast regardless of the badge's own colors.
+.leagueLogoWrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .leagueLogo {
   width: 48px;
   height: 48px;
   object-fit: contain;
+  background: transparent !important;
 }
 
 .wideCardLink {
@@ -313,6 +358,20 @@
       justify-content: space-between;
       gap: 0.5rem;
 
+      // Single-entity broadcasts (a NASCAR rally, an NBA draft, a channel
+      // feed) only ever render one .team child here, no score/vs in the
+      // middle — center it instead of letting space-between push it left.
+      // `.team`'s own `flex: 1` (meant to split width with a second team)
+      // has to be overridden too, or it'd still fill the whole row and
+      // leave nothing for `justify-content` to actually center.
+      &.single {
+        justify-content: center;
+
+        .team {
+          flex: 0 1 auto;
+        }
+      }
+
       .team {
         display: flex;
         align-items: center;
@@ -325,6 +384,7 @@
           height: 28px;
           object-fit: contain;
           border-radius: 0.3rem;
+          background: transparent !important;
         }
 
         span {
@@ -343,6 +403,52 @@
         color: var(--primary-3);
         white-space: nowrap;
         padding: 0 0.3rem;
+      }
+    }
+
+    // Used by Live & Upcoming / More Live Events instead of .wideCardTeams —
+    // badge stacked above name per team, with more room to actually show the
+    // full name instead of truncating it next to the opposing team + score.
+    .wideCardTeamsStacked {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.3rem 0;
+
+      .teamStacked {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        width: 100%;
+
+        .teamBadgeLg {
+          width: 44px;
+          height: 44px;
+          object-fit: contain;
+          border-radius: 0.4rem;
+          background: transparent !important;
+        }
+
+        span {
+          font-size: 0.95rem;
+          font-weight: 700;
+          color: var(--primary-3);
+          text-align: center;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .scoreStacked {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--primary-2);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
     }
 
@@ -406,12 +512,22 @@
 
     .HeroCarousel {
       height: 60vh;
-      max-width: calc(100vw - 2rem);
+      max-width: 100%;
       .CarouselLoading {
         height: 60vh;
       }
       .curvy {
         display: none;
+      }
+      .heroNavControls {
+        top: 0.7rem;
+        right: 0.6rem;
+        padding: 0.25rem 0.6rem;
+        font-size: 0.65rem;
+
+        svg {
+          font-size: 1.3rem;
+        }
       }
     }
 
@@ -419,6 +535,11 @@
       min-width: unset;
       width: 90vw;
       padding: 0.8rem 1rem;
+
+      .matchupBanner {
+        max-width: 100%;
+        height: 3.5rem;
+      }
 
       .scoreRow {
         gap: 0.6rem;

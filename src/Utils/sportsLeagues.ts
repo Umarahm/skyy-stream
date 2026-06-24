@@ -1,11 +1,15 @@
 // Short curated league list (not exhaustive) for the homepage "All Leagues"
-// rails — IDs/logos verified directly against ESPN/TheSportsDB.
+// rails — IDs/logos verified directly against ESPN.
 export type LeagueEntry = {
   id: string;
   label: string;
-  kind: "espn" | "sportsdb";
-  sport: string; // espn sport slug, or TheSportsDB sport name
-  league: string; // espn league slug, or TheSportsDB league id
+  kind: "espn"; // every entry is ESPN-backed now — cricket moved off TheSportsDB
+  sport: "soccer" | "cricket";
+  league: string; // espn league slug ("eng.1") or numeric league id ("8048")
+  // ESPN's cricket scoreboard takes a bare year as `dates` and returns that
+  // season's full fixture list + standings in one call (confirmed working);
+  // football pages build their own date range instead, so this is unused there.
+  season?: string;
   logo: string;
 };
 
@@ -51,33 +55,36 @@ export const LEAGUES_CATALOG: LeagueEntry[] = [
     logo: "https://a.espncdn.com/i/leaguelogos/soccer/500/2.png",
   },
   {
-    id: "4460",
+    id: "8048",
     label: "IPL",
-    kind: "sportsdb",
-    sport: "Cricket",
-    league: "4460",
+    kind: "espn",
+    sport: "cricket",
+    league: "8048",
+    season: "2026",
     logo: "https://r2.thesportsdb.com/images/media/league/badge/gaiti11741709844.png",
   },
   {
-    id: "4461",
+    id: "8044",
     label: "Big Bash League",
-    kind: "sportsdb",
-    sport: "Cricket",
-    league: "4461",
+    kind: "espn",
+    sport: "cricket",
+    league: "8044",
+    season: "2026",
     logo: "https://r2.thesportsdb.com/images/media/league/badge/yko7ny1546635346.png",
   },
   {
-    id: "5401",
+    id: "21266",
     label: "Major League Cricket",
-    kind: "sportsdb",
-    sport: "Cricket",
-    league: "5401",
+    kind: "espn",
+    sport: "cricket",
+    league: "21266",
+    season: "2026",
     logo: "https://r2.thesportsdb.com/images/media/league/badge/mbbos01689159510.png",
   },
 ];
 
-export const FOOTBALL_LEAGUES = LEAGUES_CATALOG.filter((l) => l.kind === "espn");
-export const CRICKET_LEAGUES = LEAGUES_CATALOG.filter((l) => l.kind === "sportsdb");
+export const FOOTBALL_LEAGUES = LEAGUES_CATALOG.filter((l) => l.sport === "soccer");
+export const CRICKET_LEAGUES = LEAGUES_CATALOG.filter((l) => l.sport === "cricket");
 
 export const getLeagueById = (id: string): LeagueEntry | undefined =>
   LEAGUES_CATALOG.find((l) => l.id === id);

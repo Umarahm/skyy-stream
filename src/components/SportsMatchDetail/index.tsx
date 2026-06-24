@@ -44,14 +44,18 @@ const BenchList = ({ roster }: { roster: TeamRoster }) => {
   return (
     <div className={styles.rosterTeam}>
       <div className={styles.rosterHeader}>
-        <LazyLoadImage
-          src={roster.teamLogo || "/images/logo.svg"}
-          alt={roster.team}
-          effect="opacity"
-          className={`${styles.rosterBadge} skeleton`}
-          width={28}
-          height={28}
-        />
+        {roster.teamLogo ? (
+          <LazyLoadImage
+            src={roster.teamLogo}
+            alt={roster.team}
+            effect="opacity"
+            className={`${styles.rosterBadge} skeleton`}
+            width={28}
+            height={28}
+          />
+        ) : (
+          <div className={styles.rosterBadge} />
+        )}
         <h3>{roster.team}</h3>
         {roster.formation && <span className={styles.formation}>{roster.formation}</span>}
       </div>
@@ -147,14 +151,18 @@ const SportsMatchDetail = () => {
     <div className={styles.matchDetail}>
       <div className={styles.matchHeader}>
         <div className={styles.headerTeam}>
-          <LazyLoadImage
-            src={home?.team?.logos?.[0]?.href || "/images/logo.svg"}
-            alt={home?.team?.displayName}
-            effect="opacity"
-            className={`${styles.headerBadge} skeleton`}
-            width={56}
-            height={56}
-          />
+          {home?.team?.logos?.[0]?.href ? (
+            <LazyLoadImage
+              src={home.team.logos[0].href}
+              alt={home?.team?.displayName}
+              effect="opacity"
+              className={`${styles.headerBadge} skeleton`}
+              width={56}
+              height={56}
+            />
+          ) : (
+            <div className={styles.headerBadge} />
+          )}
           <span>{home?.team?.displayName}</span>
         </div>
         <div className={styles.headerScore}>
@@ -164,14 +172,18 @@ const SportsMatchDetail = () => {
           <span className={styles.headerStatus}>{statusText}</span>
         </div>
         <div className={styles.headerTeam}>
-          <LazyLoadImage
-            src={away?.team?.logos?.[0]?.href || "/images/logo.svg"}
-            alt={away?.team?.displayName}
-            effect="opacity"
-            className={`${styles.headerBadge} skeleton`}
-            width={56}
-            height={56}
-          />
+          {away?.team?.logos?.[0]?.href ? (
+            <LazyLoadImage
+              src={away.team.logos[0].href}
+              alt={away?.team?.displayName}
+              effect="opacity"
+              className={`${styles.headerBadge} skeleton`}
+              width={56}
+              height={56}
+            />
+          ) : (
+            <div className={styles.headerBadge} />
+          )}
           <span>{away?.team?.displayName}</span>
         </div>
       </div>

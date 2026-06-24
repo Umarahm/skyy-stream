@@ -3,13 +3,13 @@ import shellStyles from "@/components/SportsShell/style.module.scss";
 import {
   NormalizedMatch,
   SPORTS_CONFIG,
-  getSportsDbEventsSeason,
-  getSportsDbTable,
+  espnCricketStandingsToTableRows,
+  getEspnScoreboardFull,
   getStreamedMatches,
-  normalizeSportsDbEvent,
+  normalizeEspnEvent,
 } from "@/Utils/sports";
 import { StreamedMatch, findStreamedMatch } from "@/Utils/sportsMatch";
-import MatchCard from "@/components/SportsShared/MatchCard";
+import CricketMatchCard from "./CricketMatchCard";
 import Standings from "@/components/SportsShared/Standings";
 import WatchLiveModal, { WatchTarget } from "@/components/SportsShared/WatchLiveModal";
 
@@ -27,21 +27,25 @@ const SportsCricketTab = () => {
 
     const load = async () => {
       setLoading(true);
-      const [events, standingsTable, streamed] = await Promise.all([
-        getSportsDbEventsSeason(config.sportsDbLeagueId, config.sportsDbSeason),
-        getSportsDbTable(config.sportsDbLeagueId, config.sportsDbSeason),
+      // ESPN's cricket scoreboard accepts a bare year as `dates` and returns
+      // that whole season — real score strings ("161/5 (18/20 ov)") and an
+      // explicit per-side `winner` flag, instead of TheSportsDB's bare run
+      // total (which made "highest number wins" the only signal available).
+      const season = String(new Date().getFullYear());
+      const [scoreboard, streamed] = await Promise.all([
+        getEspnScoreboardFull(config.espnSport, config.espnLeague, season),
         getStreamedMatches(config.streamedId),
       ]);
 
       if (!active) return;
       setMatches(
-        (events.events || [])
-          .map(normalizeSportsDbEvent)
+        (scoreboard.events || [])
+          .map((event: any) => normalizeEspnEvent(event, config.label, config.espnSport, config.espnLeague))
           .filter((match): match is NormalizedMatch => Boolean(match))
           .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
           .slice(0, 12),
       );
-      setTable(standingsTable.table || []);
+      setTable(espnCricketStandingsToTableRows(scoreboard.standings));
       setStreamedMatches(streamed || []);
       setLoading(false);
     };
@@ -67,7 +71,7 @@ const SportsCricketTab = () => {
     <>
       <div className={shellStyles.header}>
         <h1>Cricket</h1>
-        <p>Major League Cricket — fixtures & standings</p>
+        <p>Indian Premier League — fixtures, results & standings</p>
       </div>
 
       {loading ? (
@@ -75,13 +79,13 @@ const SportsCricketTab = () => {
       ) : (
         <>
           <div className={shellStyles.section}>
-            <h2>Fixtures</h2>
+            <h2>Fixtures & Results</h2>
             {matches.length === 0 ? (
               <p className={shellStyles.message}>No fixtures found right now.</p>
             ) : (
               <div className={shellStyles.grid}>
                 {matches.map((match) => (
-                  <MatchCard
+                  <CricketMatchCard
                     key={match.id}
                     match={match}
                     canWatchLive={

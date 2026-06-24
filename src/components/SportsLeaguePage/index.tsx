@@ -3,18 +3,19 @@ import { useSearchParams } from "next/navigation";
 import { LazyLoadImage } from "react-lazy-load-image-component";
 import "react-lazy-load-image-component/src/effects/opacity.css";
 import shellStyles from "@/components/SportsShell/style.module.scss";
+import styles from "./style.module.scss";
 import MatchCard from "@/components/SportsShared/MatchCard";
+import CricketMatchCard from "@/components/SportsCricketTab/CricketMatchCard";
 import Standings from "@/components/SportsShared/Standings";
 import {
   NormalizedMatch,
   buildEspnDateRange,
+  espnCricketStandingsToTableRows,
   espnStandingsToTableRows,
   getEspnScoreboard,
+  getEspnScoreboardFull,
   getEspnStandings,
-  getSportsDbEventsSeason,
-  getSportsDbTable,
   normalizeEspnEvent,
-  normalizeSportsDbEvent,
 } from "@/Utils/sports";
 import { getLeagueById } from "@/Utils/sportsLeagues";
 
@@ -22,6 +23,7 @@ const SportsLeaguePage = () => {
   const params = useSearchParams();
   const id = params.get("id") || "";
   const league = getLeagueById(id);
+  const isCricket = league?.sport === "cricket";
 
   const [matches, setMatches] = useState<NormalizedMatch[]>([]);
   const [table, setTable] = useState<any[]>([]);
@@ -33,7 +35,25 @@ const SportsLeaguePage = () => {
 
     const load = async () => {
       setLoading(true);
-      if (league.kind === "espn") {
+
+      if (league.sport === "cricket") {
+        // ESPN's cricket scoreboard takes a bare year and returns that whole
+        // season's fixtures + standings in one call (no separate endpoint).
+        const scoreboard = await getEspnScoreboardFull(
+          league.sport,
+          league.league,
+          league.season || String(new Date().getFullYear()),
+        );
+        if (!active) return;
+        setMatches(
+          (scoreboard.events || [])
+            .map((event: any) => normalizeEspnEvent(event, league.label, league.sport, league.league))
+            .filter((match): match is NormalizedMatch => Boolean(match))
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+            .slice(0, 12),
+        );
+        setTable(espnCricketStandingsToTableRows(scoreboard.standings));
+      } else {
         const [scoreboard, standings] = await Promise.all([
           getEspnScoreboard(league.sport, league.league, buildEspnDateRange(5, 5)),
           getEspnStandings(league.sport, league.league),
@@ -46,20 +66,6 @@ const SportsLeaguePage = () => {
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
         );
         setTable(espnStandingsToTableRows(standings));
-      } else {
-        const [events, standingsTable] = await Promise.all([
-          getSportsDbEventsSeason(league.league),
-          getSportsDbTable(league.league),
-        ]);
-        if (!active) return;
-        setMatches(
-          (events.events || [])
-            .map(normalizeSportsDbEvent)
-            .filter((match): match is NormalizedMatch => Boolean(match))
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-            .slice(0, 12),
-        );
-        setTable(standingsTable.table || []);
       }
       if (active) setLoading(false);
     };
@@ -81,7 +87,7 @@ const SportsLeaguePage = () => {
           src={league.logo}
           alt={league.label}
           effect="opacity"
-          className="skeleton"
+          className={`${styles.leagueHeaderBadge} skeleton`}
           width={48}
           height={48}
         />
@@ -93,14 +99,23 @@ const SportsLeaguePage = () => {
       ) : (
         <>
           <div className={shellStyles.section}>
-            <h2>Fixtures</h2>
+            <h2>{isCricket ? "Fixtures & Results" : "Fixtures"}</h2>
             {matches.length === 0 ? (
               <p className={shellStyles.message}>No fixtures found right now.</p>
             ) : (
               <div className={shellStyles.grid}>
-                {matches.map((match) => (
-                  <MatchCard key={match.id} match={match} canWatchLive={false} onWatchLive={() => {}} />
-                ))}
+                {matches.map((match) =>
+                  isCricket ? (
+                    <CricketMatchCard
+                      key={match.id}
+                      match={match}
+                      canWatchLive={false}
+                      onWatchLive={() => {}}
+                    />
+                  ) : (
+                    <MatchCard key={match.id} match={match} canWatchLive={false} onWatchLive={() => {}} />
+                  ),
+                )}
               </div>
             )}
           </div>
