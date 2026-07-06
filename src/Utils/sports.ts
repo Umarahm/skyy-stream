@@ -76,6 +76,16 @@ export const getSportsDbEventsSeason = async (
 ): Promise<{ events: any[] }> =>
   fetchJson("sportsdbEventsSeason", { league, season }, { events: [] });
 
+export const getSportsDbNextLeagueEvents = async (
+  league: string,
+): Promise<{ events: any[] }> =>
+  fetchJson("sportsdbNextLeague", { league }, { events: [] });
+
+export const getSportsDbPastLeagueEvents = async (
+  league: string,
+): Promise<{ events: any[] }> =>
+  fetchJson("sportsdbPastLeague", { league }, { events: [] });
+
 export const getSportsDbEventsDay = async (
   date: string,
   sportName: string,

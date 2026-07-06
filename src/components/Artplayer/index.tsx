@@ -128,12 +128,8 @@ export default function Player({
         type: format === "hls" ? "m3u8" : "mp4",
         subtitle: {
           url: defaultCaption?.file || "",
-          // Proxy URLs don't end in .vtt so Artplayer can't auto-detect the
-          // format — force it to always treat captions as WebVTT.
           type: "vtt",
           encoding: "utf-8",
-          // Allow <b>, <i>, <u>, <ruby> etc. inside VTT cues to render as real
-          // HTML rather than being escaped to plain text.
           escape: false,
         },
         airplay: true,
@@ -152,8 +148,6 @@ export default function Player({
             selector: subtitles,
             onSelect(item: any) {
               if (item?.url) {
-                // Use switch() so we can force type: 'vtt' — proxy URLs have no
-                // .vtt extension and Artplayer can't auto-detect the format.
                 art.subtitle.switch(item.url, { name: item.html, type: "vtt" });
               } else {
                 art.subtitle.url = "";

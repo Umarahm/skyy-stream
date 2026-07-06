@@ -18,6 +18,9 @@ import {
   getEspnNews,
   getFootballLiveToday,
   getMultiSportEventsToday,
+  getSportsDbEventsSeason,
+  getSportsDbNextLeagueEvents,
+  getSportsDbPastLeagueEvents,
   getWorldCupEventsToday,
   getStreamedAllTodayMatches,
   getStreamedLiveAll,
@@ -42,6 +45,15 @@ import SportsHero from "./SportsHero";
 import WideMatchCard, { WideMatchCardSkeleton } from "./WideMatchCard";
 
 const RAIL_SKELETON_COUNT = 4;
+
+// Football and cricket appear first in the hero carousel; all other sports
+// follow. Within each priority tier matches are sorted live → upcoming → finished.
+const CAROUSEL_SPORT_PRIORITY: Record<string, number> = {
+  Football: 0,
+  Soccer: 0,
+  "FIFA World Cup": 0, // ESPN-sourced matches carry fifaEvent.label as their sportLabel
+  Cricket: 1,
+};
 const RailSkeleton = () => (
   <>
     {Array.from({ length: RAIL_SKELETON_COUNT }).map((_, i) => (
@@ -108,10 +120,14 @@ const SportsHubHome = () => {
   const [footballMatches, setFootballMatches] = useState<NormalizedMatch[]>([]);
   const [streamedMatches, setStreamedMatches] = useState<StreamedMatch[]>([]);
   const [liveStreamed, setLiveStreamed] = useState<StreamedMatch[]>([]);
-  // Raw TheSportsDB World Cup events for `date` — one call, reused two ways:
-  // normalized directly into the hero carousel, and fuzzy-matched onto the
-  // ESPN-sourced football fixtures below for their backdrop/banner art.
+  // TheSportsDB World Cup raw events — merged pool used as the backdrop
+  // lookup source for ESPN football fixtures. `sportsDbFootballArtwork`
+  // combines today's events + next/past league endpoints (curated, reliably
+  // have strThumb/strBanner) + the full season (back-fills images later).
   const [worldCupEvents, setWorldCupEvents] = useState<any[]>([]);
+  const [sportsDbFootballSeason, setSportsDbFootballSeason] = useState<any[]>([]);
+  const [sportsDbFootballNext, setSportsDbFootballNext] = useState<any[]>([]);
+  const [sportsDbFootballPast, setSportsDbFootballPast] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [watchTarget, setWatchTarget] = useState<WatchTarget | null>(null);
 
@@ -132,22 +148,30 @@ const SportsHubHome = () => {
     const load = async () => {
       setLoading(true);
       const date = todayAsDate();
-      const [eventResults, streamedResults, footballStreamed, liveResults, worldCupResults] =
-        await Promise.all([
-          getMultiSportEventsToday(date),
-          Promise.all(
-            HOMEPAGE_SPORTS_DB_NAMES.map((name) => getStreamedMatches(SPORTSDB_TO_STREAMED_ID[name])),
-          ),
-          getStreamedMatches(fifaConfig.streamedId),
-          getStreamedLiveAll(),
-          getWorldCupEventsToday(date),
-        ]);
+      const [
+        eventResults, streamedResults, footballStreamed, liveResults,
+        worldCupResults, seasonResult, nextResult, pastResult,
+      ] = await Promise.all([
+        getMultiSportEventsToday(date),
+        Promise.all(
+          HOMEPAGE_SPORTS_DB_NAMES.map((name) => getStreamedMatches(SPORTSDB_TO_STREAMED_ID[name])),
+        ),
+        getStreamedMatches(fifaConfig.streamedId),
+        getStreamedLiveAll(),
+        getWorldCupEventsToday(date),
+        getSportsDbEventsSeason(fifaConfig.sportsDbLeagueId, fifaConfig.sportsDbSeason),
+        getSportsDbNextLeagueEvents(fifaConfig.sportsDbLeagueId),
+        getSportsDbPastLeagueEvents(fifaConfig.sportsDbLeagueId),
+      ]);
 
       if (!active) return;
       setMatches(eventResults);
       setStreamedMatches([...streamedResults.flat(), ...(footballStreamed || [])]);
       setLiveStreamed(liveResults || []);
       setWorldCupEvents(worldCupResults || []);
+      setSportsDbFootballSeason(seasonResult.events || []);
+      setSportsDbFootballNext(nextResult.events || []);
+      setSportsDbFootballPast(pastResult.events || []);
       setLoading(false);
     };
 
@@ -205,14 +229,23 @@ const SportsHubHome = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [moreLiveInView]);
 
-  // ESPN's football scoreboard has no backdrop image field at all. Prefer
-  // TheSportsDB's dedicated match banner (same high-res source every other
-  // sport's backdrop already uses) and only fall back to streamed.pk's
-  // poster — noticeably lower-res — when TheSportsDB doesn't have the
-  // fixture yet.
+  // ESPN's football scoreboard has no backdrop image field at all. Look up
+  // TheSportsDB artwork by team-name fuzzy match — prefer the full-season
+  // endpoint (strThumb/strBanner are back-filled there after each match is
+  // indexed, so it's more reliably populated than the per-day endpoint) and
+  // fall back to today's events then streamed.pk.
+  // next/past league endpoints are curated by TheSportsDB and consistently
+  // have strThumb/strBanner populated — put them first so they win over the
+  // season dump (which back-fills artwork slowly) and today's day endpoint.
+  const footballBackdropPool = [
+    ...sportsDbFootballNext,
+    ...sportsDbFootballPast,
+    ...sportsDbFootballSeason,
+    ...worldCupEvents,
+  ];
   const footballMatchesWithBackdrop = footballMatches.map((match) => {
     if (match.backdrop) return match;
-    const sportsDbAssets = findSportsDbBackdrop(match, worldCupEvents);
+    const sportsDbAssets = findSportsDbBackdrop(match, footballBackdropPool);
     if (sportsDbAssets?.backdrop) {
       return { ...match, backdrop: sportsDbAssets.backdrop, banner: sportsDbAssets.banner };
     }
@@ -221,28 +254,18 @@ const SportsHubHome = () => {
   });
   const combinedMatches = sortMatchesByStatus([...matches, ...footballMatchesWithBackdrop]);
 
-  // Hero carousel: one API (TheSportsDB), normalize, display — score and
-  // artwork both come straight off the same eventday record, no fuzzy
-  // matching needed. Team badges are the one exception: for World Cup
-  // matches, ESPN's `team.logo` is an actual country flag
-  // (teamlogos/countries/500/<abbr>.png), while TheSportsDB's badge is a
-  // lower-quality crest — swap it in by team name from the already-fetched
-  // ESPN football fixtures.
-  const heroMatches = sortMatchesByStatus([
+  const heroMatches = [
     ...matches,
-    ...worldCupEvents
-      .map(normalizeSportsDbEvent)
-      .filter((match): match is NormalizedMatch => Boolean(match))
-      .map((match) => {
-        const espnFixture = findFixtureByTeams(match.homeName, match.awayName, footballMatches);
-        if (!espnFixture) return match;
-        return {
-          ...match,
-          homeLogo: espnFixture.homeLogo || match.homeLogo,
-          awayLogo: espnFixture.awayLogo || match.awayLogo,
-        };
-      }),
-  ]);
+    ...footballMatchesWithBackdrop,
+  ].sort((a, b) => {
+    const statusOrder: Record<string, number> = { in: 0, pre: 1, post: 2 };
+    const statusDiff = (statusOrder[a.status] ?? 1) - (statusOrder[b.status] ?? 1);
+    if (statusDiff !== 0) return statusDiff;
+    const aPrio = CAROUSEL_SPORT_PRIORITY[a.sportLabel ?? ""] ?? 99;
+    const bPrio = CAROUSEL_SPORT_PRIORITY[b.sportLabel ?? ""] ?? 99;
+    if (aPrio !== bPrio) return aPrio - bPrio;
+    return new Date(a.date).getTime() - new Date(b.date).getTime();
+  });
 
   const handleWatchLive = (match: NormalizedMatch) => {
     const streamedMatch = findStreamedMatch(match, streamedMatches);

@@ -1,5 +1,5 @@
 const cache: any = {}; // Object to store cached data
-const DEFAULT_CACHE_TTL: number = 1800; // Cache TTL in seconds (1/2 hour)
+const DEFAULT_CACHE_TTL: number = 300; // Cache TTL in seconds (1/2 hour)
 
 // Function to set data in the cache. `ttlSeconds` lets a caller shorten the
 // TTL for data that goes stale fast (e.g. a live scoreboard) without

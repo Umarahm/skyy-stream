@@ -166,6 +166,8 @@ export default async function axiosFetch({
     sportsdbTable: backendRequest("sportsdbTable", { league, season }),
     sportsdbEventsSeason: backendRequest("sportsdbEventsSeason", { league, season }),
     sportsdbEventsDay: backendRequest("sportsdbEventsDay", { dates, sport }),
+    sportsdbNextLeague: backendRequest("sportsdbNextLeague", { league }),
+    sportsdbPastLeague: backendRequest("sportsdbPastLeague", { league }),
     sportsdbEvent: backendRequest("sportsdbEvent", { id }),
     sportsdbHighlights: backendRequest("sportsdbHighlights", { dates, sport }),
   };

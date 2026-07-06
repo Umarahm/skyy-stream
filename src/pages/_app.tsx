@@ -113,15 +113,9 @@ export default function App({ Component, pageProps }: any) {
       <Layout>
         <Toaster
           toastOptions={{
-            className: "sooner-toast-desktop",
+            className: "sooner-toast",
           }}
           position="bottom-right"
-        />
-        <Toaster
-          toastOptions={{
-            className: "sooner-toast-mobile",
-          }}
-          position="top-center"
         />
         <Tooltip id="tooltip" className="react-tooltip" />
         <Component {...pageProps} />

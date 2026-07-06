@@ -20,6 +20,7 @@ const SettingsPage = ({
   SBColor,
   SBBlur,
   SOpacity,
+  SOutline,
   setMode,
   setTheme,
   setAscent_color,
@@ -29,6 +30,7 @@ const SettingsPage = ({
   setSBColor,
   setSBBlur,
   setSOpacity,
+  setSOutline,
   hub,
   onHubChange,
 }: any) => {
@@ -64,6 +66,7 @@ const SettingsPage = ({
       SBColor,
       SBBlur,
       SOpacity,
+      SOutline,
     };
     if (type === "mode") setSettings({ values: { ...prevVal, mode: value } });
     if (type === "theme") setSettings({ values: { ...prevVal, theme: value } });
@@ -79,6 +82,8 @@ const SettingsPage = ({
       setSettings({ values: { ...prevVal, SBBlur: value } });
     if (type === "SOpacity")
       setSettings({ values: { ...prevVal, SOpacity: value } });
+    if (type === "SOutline")
+      setSettings({ values: { ...prevVal, SOutline: value } });
     if (type === "ascent_color")
       setSettings({ values: { ...prevVal, ascent_color: value } });
   };
@@ -208,6 +213,8 @@ const SettingsPage = ({
               <option value="Roboto Mono" defaultChecked>
                 Roboto Mono
               </option>
+              <option value="Poppins">Poppins</option>
+              <option value="DM Sans">DM Sans</option>
               <option value="Helvetica">Helvetica</option>
               <option value="cursive">Cursive</option>
               <option value="serif">Serif</option>
@@ -342,6 +349,26 @@ const SettingsPage = ({
               <option value="75%">75%</option>
               <option value="100%" defaultChecked>
                 100%
+              </option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="SOutline">Subtitle Outline</label>
+            <select
+              name="SOutline"
+              id="SOutline"
+              value={SOutline}
+              onChange={(e) => {
+                setSOutline(e.target.value);
+                handleSelect({ type: "SOutline", value: e.target.value });
+              }}
+            >
+              <option value="none" defaultChecked>None</option>
+              <option value="-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000">
+                Black Outline
+              </option>
+              <option value="-1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff">
+                White Outline
               </option>
             </select>
           </div>

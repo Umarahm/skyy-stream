@@ -102,7 +102,7 @@ export const findSportsDbBackdrop = (
   );
   if (!found) return undefined;
   return {
-    backdrop: found.strThumb || found.strBanner || found.strPoster,
+    backdrop: found.strThumb || found.strBanner || found.strPoster || found.strLeagueBadge,
     banner: found.strBanner || undefined,
   };
 };

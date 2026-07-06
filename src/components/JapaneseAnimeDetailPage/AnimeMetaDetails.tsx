@@ -320,12 +320,12 @@ const AnimeMetaDetails = ({
             >
               Recommended
             </p>
-            <p
+            {/* <p
               className={`${category === "characters" ? styles.active : styles.inactive}`}
               onClick={() => setCategory("characters")}
             >
               Characters
-            </p>
+            </p> */}
           </div>
           <p
             className={`${styles.categoryBlock} ${styles.episodesBlock} ${category === "episodes" ? styles.active : styles.inactive}`}
@@ -488,7 +488,7 @@ const AnimeMetaDetails = ({
           </div>
         ) : null}
 
-        {category === "characters" ? (
+        {/* {category === "characters" ? (
           <div className={styles.cardGrid}>
             {loading ? (
               dummyList.map((item) => (
@@ -514,7 +514,7 @@ const AnimeMetaDetails = ({
               </>
             )}
           </div>
-        ) : null}
+        ) : null} */}
 
         {category === "episodes" ? (
           <div className={styles.EpisodeList}>

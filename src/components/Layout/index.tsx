@@ -21,6 +21,7 @@ const Layout = ({ children }: any) => {
   const [SBColor, setSBColor] = useState("transparent");
   const [SBBlur, setSBBlur] = useState("0");
   const [SOpacity, setSOpacity] = useState("100%");
+  const [SOutline, setSOutline] = useState("none");
   const [themeColor, setThemeColor] = useState<any>();
   const [hub, setSelectedHub] = useState<AppHub | "">("");
   const [isHubInitialized, setIsHubInitialized] = useState(false);
@@ -55,6 +56,7 @@ const Layout = ({ children }: any) => {
       setSBColor(values?.SBColor);
       setSBBlur(values?.SBBlur);
       setSOpacity(values?.SOpacity);
+      setSOutline(values?.SOutline ?? "none");
     }
     setSelectedHub(getHub());
     setIsHubInitialized(true);
@@ -96,6 +98,7 @@ const Layout = ({ children }: any) => {
     document.documentElement.style.setProperty("--SBColor", SBColor);
     document.documentElement.style.setProperty("--SBBlur", SBBlur);
     document.documentElement.style.setProperty("--SOpacity", SOpacity);
+    document.documentElement.style.setProperty("--SOutline", SOutline);
   }, [
     mode,
     ascent_color,
@@ -105,7 +108,33 @@ const Layout = ({ children }: any) => {
     SBColor,
     SBBlur,
     SOpacity,
+    SOutline,
   ]);
+
+  // Inject subtitle styles as a late <style> tag so they always win over
+  // Artplayer's runtime-injected stylesheet regardless of document order.
+  useEffect(() => {
+    let el = document.getElementById("rive-subtitle-style") as HTMLStyleElement | null;
+    if (!el) {
+      el = document.createElement("style");
+      el.id = "rive-subtitle-style";
+      document.head.appendChild(el);
+    }
+    el.textContent = `
+      .art-subtitle-line {
+        font-family: "${SFFamily}", "Roboto Mono", serif !important;
+        font-weight: 500 !important;
+        font-size: ${SFSize} !important;
+        color: ${SFColor} !important;
+        opacity: ${SOpacity} !important;
+        background: ${SBColor} !important;
+        backdrop-filter: blur(${SBBlur}) !important;
+        text-shadow: ${SOutline} !important;
+        border-radius: 0.5rem !important;
+        padding: 0.3rem !important;
+      }
+    `;
+  }, [SFFamily, SFSize, SFColor, SBColor, SBBlur, SOpacity, SOutline]);
 
   const handleHubSelect = (value: AppHub) => {
     setSelectedHub(value);
@@ -213,6 +242,8 @@ const Layout = ({ children }: any) => {
             setSBColor={setSBColor}
             setSBBlur={setSBBlur}
             setSOpacity={setSOpacity}
+            SOutline={SOutline}
+            setSOutline={setSOutline}
             hub={hub}
             onHubChange={handleHubSelect}
           />

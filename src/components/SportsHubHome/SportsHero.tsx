@@ -39,7 +39,7 @@ const SportsHero = ({ matches }: { matches: NormalizedMatch[] }) => {
               ref={carouselRef}
               imageArr={images}
               setIndex={setIndex}
-              mobileHeight="60vh"
+              mobileHeight="40vh"
               desktopHeight="80vh"
               objectFit={"cover"}
             />

@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import styles from "./style.module.scss";
 import { LazyLoadImage } from "react-lazy-load-image-component";
@@ -5,11 +6,8 @@ import "react-lazy-load-image-component/src/effects/opacity.css";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import { NormalizedMatch, getMatchDetailHref, getMatchStatusLabel } from "@/Utils/sports";
+import { namesLikelyMatch } from "@/Utils/sportsMatch";
 
-// Mirrors WideMatchCard's stacked layout (the one used by Live & Upcoming
-// and More Live Events, the only two rails that ever show this skeleton) so
-// a rail can show placeholder cards while its data is still loading instead
-// of an empty gap.
 export const WideMatchCardSkeleton = () => (
   <div className={styles.wideCard}>
     <Skeleton className={styles.wideCardBackdrop} />
@@ -57,6 +55,31 @@ const TeamBadge = ({
     <div className={badgeClass} style={{ width: size, height: size }} />
   );
 
+const CONFETTI_COLORS = ["#f87171", "#fbbf24", "#34d399", "#60a5fa", "#a78bfa", "#f472b6", "#fb923c"];
+
+const ConfettiOverlay = () => (
+  <div className={styles.confettiOverlay} aria-hidden>
+    {Array.from({ length: 20 }, (_, i) => (
+      <span
+        key={i}
+        className={styles.confettiParticle}
+        style={{
+          left: `${(i / 20) * 95 + 2}%`,
+          background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+          animationDelay: `${((i % 6) * 0.08).toFixed(2)}s`,
+          width: `${[4, 5, 6, 7, 5, 4][i % 6]}px`,
+          height: `${[6, 5, 4, 7, 5, 6][i % 6]}px`,
+          borderRadius: i % 3 === 0 ? "50%" : "2px",
+        }}
+      />
+    ))}
+  </div>
+);
+
+// True when the match finished or is in a penalty shootout.
+const isPenaltyMatch = (statusDetail?: string) =>
+  /pen(alt|s)?|pso|ft_pen|shootout/i.test(statusDetail || "");
+
 const WideMatchCard = ({
   match,
   canWatchLive,
@@ -67,27 +90,41 @@ const WideMatchCard = ({
   match: NormalizedMatch;
   canWatchLive: boolean;
   onWatchLive: () => void;
-  // Goal scorer/time line — only the "Live Now" rail wants this, the
-  // cross-sport "Live & Upcoming" and streamed.pk rails stay score-only.
   showGoals?: boolean;
-  // Live Now keeps the compact side-by-side row; Live & Upcoming and More
-  // Live Events stack badge-over-name per team (bigger, no truncation vs.
-  // cramming both teams + score into one row).
   stacked?: boolean;
 }) => {
   const status = getMatchStatusLabel(match);
   const detailHref = getMatchDetailHref(match);
-  const goals = showGoals ? (match.keyEvents || []).filter((event) => event.type === "goal").slice(-3) : [];
-  // streamed.pk lists plenty of non-head-to-head broadcasts alongside actual
-  // matches — a NASCAR rally, an NBA draft, a "SkySports" channel feed. Those
-  // never had a real away team to begin with (normalizeStreamedMatch's
-  // " vs " split only ever produced one side), so showing a "vs" and an
-  // empty second team slot is wrong — render it as a single entry instead.
+  const isPens = isPenaltyMatch(match.statusDetail);
+
+  const allGoalEvents = showGoals
+    ? (match.keyEvents || []).filter((e) => e.type === "goal")
+    : [];
+  const homeGoals = allGoalEvents
+    .filter((g) => namesLikelyMatch(g.team, match.homeName))
+    .slice(-4);
+  const awayGoals = allGoalEvents
+    .filter((g) => namesLikelyMatch(g.team, match.awayName))
+    .slice(-4);
+
+  // Confetti: fires when live goal count rises between polls.
+  const prevGoalCountRef = useRef<number | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  useEffect(() => {
+    const prev = prevGoalCountRef.current;
+    const curr = allGoalEvents.length;
+    prevGoalCountRef.current = curr;
+    if (match.status === "in" && prev !== null && curr > prev) {
+      setShowConfetti(true);
+      const t = setTimeout(() => setShowConfetti(false), 2600);
+      return () => clearTimeout(t);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allGoalEvents.length, match.status]);
+
   const isSingleEntity = !match.awayName;
 
-  // Picked up by SportsSearchPopover's DOM scan — it queries every element
-  // carrying this attribute rather than each rail tracking its own search
-  // index, so the popover always reflects exactly what's rendered right now.
   const searchAttrs = {
     "data-sports-search-item": "",
     "data-sports-search-label": isSingleEntity
@@ -95,11 +132,24 @@ const WideMatchCard = ({
       : `${match.homeName} vs ${match.awayName} · ${match.competition || match.sportLabel || "Sport"}`,
   };
 
+  const scoreNode = (size: "normal" | "stacked") => {
+    if (match.status === "pre") return "vs";
+    const score = `${match.homeScore ?? "-"} : ${match.awayScore ?? "-"}`;
+    if (!isPens) return score;
+    return (
+      <>
+        {score}
+        <span className={styles.penBadge}>PKS</span>
+      </>
+    );
+  };
+
   const card = (
     <div
       className={`${styles.wideCard} ${match.status === "in" ? styles.live : ""}`}
       {...(!detailHref ? searchAttrs : undefined)}
     >
+      {showConfetti && <ConfettiOverlay />}
       <div
         className={styles.wideCardBackdrop}
         style={{ backgroundImage: `url(${match.backdrop || "/images/NoSportImgFound.svg"})` }}
@@ -113,6 +163,7 @@ const WideMatchCard = ({
             <span className={styles.statusText}>{status.label}</span>
           )}
         </div>
+
         {isSingleEntity ? (
           <div className={stacked ? styles.wideCardTeamsStacked : `${styles.wideCardTeams} ${styles.single}`}>
             <div className={stacked ? styles.teamStacked : styles.team}>
@@ -131,38 +182,51 @@ const WideMatchCard = ({
               <TeamBadge name={match.homeName} logo={match.homeLogo} size={44} badgeClass={styles.teamBadgeLg} />
               <span>{match.homeName}</span>
             </div>
-            <div className={styles.scoreStacked}>
-              {match.status === "pre" ? "vs" : `${match.homeScore ?? "-"} : ${match.awayScore ?? "-"}`}
-            </div>
+            <div className={styles.scoreStacked}>{scoreNode("stacked")}</div>
             <div className={styles.teamStacked}>
               <TeamBadge name={match.awayName} logo={match.awayLogo} size={44} badgeClass={styles.teamBadgeLg} />
               <span>{match.awayName}</span>
             </div>
           </div>
         ) : (
+          // Compact layout — goals pinned under each team column.
           <div className={styles.wideCardTeams}>
-            <div className={styles.team}>
-              <TeamBadge name={match.homeName} logo={match.homeLogo} size={28} badgeClass={styles.teamBadge} />
-              <span>{match.homeName}</span>
+            <div className={styles.teamGoalsWrap}>
+              <div className={styles.team}>
+                <TeamBadge name={match.homeName} logo={match.homeLogo} size={28} badgeClass={styles.teamBadge} />
+                <span>{match.homeName}</span>
+              </div>
+              {homeGoals.length > 0 && (
+                <ul className={styles.teamGoalsList}>
+                  {homeGoals.map((g) => (
+                    <li key={g.id}>
+                      ⚽ {g.time ? `${g.time}′` : ""} {g.players[0] || ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            <div className={styles.score}>
-              {match.status === "pre" ? "vs" : `${match.homeScore ?? "-"} : ${match.awayScore ?? "-"}`}
-            </div>
-            <div className={styles.team}>
-              <TeamBadge name={match.awayName} logo={match.awayLogo} size={28} badgeClass={styles.teamBadge} />
-              <span>{match.awayName}</span>
+
+            <div className={styles.score}>{scoreNode("normal")}</div>
+
+            <div className={`${styles.teamGoalsWrap} ${styles.teamGoalsWrapAway}`}>
+              <div className={styles.team}>
+                <TeamBadge name={match.awayName} logo={match.awayLogo} size={28} badgeClass={styles.teamBadge} />
+                <span>{match.awayName}</span>
+              </div>
+              {awayGoals.length > 0 && (
+                <ul className={`${styles.teamGoalsList} ${styles.teamGoalsListAway}`}>
+                  {awayGoals.map((g) => (
+                    <li key={g.id}>
+                      ⚽ {g.time ? `${g.time}′` : ""} {g.players[0] || ""}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         )}
-        {match.status === "in" && goals.length > 0 && (
-          <ul className={styles.goalScorers}>
-            {goals.map((goal) => (
-              <li key={goal.id}>
-                ⚽ {goal.time} {goal.players.join(", ") || goal.team}
-              </li>
-            ))}
-          </ul>
-        )}
+
         {canWatchLive && (
           <button type="button" className={styles.watchLiveBtn} onClick={onWatchLive}>
             Watch Live

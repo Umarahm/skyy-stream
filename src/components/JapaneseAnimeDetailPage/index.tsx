@@ -18,7 +18,6 @@ import { getAniListAnimeDetails } from "@/Utils/anilist";
 import Player from "@/components/Artplayer";
 import {
   getMiruroDisplayTitle,
-  getMiruroEpisodes,
   getMiruroCharacters,
   getMiruroInfo,
   getMiruroMediaLabel,
@@ -272,7 +271,6 @@ const JapaneseAnimeDetailPage = () => {
       }
       try {
         setLoading(true);
-        setEpisodesLoading(Boolean(id));
         let details: any = null;
         let episodeInfo: any = null;
         let charactersInfo: any = null;
@@ -280,14 +278,12 @@ const JapaneseAnimeDetailPage = () => {
 
         if (id) {
           const numericId = Number(id);
-          const [info, episodes, characters, aniListInfo] = await Promise.all([
+          const [info, characters, aniListInfo] = await Promise.all([
             getMiruroInfo(id),
-            getMiruroEpisodes(id),
             getMiruroCharacters(id),
             Number.isFinite(numericId) ? getAniListAnimeDetails(numericId) : Promise.resolve(null),
           ]);
           details = info;
-          episodeInfo = episodes;
           charactersInfo = characters;
           aniListDetails = aniListInfo;
         } else if (slug) {
@@ -298,11 +294,14 @@ const JapaneseAnimeDetailPage = () => {
         setAnimeData(details);
         setEpisodesData(episodeInfo);
         setCharactersData(charactersInfo);
-        setAnilistEpisodeCount(
+        const anilistEpCount =
           typeof aniListDetails?.episodes === "number" && aniListDetails.episodes > 0
             ? aniListDetails.episodes
-            : null,
-        );
+            : typeof aniListDetails?.nextAiringEpisode?.episode === "number" &&
+                aniListDetails.nextAiringEpisode.episode > 1
+              ? aniListDetails.nextAiringEpisode.episode - 1
+              : null;
+        setAnilistEpisodeCount(anilistEpCount);
         const queryTitle = sanitizeTitleForTmdb(
           getMiruroDisplayTitle(details) || details?.title || details?.titleJp || "",
         );
@@ -391,6 +390,16 @@ const JapaneseAnimeDetailPage = () => {
         const sourceList = Array.isArray(watchPayload?.data?.sources)
           ? watchPayload.data.sources
           : [];
+        const normalizeSourceTracks = (source: any) => {
+          const raw = Array.isArray(source?.tracks) ? source.tracks : [];
+          return raw
+            .filter((t: any) => t?.file && String(t?.kind || "captions").toLowerCase() !== "thumbnails")
+            .map((t: any) => ({
+              file: String(t?.proxyUrl || t.file),
+              label: String(t?.label || "Subtitle"),
+              default: Boolean(t?.default),
+            }));
+        };
         const normalized = sourceList
           .map((source: any, idx: number) => {
             const type =
@@ -407,6 +416,7 @@ const JapaneseAnimeDetailPage = () => {
                   .includes("mp4")
                   ? "mp4"
                   : "hls",
+              tracks: normalizeSourceTracks(source),
             };
           })
           .filter(Boolean);
@@ -436,6 +446,10 @@ const JapaneseAnimeDetailPage = () => {
     return list.length > 0 ? list : ["sub"];
   }, [previewProvider, previewAnikotoTypes, providersByAudioType]);
   const selectedPreviewSource = previewSources[previewSourceIndex] || null;
+  const previewCaptions = useMemo(
+    () => (selectedPreviewSource?.tracks || []) as Array<{ file: string; label: string; default?: boolean }>,
+    [selectedPreviewSource],
+  );
   const hasPreviewRequest = Boolean(previewEpisode);
   const isInlinePreview = hasPreviewRequest;
 
@@ -483,6 +497,16 @@ const JapaneseAnimeDetailPage = () => {
           const anikotoSources = Array.isArray(watchPayload?.data?.sources)
             ? watchPayload.data.sources
             : [];
+          const normalizeTracks = (source: any) => {
+            const raw = Array.isArray(source?.tracks) ? source.tracks : [];
+            return raw
+              .filter((t: any) => t?.file && String(t?.kind || "captions").toLowerCase() !== "thumbnails")
+              .map((t: any) => ({
+                file: String(t?.proxyUrl || t.file),
+                label: String(t?.label || "Subtitle"),
+                default: Boolean(t?.default),
+              }));
+          };
           const typeSet = new Set<"sub" | "dub">();
           const normalized = anikotoSources
             .map((source: any, idx: number) => {
@@ -501,6 +525,7 @@ const JapaneseAnimeDetailPage = () => {
                     .includes("mp4")
                     ? "mp4"
                     : "hls",
+                tracks: normalizeTracks(source),
               };
             })
             .filter(Boolean);
@@ -641,11 +666,7 @@ const JapaneseAnimeDetailPage = () => {
           continue;
         }
         updateStatus(provider, "success", "Video found");
-        return {
-          provider,
-          audioType,
-          sources,
-        };
+        return { provider, audioType, sources };
       } catch (error) {
         updateStatus(provider, "failed", "Request failed");
       }
@@ -678,6 +699,7 @@ const JapaneseAnimeDetailPage = () => {
                   <Player
                     option={{ url: selectedPreviewSource?.proxyUrl || "" }}
                     format={selectedPreviewSource?.streamFormat || "hls"}
+                    captions={previewCaptions}
                     className={styles.previewPlayer}
                   />
                 )}

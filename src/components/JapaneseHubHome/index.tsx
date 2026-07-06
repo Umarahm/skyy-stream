@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
-  getMiruroBanner,
   getMiruroDisplayTitle,
   getMiruroMediaLabel,
   getMiruroPopular,
@@ -20,14 +19,15 @@ import { setHub } from "@/Utils/settings";
 import { useRouter } from "next/navigation";
 import axiosFetch from "@/Utils/fetchBackend";
 
+// ── TMDB helpers (identical logic to anime-details page) ─────────────────────
+
 const getTmdbImageUrl = (path?: string | null) =>
   path ? `${process.env.NEXT_PUBLIC_TMBD_IMAGE_URL}${path}` : "";
 
-const isStrictAnimeTmdbResult = (item: any) =>
+const isLikelyAnimeTmdbResult = (item: any) =>
   item?.original_language === "ja" &&
   Array.isArray(item?.genre_ids) &&
-  item.genre_ids.includes(16) &&
-  item?.backdrop_path;
+  item.genre_ids.includes(16);
 
 const sanitizeTitleForTmdb = (rawTitle: string) =>
   String(rawTitle || "")
@@ -43,150 +43,209 @@ const sanitizeTitleForTmdb = (rawTitle: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
-const getTmdbAnimeBackdrop = async (title: string) => {
-  const cleanTitle = sanitizeTitleForTmdb(title);
-  if (!cleanTitle) return "";
-
-  const searchRes: any = await axiosFetch({
-    requestID: "searchMulti",
-    query: `${cleanTitle} anime`,
-    page: 1,
-  });
-  const results = (searchRes?.results || []).filter(
-    (item: any) => item?.media_type === "tv" || item?.media_type === "movie",
-  );
-  const match =
-    results.find((item: any) => item?.media_type === "tv" && isStrictAnimeTmdbResult(item)) ||
-    results.find(isStrictAnimeTmdbResult);
-
-  if (cleanTitle.toLowerCase() === "one piece" && match?.id && match?.media_type) {
-    const images: any = await axiosFetch({
-      requestID: `${match.media_type}Images`,
-      id: String(match.id),
-    });
-    const nextBackdrop = images?.backdrops?.[1]?.file_path || images?.backdrops?.[0]?.file_path;
-    return getTmdbImageUrl(nextBackdrop);
+const findAnimeTmdbMatch = async (title: string) => {
+  const searches = [title, `${title} anime`];
+  for (const query of searches) {
+    const searchRes: any = await axiosFetch({ requestID: "searchMulti", query, page: 1 });
+    const results = (searchRes?.results || []).filter(
+      (item: any) =>
+        (item?.media_type === "tv" || item?.media_type === "movie") &&
+        (item?.backdrop_path || item?.id),
+    );
+    const match =
+      results.find((item: any) => item?.media_type === "tv" && isLikelyAnimeTmdbResult(item)) ||
+      results.find(isLikelyAnimeTmdbResult);
+    if (match) return match;
   }
-
-  return getTmdbImageUrl(match?.backdrop_path);
+  return null;
 };
+
+// Returns exactly ONE backdrop URL per anime (same images as detail page uses)
+const getBestTmdbBackdrop = async (match: any): Promise<string> => {
+  if (!match?.id || !match?.media_type) return getTmdbImageUrl(match?.backdrop_path);
+  const response = await axiosFetch({
+    requestID: `${match.media_type}Images`,
+    id: String(match.id),
+  });
+  const first = response?.backdrops?.[0]?.file_path;
+  return first ? getTmdbImageUrl(first) : getTmdbImageUrl(match?.backdrop_path);
+};
+
+// ── Lazy-fetch hook ──────────────────────────────────────────────────────────
+
+function useLazyFetch<T>(
+  fetcher: () => Promise<T>,
+  sentinelRef: React.RefObject<HTMLDivElement | null>,
+): { data: T | null; loading: boolean } {
+  const [data, setData] = useState<T | null>(null);
+  const [loading, setLoading] = useState(true);
+  const fetchedRef = useRef(false);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting || fetchedRef.current) return;
+        fetchedRef.current = true;
+        observer.disconnect();
+        setLoading(true);
+        fetcher()
+          .then((res) => { setData(res); setLoading(false); })
+          .catch(() => setLoading(false));
+      },
+      { rootMargin: "400px" },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return { data, loading };
+}
+
+// ── Component ────────────────────────────────────────────────────────────────
+
+const SKELETON_ITEMS = [1, 2, 3, 4, 5, 6];
 
 const JapaneseHubHome = () => {
   const { push } = useRouter();
-  const [spotlight, setSpotlight] = useState<any[]>([]);
-  const [trending, setTrending] = useState<any[]>([]);
-  const [popular, setPopular] = useState<any[]>([]);
-  const [upcoming, setUpcoming] = useState<any[]>([]);
-  const [heroSlides, setHeroSlides] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [heroSlides, setHeroSlides] = useState<Array<{ item: any; image: string }>>([]);
   const [heroLoading, setHeroLoading] = useState(true);
   const [heroIndex, setHeroIndex] = useState(0);
 
+  // One sentinel ref per data source
+  const trendingRef = useRef<HTMLDivElement>(null);
+  const popularRef = useRef<HTMLDivElement>(null);
+  const upcomingRef = useRef<HTMLDivElement>(null);
+  const spotlightRef = useRef<HTMLDivElement>(null);
+
+  const { data: trendingData, loading: trendingLoading } = useLazyFetch(
+    () => getMiruroTrending().then((r) => r?.results || []),
+    trendingRef,
+  );
+  const { data: popularData, loading: popularLoading } = useLazyFetch(
+    () => getMiruroPopular().then((r) => r?.results || []),
+    popularRef,
+  );
+  const { data: upcomingData, loading: upcomingLoading } = useLazyFetch(
+    () => getMiruroUpcoming().then((r) => r?.results || []),
+    upcomingRef,
+  );
+  const { data: spotlightData, loading: spotlightLoading } = useLazyFetch(
+    () => getMiruroSpotlight().then((r) => r?.results || []),
+    spotlightRef,
+  );
+
+  const trending = trendingData || [];
+  const popular = popularData || [];
+  const upcoming = upcomingData || [];
+  const spotlight = spotlightData || [];
+
+  // Build hero carousel: one TMDB backdrop per trending anime, no miruro fallback
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const [spotlightRes, trendingRes, popularRes, upcomingRes] = await Promise.all([
-          getMiruroSpotlight(),
-          getMiruroTrending(),
-          getMiruroPopular(),
-          getMiruroUpcoming(),
-        ]);
-        const spotlightList = spotlightRes?.results || [];
-        setSpotlight(spotlightList);
-        setTrending(trendingRes?.results || []);
-        setPopular(popularRes?.results || []);
-        setUpcoming(upcomingRes?.results || []);
-
-        const fallbackSlides = spotlightList.slice(0, 8).map((item: any) => ({
-          item,
-          image: getMiruroBanner(item),
-        }));
-        setHeroSlides(fallbackSlides.filter((slide) => slide.image));
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, []);
-
-  useEffect(() => {
-    if (!spotlight.length) {
-      setHeroLoading(false);
-      return;
-    }
-
+    if (!trending.length) return;
     let cancelled = false;
 
-    const loadHeroBackdrops = async () => {
+    (async () => {
       try {
         setHeroLoading(true);
-        const tmdbSlides = await Promise.all(
-          spotlight.slice(0, 8).map(async (item: any) => {
-            const title = getMiruroDisplayTitle(item);
-            const image = await getTmdbAnimeBackdrop(title);
-            return image ? { item, image } : null;
-          }),
-        );
-        if (cancelled) return;
-
-        const enrichedSlides = tmdbSlides.filter(Boolean);
-        if (enrichedSlides.length > 0) {
-          setHeroSlides(enrichedSlides);
+        const slides: Array<{ item: any; image: string }> = [];
+        for (const item of trending.slice(0, 8)) {
+          if (cancelled) return;
+          const title = sanitizeTitleForTmdb(getMiruroDisplayTitle(item));
+          if (!title) continue;
+          const match = await findAnimeTmdbMatch(title);
+          if (cancelled) return;
+          if (!match) continue;
+          const image = await getBestTmdbBackdrop(match);
+          if (cancelled) return;
+          if (image) slides.push({ item, image });
         }
-      } catch (error) {
-        console.error(error);
+        if (!cancelled && slides.length > 0) setHeroSlides(slides);
+      } catch (e) {
+        console.error(e);
       } finally {
         if (!cancelled) setHeroLoading(false);
       }
-    };
+    })();
 
-    loadHeroBackdrops();
+    return () => { cancelled = true; };
+  }, [trending]);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [spotlight]);
-
-  const getName = (item: any) => getMiruroDisplayTitle(item);
-  const getPoster = (item: any) => getMiruroPoster(item);
   const getId = (item: any) => item?.id || item?.malId || item?._id;
   const detailHref = (item: any) => {
     const id = getId(item);
     return id ? `/anime-details?id=${id}` : "/anime";
   };
-  const hero = heroSlides?.[heroIndex]?.item || heroSlides?.[0]?.item || spotlight?.[0];
-  const heroImages = heroSlides.map((slide) => slide.image);
-  const heroTitle = getName(hero);
-  const heroTitleLength = heroTitle.length;
-  const heroTitleClass =
-    heroTitleLength > 70
-      ? styles.titleXs
-      : heroTitleLength > 50
-        ? styles.titleSm
-        : heroTitleLength > 35
-          ? styles.titleMd
-          : styles.titleLg;
-
   const toCardData = (item: any) => ({
-    id: getId(item) || getName(item),
-    name: getName(item),
-    title: getName(item),
-    poster_path: getPoster(item),
+    id: getId(item) || getMiruroDisplayTitle(item),
+    name: getMiruroDisplayTitle(item),
+    title: getMiruroDisplayTitle(item),
+    poster_path: getMiruroPoster(item),
     mediaLabel: getMiruroMediaLabel(item),
   });
 
-  const sections = [
-    { label: "Trending", list: trending },
-    { label: "Popular", list: popular },
-    { label: "Upcoming", list: upcoming },
-    { label: "Spotlight Picks", list: spotlight },
-    { label: "Trending Mix", list: trending.slice(6) },
-    { label: "Popular Classics", list: popular.slice(6) },
-    { label: "Upcoming Hype", list: upcoming.slice(6) },
-  ];
+  const hero = heroSlides[heroIndex]?.item ?? heroSlides[0]?.item;
+  const heroImages = heroSlides.map((s) => s.image);
+  const heroTitle = hero ? getMiruroDisplayTitle(hero) : "";
+  const heroTitleLen = heroTitle.length;
+  const heroTitleClass =
+    heroTitleLen > 70 ? styles.titleXs
+    : heroTitleLen > 50 ? styles.titleSm
+    : heroTitleLen > 35 ? styles.titleMd
+    : styles.titleLg;
+
+  const renderSection = (
+    label: string,
+    list: any[],
+    loading: boolean,
+    sentinelRef: React.RefObject<HTMLDivElement | null> | null,
+    globalIndex: number,
+  ) => (
+    <section className={styles.section} key={label}>
+      {sentinelRef && <div ref={sentinelRef} style={{ height: 1 }} aria-hidden="true" />}
+      <h1>
+        {label}
+        <div>
+          <MdChevronLeft
+            onClick={() => {
+              document.querySelectorAll(`.${styles.HomeListSection}`)[globalIndex]?.scrollBy(-700, 0);
+            }}
+            data-tooltip-id="tooltip"
+            data-tooltip-content="Swipe Left"
+          />
+          swipe
+          <MdChevronRight
+            onClick={() => {
+              document.querySelectorAll(`.${styles.HomeListSection}`)[globalIndex]?.scrollBy(700, 0);
+            }}
+            data-tooltip-id="tooltip"
+            data-tooltip-content="Swipe Right"
+          />
+        </div>
+      </h1>
+      <div className={styles.HomeListSection}>
+        {loading && SKELETON_ITEMS.map((n) => <Skeleton key={n} className={styles.loading} />)}
+        {!loading && list.length === 0 && (
+          <p className={styles.emptyMessage}>No titles found.</p>
+        )}
+        {list.map((item: any) => {
+          const mapped = toCardData(item);
+          return (
+            <MovieCardSmall
+              key={`${label}-${mapped.id}`}
+              data={mapped}
+              media_type="tv"
+              customHref={detailHref(item)}
+            />
+          );
+        })}
+      </div>
+    </section>
+  );
 
   return (
     <div className={styles.page}>
@@ -194,15 +253,12 @@ const JapaneseHubHome = () => {
         <button
           type="button"
           className={`${styles.changeHubBtn} btn`}
-          onClick={() => {
-            setHub("");
-            push("/");
-          }}
+          onClick={() => { setHub(""); push("/"); }}
         >
           Change Hub
         </button>
         <div className={styles.HomeCarousel}>
-          {heroImages?.length > 0 ? (
+          {heroImages.length > 0 ? (
             <Carousel
               imageArr={heroImages}
               setIndex={setHeroIndex}
@@ -210,13 +266,13 @@ const JapaneseHubHome = () => {
               desktopHeight="80vh"
               objectFit="cover"
             />
-          ) : heroLoading || loading ? (
+          ) : (heroLoading || trendingLoading) ? (
             <Skeleton className={styles.CarouselLoading} />
           ) : null}
-          <div className={styles.curvy}></div>
-          <div className={styles.curvy2}></div>
-          <div className={styles.curvy3}></div>
-          <div className={styles.curvy4}></div>
+          <div className={styles.curvy} />
+          <div className={styles.curvy2} />
+          <div className={styles.curvy3} />
+          <div className={styles.curvy4} />
           <div className={styles.HomeHeroMeta}>
             <h1
               className={heroTitleClass}
@@ -230,71 +286,24 @@ const JapaneseHubHome = () => {
                 {hero ? getMiruroMediaLabel(hero) : <Skeleton width={60} />}
               </p>
               {hero ? (
-                <Link className={styles.links} href={detailHref(hero)}>
-                  detail
-                </Link>
+                <Link className={styles.links} href={detailHref(hero)}>detail</Link>
               ) : (
-                <div>
-                  <Skeleton width={200} count={1} />
-                </div>
+                <Skeleton width={200} />
               )}
             </div>
           </div>
         </div>
       </section>
 
-
       <div className={styles.HomeListAll}>
-        {sections.map((section, sectionIndex) => (
-          <section className={styles.section} key={section.label}>
-            <h1>
-              {section.label}
-              <div>
-                <MdChevronLeft
-                  onClick={() => {
-                    document
-                      .querySelectorAll(`.${styles.HomeListSection}`)
-                    [sectionIndex]?.scrollBy(-700, 0);
-                  }}
-                  data-tooltip-id="tooltip"
-                  data-tooltip-content="Swipe Left"
-                />
-                swipe
-                <MdChevronRight
-                  onClick={() => {
-                    document
-                      .querySelectorAll(`.${styles.HomeListSection}`)
-                    [sectionIndex]?.scrollBy(700, 0);
-                  }}
-                  data-tooltip-id="tooltip"
-                  data-tooltip-content="Swipe Right"
-                />
-              </div>
-            </h1>
-            <div className={styles.HomeListSection}>
-              {loading &&
-                [1, 2, 3, 4, 5, 6].map((item) => (
-                  <Skeleton key={item} className={styles.loading} />
-                ))}
-              {!loading && section.list.length === 0 ? (
-                <p className={styles.emptyMessage}>No titles found.</p>
-              ) : null}
-              {section.list.map((item: any) => {
-                const mapped = toCardData(item);
-                return (
-                  <MovieCardSmall
-                    key={`${section.label}-${mapped.id}`}
-                    data={mapped}
-                    media_type="tv"
-                    customHref={detailHref(item)}
-                  />
-                );
-              })}
-            </div>
-          </section>
-        ))}
+        {renderSection("Trending",         trending,            trendingLoading,  trendingRef,  0)}
+        {renderSection("Popular",          popular,             popularLoading,   popularRef,   1)}
+        {renderSection("Trending Mix",     trending.slice(6),   trendingLoading,  null,         2)}
+        {renderSection("Popular Classics", popular.slice(6),    popularLoading,   null,         3)}
+        {renderSection("Upcoming",         upcoming,            upcomingLoading,  upcomingRef,  4)}
+        {renderSection("Spotlight Picks",  spotlight,           spotlightLoading, spotlightRef, 5)}
+        {renderSection("Upcoming Hype",    upcoming.slice(6),   upcomingLoading,  null,         6)}
         <AnimeSchedule />
-
       </div>
     </div>
   );

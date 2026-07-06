@@ -10,6 +10,7 @@ export type RiveSettings = {
   SBColor: string;
   SBBlur: string;
   SOpacity: string;
+  SOutline: string;
   hub: AppHub | "";
 };
 
@@ -23,6 +24,7 @@ const defaultSettings: RiveSettings = {
   SBColor: "transparent",
   SBBlur: "0",
   SOpacity: "100%",
+  SOutline: "none",
   hub: "",
 };
 

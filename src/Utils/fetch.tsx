@@ -367,6 +367,17 @@ export default async function axiosFetch({
       if (season) params.set("s", String(season));
       return fetchJson(`${sportsDbBase}/eventsseason.php?${params.toString()}`, { events: [] });
     },
+    // TheSportsDB's "next" and "past" league event endpoints return the most
+    // recently curated fixtures — these consistently have strThumb/strBanner
+    // artwork populated, unlike eventsseason which back-fills images slowly.
+    sportsdbNextLeague: () => {
+      if (!league) return Promise.resolve({ events: [] });
+      return fetchJson(`${sportsDbBase}/eventsnextleague.php?id=${encodeURIComponent(String(league))}`, { events: [] });
+    },
+    sportsdbPastLeague: () => {
+      if (!league) return Promise.resolve({ events: [] });
+      return fetchJson(`${sportsDbBase}/eventspastleague.php?id=${encodeURIComponent(String(league))}`, { events: [] });
+    },
     // `sport` here is TheSportsDB's human-readable sport name ("Soccer",
     // "Cricket", "Basketball", ...), not an ESPN/streamed.pk slug — the
     // sport-filtered eventsday call returns full real data; the unfiltered
